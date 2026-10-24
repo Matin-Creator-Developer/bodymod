@@ -78,9 +78,7 @@
 
         .container { max-width: 760px; margin: 0 auto; padding: 12px; }
 
-        /* ==========================================================================
-           هدر مینیمال، مرتب و مجهز به دکمه منوی همبرگری
-           ========================================================================== */
+        /* هدر مینیمال با منوی همبرگری */
         .app-header {
             display: flex;
             align-items: center;
@@ -97,166 +95,79 @@
             z-index: 100;
         }
 
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .header-right { display: flex; align-items: center; gap: 10px; }
 
         .hamburger-btn {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            background: var(--bg-muted);
-            border: 1px solid var(--border-color);
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            cursor: pointer;
-            transition: transform 0.15s;
-        }
-        .hamburger-btn:active { transform: scale(0.94); }
-
-        .brand-title h1 {
-            font-size: 15px;
-            font-weight: 900;
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            width: 42px; height: 42px; border-radius: 12px;
+            background: var(--bg-muted); border: 1px solid var(--border-color);
+            color: var(--primary); display: flex; align-items: center;
+            justify-content: center; font-size: 22px; cursor: pointer;
         }
 
-        .greeting-line {
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--text-muted);
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .brand-title h1 { font-size: 15px; font-weight: 900; color: var(--primary); display: flex; align-items: center; gap: 6px; }
+        .greeting-line { font-size: 11px; font-weight: 700; color: var(--text-muted); }
+        .header-left { display: flex; align-items: center; gap: 8px; }
 
         .auth-pill-btn {
             background: linear-gradient(135deg, var(--primary), #00bbf9);
-            color: #070a12;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 900;
-            cursor: pointer;
-            box-shadow: 0 4px 12px var(--primary-glow);
+            color: #070a12; border: none; padding: 8px 14px;
+            border-radius: 999px; font-size: 12px; font-weight: 900;
+            cursor: pointer; box-shadow: 0 4px 12px var(--primary-glow);
         }
 
-        /* ==========================================================================
-           منوی همبرگری کشویی (Slide-out Drawer)
-           ========================================================================== */
+        /* منوی همبرگری کشویی */
         .drawer-backdrop {
-            position: fixed;
-            inset: 0;
-            background: rgba(7, 10, 18, 0.75);
-            backdrop-filter: blur(4px);
-            z-index: 1500;
-            display: none;
+            position: fixed; inset: 0; background: rgba(7, 10, 18, 0.75);
+            backdrop-filter: blur(4px); z-index: 1500; display: none;
         }
         .drawer-backdrop.open { display: block; }
 
         .side-drawer {
-            position: fixed;
-            top: 0;
-            right: -310px;
-            width: 290px;
-            height: 100vh;
-            background: var(--bg-card);
-            border-left: 2px solid var(--primary);
-            box-shadow: -10px 0 35px rgba(0, 0, 0, 0.6);
-            z-index: 1600;
-            padding: 18px 14px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            transition: right 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+            position: fixed; top: 0; right: -310px; width: 290px; height: 100vh;
+            background: var(--bg-card); border-left: 2px solid var(--primary);
+            box-shadow: -10px 0 35px rgba(0, 0, 0, 0.6); z-index: 1600;
+            padding: 18px 14px; display: flex; flex-direction: column;
+            justify-content: space-between; transition: right 0.28s cubic-bezier(0.4, 0, 0.2, 1);
             overflow-y: auto;
         }
         .side-drawer.open { right: 0; }
 
         .drawer-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding-bottom: 14px;
-            border-bottom: 1px dashed var(--border-color);
-            margin-bottom: 12px;
+            display: flex; align-items: center; justify-content: space-between;
+            padding-bottom: 14px; border-bottom: 1px dashed var(--border-color); margin-bottom: 12px;
         }
 
         .drawer-user-card {
-            background: var(--bg-muted);
-            border: 1px solid var(--border-color);
-            border-radius: 14px;
-            padding: 12px;
-            margin-bottom: 14px;
+            background: var(--bg-muted); border: 1px solid var(--border-color);
+            border-radius: 14px; padding: 12px; margin-bottom: 14px;
         }
 
-        .drawer-nav-list {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
+        .drawer-nav-list { display: flex; flex-direction: column; gap: 6px; }
 
         .drawer-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-            padding: 11px 12px;
-            border-radius: 12px;
-            border: 1px solid transparent;
-            background: transparent;
-            color: var(--text-main);
-            font-size: 13px;
-            font-weight: 800;
-            cursor: pointer;
-            text-align: right;
-            transition: background 0.2s;
+            display: flex; align-items: center; justify-content: space-between;
+            width: 100%; padding: 11px 12px; border-radius: 12px;
+            border: 1px solid transparent; background: transparent;
+            color: var(--text-main); font-size: 13px; font-weight: 800;
+            cursor: pointer; text-align: right; transition: background 0.2s;
         }
-
         .drawer-item:hover { background: var(--bg-muted); }
-        .drawer-item.active {
-            background: var(--primary-glow);
-            color: var(--primary);
-            border-color: var(--primary);
-        }
+        .drawer-item.active { background: var(--primary-glow); color: var(--primary); border-color: var(--primary); }
 
         .drawer-footer {
-            margin-top: 20px;
-            padding-top: 12px;
+            margin-top: 20px; padding-top: 12px;
             border-top: 1px dashed var(--border-color);
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+            display: flex; flex-direction: column; gap: 8px;
         }
 
-        /* نوار ظریف وضعیت ظرفیت بتا بالای صفحه */
         .compact-beta-bar {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-right: 4px solid var(--accent);
-            border-radius: 14px;
-            padding: 10px 14px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 8px;
-            font-size: 12px;
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-right: 4px solid var(--accent); border-radius: 14px;
+            padding: 10px 14px; margin-bottom: 12px; display: flex;
+            align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: 8px; font-size: 12px;
         }
 
-        /* نوار تقویم و روزشمار */
         .date-navigator {
             background: var(--bg-card); border-radius: var(--radius-lg); padding: 12px 14px;
             margin-bottom: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color);
@@ -292,7 +203,6 @@
         .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
         .card-title { font-size: 14px; font-weight: 800; display: flex; align-items: center; gap: 6px; }
 
-        /* داشبورد کالری */
         .dashboard-grid { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: center; }
         @media (min-width: 540px) { .dashboard-grid { grid-template-columns: 185px 1fr; } }
 
@@ -316,7 +226,6 @@
         .progress-track { width: 100%; height: 8px; background: var(--border-color); border-radius: 999px; overflow: hidden; }
         .progress-fill { height: 100%; border-radius: 999px; transition: width 0.3s; }
 
-        /* بخش آب */
         .water-card { border: 1px solid rgba(0, 187, 249, 0.4); background: linear-gradient(180deg, var(--bg-card) 0%, var(--water-light) 220%); }
         .water-controls-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
         .water-btns { display: flex; align-items: center; gap: 8px; }
@@ -336,7 +245,6 @@
             background: var(--bg-card); padding: 6px 10px; border-radius: 10px; border: 1px solid var(--border-color);
         }
 
-        /* وعده‌ها و جستجوی بانک غذا */
         .meals-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
         .meal-tab {
             padding: 8px 4px; border-radius: 10px; border: 1px solid var(--border-color);
@@ -389,31 +297,6 @@
         .bank-add-controls { display: flex; align-items: center; gap: 6px; }
         .add-food-btn { background: var(--primary); color: #070a12; border: none; padding: 7px 12px; border-radius: 9px; font-size: 12px; font-weight: 900; cursor: pointer; }
 
-        /* دکمه گرافیکی و دائمی ورود با گوگل (همیشه قابل مشاهده) */
-        .custom-google-btn {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            background: #ffffff;
-            color: #1f2937;
-            border: 1px solid #cbd5e1;
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 13px;
-            font-weight: 800;
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
-            transition: transform 0.15s, box-shadow 0.15s;
-            margin-bottom: 10px;
-        }
-        .custom-google-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
-        }
-
-        /* استایل‌های لندینگ‌پیج داخل تب معرفی */
         .store-buttons-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
         .store-btn {
             display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -493,9 +376,7 @@
 </head>
 <body>
 
-<!-- ==========================================================================
-     منوی همبرگری کشویی (Slide-out Navigation Drawer)
-     ========================================================================== -->
+<!-- منوی همبرگری کشویی -->
 <div class="drawer-backdrop" id="drawerBackdrop" onclick="closeDrawer()"></div>
 <aside class="side-drawer" id="sideDrawer">
     <div>
@@ -507,7 +388,6 @@
             <button class="icon-btn" onclick="closeDrawer()">✕</button>
         </div>
 
-        <!-- کارت وضعیت کاربر در بالای منوی همبرگری -->
         <div class="drawer-user-card">
             <div style="font-size:13px; font-weight:900; color:var(--primary);" id="drawerUserName">کاربر مهمان 👋</div>
             <div style="font-size:11px; color:var(--text-muted); margin-top:2px;" id="drawerUserSub">برای ذخیره ابری وارد حساب شو</div>
@@ -516,7 +396,6 @@
             </button>
         </div>
 
-        <!-- آیتم‌های ناوبری منوی همبرگری -->
         <nav class="drawer-nav-list">
             <button class="drawer-item active" data-tab="trackerTab" onclick="switchTab('trackerTab')">
                 <span>🍽️ داشبورد کالری و آب</span>
@@ -558,9 +437,7 @@
 
 <div class="container">
 
-    <!-- ==========================================================================
-         هدر مرتب و خلوت با دکمه منوی همبرگری (☰)
-         ========================================================================== -->
+    <!-- هدر اصلی با دکمه همبرگری -->
     <header class="app-header">
         <div class="header-right">
             <button class="hamburger-btn" onclick="openDrawer()" title="منوی برنامه">☰</button>
@@ -576,7 +453,7 @@
         </div>
     </header>
 
-    <!-- نوار جمع‌وجور و شیک وضعیت ظرفیت بتا (متصل به کلودفلر) -->
+    <!-- نوار وضعیت ظرفیت بتا (زنده از دیتابیس BODYMOD_DB_KV) -->
     <div class="compact-beta-bar">
         <div>
             <strong style="color:var(--accent);">🎟️ ظرفیت اشتراک بتا:</strong>
@@ -589,7 +466,7 @@
         </div>
     </div>
 
-    <!-- نوار تقویم شمسی و روزشمار -->
+    <!-- نوار تقویم شمسی -->
     <section class="date-navigator">
         <div class="date-nav-top">
             <button class="nav-arrow-btn" id="prevDayBtn">▶ روز قبل</button>
@@ -609,9 +486,7 @@
         </div>
     </section>
 
-    <!-- ==========================================================================
-         بخش ۱: داشبورد کالری، آب و وعده‌های روزانه (صفحه اصلی مرتب)
-         ========================================================================== -->
+    <!-- TAB 1: DAILY TRACKER -->
     <div id="trackerTab" class="tab-section active">
         <div class="card">
             <div class="card-header">
@@ -742,9 +617,7 @@
         </div>
     </div>
 
-    <!-- ==========================================================================
-         بخش ۲: برنامه تمرین (قابل دسترسی از منوی همبرگری)
-         ========================================================================== -->
+    <!-- TAB 2: WORKOUT PLAN -->
     <div id="workoutTab" class="tab-section">
         <div class="card" style="text-align:center; padding:28px 18px;">
             <div style="font-size:48px; margin-bottom:10px;">🔥💪</div>
@@ -760,9 +633,7 @@
         </div>
     </div>
 
-    <!-- ==========================================================================
-         بخش ۳: چت با هوش مصنوعی (قابل دسترسی از منوی همبرگری)
-         ========================================================================== -->
+    <!-- TAB 3: AI CHAT -->
     <div id="aiChatTab" class="tab-section">
         <div class="card" style="text-align:center; padding:28px 18px;">
             <div style="font-size:48px; margin-bottom:10px;">🤖⚡</div>
@@ -778,9 +649,7 @@
         </div>
     </div>
 
-    <!-- ==========================================================================
-         بخش ۴: تاریخچه (قابل دسترسی از منوی همبرگری)
-         ========================================================================== -->
+    <!-- TAB 4: HISTORY -->
     <div id="historyTab" class="tab-section">
         <div class="card">
             <div class="card-header">
@@ -795,9 +664,7 @@
         </div>
     </div>
 
-    <!-- ==========================================================================
-         بخش ۵: پروفایل و تنظیمات (قابل دسترسی از منوی همبرگری)
-         ========================================================================== -->
+    <!-- TAB 5: PROFILE & SETTINGS -->
     <div id="settingsTab" class="tab-section">
         <div class="card">
             <div class="card-header">
@@ -833,9 +700,7 @@
         </div>
     </div>
 
-    <!-- ==========================================================================
-         بخش ۶: معرفی اپ، دانلود از بازار/مایکت و حمایت مالی دونیتو (داخل منوی همبرگری)
-         ========================================================================== -->
+    <!-- TAB 6: ABOUT APP & DONATE -->
     <div id="aboutAppTab" class="tab-section">
         <div class="card">
             <h2 style="font-size:18px; font-weight:900; color:var(--primary); margin-bottom:8px;">
@@ -845,9 +710,6 @@
                 برای استفاده از مربی هوش مصنوعی (روزی ۳ پیام + ۱ تحلیل عکس خوراکی + ماهی ۱ برنامه ورزشی کامل)، اپلیکیشن رسمی رو از کافه‌بازار یا مایکت دانلود کن:
             </p>
 
-            <!-- ==================================================================
-                 ⚠️⚠️⚠️ محل قرار دادن لینک دانلود کافه‌بازار و مایکت ⚠️⚠️⚠️
-                 ================================================================== -->
             <div class="store-buttons-grid">
                 <a href="#BazaarLink" onclick="openCyber403Modal('دانلود از کافه‌بازار'); return false;" class="store-btn bazaar">
                     <span>🛒</span>
@@ -892,9 +754,7 @@
 
 </div>
 
-<!-- ==========================================================================
-     پاپ‌آپ امنیتی ۴۰۳ سایبرپانکی
-     ========================================================================== -->
+<!-- پاپ‌آپ امنیتی ۴۰۳ سایبرپانکی -->
 <div class="modal-backdrop" id="cyber403Modal">
     <div class="modal-box" style="text-align:center;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
@@ -922,7 +782,7 @@
 </div>
 
 <!-- ==========================================================================
-     مودال مرحله ۱: ورود با دکمه دائمی گوگل (همیشه قابل مشاهده!) + ربات بله
+     مودال مرحله ۱: ورود تمیز با دکمه رسمی گوگل + شماره موبایل بله
      ========================================================================== -->
 <div class="modal-backdrop" id="authModal">
     <div class="modal-box">
@@ -932,45 +792,25 @@
         </div>
 
         <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">
-            اول با گوگل یا شماره موبایلت (از طریق ربات بله) وارد شو؛ بلافاصله بعدش مشخصات بدنت و هدفت رو می‌گیریم تا پروفایلت توی کلودفلر ساخته بشه!
+            اول با گوگل یا شماره موبایل اکانت «بله» وارد شو؛ بلافاصله بعدش مشخصات بدنت و هدفت رو می‌گیریم تا پروفایلت توی کلودفلر ساخته بشه!
         </p>
 
-        <!-- ۱. دکمه گرافیکی و دائمی گوگل با لوگوی اصلی رنگی (که هیچ‌وقت غیب نمی‌شه!) -->
-        <button type="button" class="custom-google-btn" id="alwaysVisibleGoogleBtn">
-            <svg width="20" height="20" viewBox="0 0 48 48">
-                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-            </svg>
-            <span>ورود سریع با حساب گوگل (Google)</span>
-        </button>
+        <!-- ۱. دکمه رسمی خود گوگل (تک و مرتب) -->
+        <div id="googleButtonContainer" style="display:flex; justify-content:center; margin:14px 0;"></div>
 
-        <!-- ظرف رسمی گوگل (در صورت لود شدن اسکریپت گوگل در پس‌زمینه) -->
-        <div id="googleButtonContainer" style="display:flex; justify-content:center; margin-bottom:8px;"></div>
-
-        <!-- کادر کمکی جیمیل (اگر اسکریپت گوگل به دلیل اینترنت ایران باز نشد) -->
-        <div id="googleFallbackBox" style="display:none; background:var(--bg-muted); padding:12px; border-radius:12px; margin-bottom:12px; border:1px solid var(--primary);">
-            <label class="form-label" style="color:var(--primary);">📧 آدرس جیمیل خودت رو وارد کن:</label>
-            <div style="display:flex; gap:6px; margin-top:6px;">
-                <input type="email" id="fallbackGmailInput" class="form-control" style="flex:1;" placeholder="yourname@gmail.com">
-                <button class="btn-primary" id="confirmFallbackGmailBtn">ورود</button>
-            </div>
-        </div>
-
-        <!-- ۲. ورود با شماره موبایل و ربات بله (OTP) -->
-        <div style="border-top:1px dashed var(--border-color); padding-top:12px; margin-top:8px;">
+        <!-- ۲. ورود با شماره موبایل در پیام‌رسان بله -->
+        <div style="border-top:1px dashed var(--border-color); padding-top:12px; margin-top:10px;">
             <div style="font-size:13px; font-weight:800; color:var(--primary); margin-bottom:8px;">
                 💬 یا ورود سریع با شماره موبایل (از طریق ربات «بله»):
             </div>
             <div class="form-grid">
                 <div class="form-group full">
-                    <label class="form-label">شماره موبایل یا آیدی چت بله *</label>
-                    <input type="tel" id="balePhoneInput" class="form-control" placeholder="مثلاً: 0914xxxxxxx">
+                    <label class="form-label">شماره موبایل اکانت بله *</label>
+                    <input type="tel" id="balePhoneInput" class="form-control" placeholder="مثلاً: 0914xxxxxxx" dir="ltr" style="text-align:left;">
                 </div>
                 <div class="form-group full" id="baleOtpGroup" style="display:none;">
                     <label class="form-label">کد تایید ۶ رقمی ارسال شده در بله *</label>
-                    <input type="number" id="baleOtpInput" class="form-control" placeholder="123456">
+                    <input type="number" id="baleOtpInput" class="form-control" placeholder="123456" dir="ltr" style="text-align:center;">
                 </div>
             </div>
             <div style="display:flex; gap:8px;">
@@ -1151,7 +991,6 @@
         } catch { return null; }
     };
 
-    // کنترل منوی همبرگری
     window.openDrawer = () => {
         document.getElementById('drawerBackdrop').classList.add('open');
         document.getElementById('sideDrawer').classList.add('open');
@@ -1303,7 +1142,7 @@
         createFood('b_lavash', 'نان لواش / تافتون / تست', 'bread', 275, 8.6, 56.0, 1.5, { 'ورق': 30, 'کف دست': 20, '۱۰۰ گرم': 100 })
     ];
 
-    const STORAGE_KEY = 'bodymod_web_clean_v4';
+    const STORAGE_KEY = 'bodymod_web_clean_v5';
     const todayISO = getLocalISODate(new Date());
 
     const getInitialTheme = () => {
@@ -1503,19 +1342,15 @@
         document.getElementById('onboardingModal').classList.remove('open');
         renderAll();
         await syncToCloudflare();
-        alert(`دمت گرم ${nickname} عزیز از ${city}! 🎉\nپرونده‌ات در کلودفلر ثبت شد.\n⚡ هدف روزانه: ${toFa(targetCal)} کالری | 💧 آب: ${toFa(state.goals.waterGlasses)} لیوان`);
+        alert(`دمت گرم ${nickname} عزیز از ${city}! 🎉\nپرونده‌ات در دیتابیس کلودفلر ثبت شد.\n⚡ هدف روزانه: ${toFa(targetCal)} کالری | 💧 آب: ${toFa(state.goals.waterGlasses)} لیوان`);
     });
 
-    // منطق ورود با گوگل (هم اسکریپت رسمی GSI و هم دکمه دائمی ضد تحریم)
+    // ورود رسمی با گوگل (تک دکمه استاندارد)
     window.handleGoogleCredentialResponse = async (response) => {
         const payload = parseJwt(response.credential);
         if (!payload) return;
-        await completeGoogleLogin(payload.email, payload.given_name || '');
-    };
-
-    const completeGoogleLogin = async (email, givenName = '') => {
-        state.authUser = { email: email.toLowerCase().trim(), phone: '', loggedIn: true };
-        if (!state.userProfile.nickname && givenName) state.userProfile.nickname = givenName;
+        state.authUser = { email: payload.email.toLowerCase().trim(), phone: '', loggedIn: true };
+        if (!state.userProfile.nickname && payload.given_name) state.userProfile.nickname = payload.given_name;
         document.getElementById('authModal').classList.remove('open');
 
         const alreadyCompleted = await fetchProfileFromCloudflare(state.authUser.email);
@@ -1536,33 +1371,11 @@
                 });
                 google.accounts.id.renderButton(
                     document.getElementById('googleButtonContainer'),
-                    { theme: 'outline', size: 'large', text: 'signin_with', locale: 'fa' }
+                    { theme: 'outline', size: 'large', text: 'signin_with', locale: 'fa', width: 280 }
                 );
             } catch (e) { console.log(e); }
         }
     };
-
-    // کلیک روی دکمه گرافیکی و دائمی گوگل
-    document.getElementById('alwaysVisibleGoogleBtn').addEventListener('click', () => {
-        if (window.google && window.google.accounts && window.google.accounts.id) {
-            google.accounts.id.prompt((notification) => {
-                if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-                    document.getElementById('googleFallbackBox').style.display = 'block';
-                }
-            });
-        } else {
-            document.getElementById('googleFallbackBox').style.display = 'block';
-        }
-    });
-
-    document.getElementById('confirmFallbackGmailBtn').addEventListener('click', async () => {
-        const email = document.getElementById('fallbackGmailInput').value.trim();
-        if (!email || !email.includes('@')) {
-            alert('لطفاً یک آدرس جیمیل معتبر وارد کن رفیق!');
-            return;
-        }
-        await completeGoogleLogin(email);
-    });
 
     window.openAuthModal = () => {
         initGoogleAuthButton();
@@ -1864,9 +1677,13 @@
     document.getElementById('foodSearchInput').addEventListener('input', renderAll);
     document.getElementById('historyMonthFilter').addEventListener('change', renderAll);
 
+    // ارسال کد تایید فقط به شماره موبایل بله
     document.getElementById('sendBaleOtpBtn').addEventListener('click', async () => {
         const phone = document.getElementById('balePhoneInput').value.trim();
-        if (!phone) { alert('رفیق اول شماره موبایلت رو وارد کن!'); return; }
+        if (!phone || !/^09\d{9}$/.test(phone)) {
+            alert('رفیق لطفاً شماره موبایل معتبر ۱۱ رقمی (مثلاً 0914xxxxxxx) وارد کن!');
+            return;
+        }
         try {
             await fetch(`${WORKER_BASE_URL}/api/auth/bale/send-otp`, {
                 method: 'POST',
@@ -1877,7 +1694,7 @@
         document.getElementById('baleOtpGroup').style.display = 'flex';
         document.getElementById('sendBaleOtpBtn').style.display = 'none';
         document.getElementById('verifyBaleOtpBtn').style.display = 'inline-block';
-        alert('کد تایید به ربات «بله» فرستاده شد! 📲');
+        alert('کد تایید به شماره موبایلت در پیام‌رسان «بله» فرستاده شد! 📲');
     });
 
     document.getElementById('verifyBaleOtpBtn').addEventListener('click', async () => {
