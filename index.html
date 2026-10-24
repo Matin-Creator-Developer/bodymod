@@ -1,11 +1,24 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl" data-theme="dark">
+<html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BodyMod | بادی‌مود: بدن مود شده (سوپراپلیکیشن کالری‌شمار و تناسب اندام هوشمند)</title>
     <!-- اسکریپت رسمی ورود با گوگل -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <!-- تشخیص فوری تم گوشی کاربر قبل از رندر صفحه برای جلوگیری از چشمک زدن صفحه -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('bodymod_user_theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            } else {
+                const isSystemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.setAttribute('data-theme', isSystemDark ? 'dark' : 'light');
+            }
+        })();
+    </script>
 
     <!-- ==========================================================================
          📢 [غیرفعال شده برای فاز اول] اسکریپت تبلیغات یکتانت / تپسل
@@ -71,7 +84,7 @@
             background-color: var(--bg-main);
             color: var(--text-main);
             line-height: 1.65;
-            padding-bottom: 50px;
+            padding-bottom: 30px;
             transition: background-color 0.25s, color 0.25s;
         }
 
@@ -129,7 +142,7 @@
             margin-bottom: 16px;
         }
 
-        /* باکس شمارنده ظرفیت ۱۰۰۰ نفری بتا */
+        /* باکس شمارنده ظرفیت ۱۰۰۰ نفری بتا (متصل به کلودفلر) */
         .scarcity-box {
             background: var(--bg-muted);
             border: 1px dashed var(--primary);
@@ -400,7 +413,7 @@
             background: var(--bg-card); padding: 6px 10px; border-radius: 10px; border: 1px solid var(--border-color);
         }
 
-        /* وعده‌ها و بانک غذا */
+        /* وعده‌ها و جستجوی بانک غذا */
         .meals-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
         .meal-tab {
             padding: 8px 4px; border-radius: 10px; border: 1px solid var(--border-color);
@@ -433,9 +446,13 @@
         }
 
         .search-input {
-            width: 100%; padding: 11px 14px; border-radius: 12px;
-            border: 1px solid var(--border-color); background: var(--bg-muted);
+            width: 100%; padding: 12px 14px; border-radius: 12px;
+            border: 1px solid var(--primary); background: var(--bg-muted);
             color: var(--text-main); font-size: 13px; margin-bottom: 10px;
+            outline: none;
+        }
+        .search-input:focus {
+            box-shadow: 0 0 12px var(--primary-glow);
         }
 
         .cat-chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 10px; }
@@ -446,7 +463,7 @@
         }
         .cat-chip.active { background: var(--primary); color: #070a12; border-color: var(--primary); }
 
-        .food-bank-grid { display: flex; flex-direction: column; gap: 8px; max-height: 440px; overflow-y: auto; }
+        .food-bank-grid { display: flex; flex-direction: column; gap: 8px; max-height: 380px; overflow-y: auto; }
         .food-bank-item {
             display: flex; align-items: center; justify-content: space-between; padding: 10px 12px;
             border-radius: 12px; background: var(--bg-muted); border: 1px solid var(--border-color);
@@ -486,6 +503,42 @@
             box-shadow: 0 0 30px var(--primary-glow);
             max-height: 92vh; overflow-y: auto;
         }
+
+        /* ==========================================================================
+           فوتر سایبرپانکی + نشان رسمی Hosted on GitHub Pages (مخصوص سایت)
+           ========================================================================== */
+        .app-footer {
+            margin-top: 24px;
+            padding: 20px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-top: 2px solid var(--primary);
+            border-radius: var(--radius-lg);
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .github-pages-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            padding: 7px 14px;
+            background: #24292f;
+            color: #ffffff;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            direction: ltr;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .github-pages-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+        }
     </style>
 </head>
 <body>
@@ -497,7 +550,7 @@
          ========================================================================== -->
     <section class="cyber-hero">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-            <span class="beta-pill">🚀 فاز آزمایشی (Early Access Beta) | ظرفیت محدود: ۱,۰۰۰ نفر</span>
+            <span class="beta-pill">🚀 فاز آزمایشی (Early Access Beta) | ظرفیت کل: ۱,۰۰۰ نفر</span>
             <span style="font-size:12px; font-weight:800; color:var(--primary);">🔥 سیستم آتیش تمرین: فعال</span>
         </div>
 
@@ -506,14 +559,14 @@
             اولین سوپراپلیکیشن سایبرپانکی کالری‌شمار ایرانی (با واحد بشقاب، کاسه، پرس و لیوان ۲۰۰cc)، تشخیص غذای ایرانی با عکس، مربی هوشمند و سیستم گیمیفیکیشن آتیش! همین الان از ابزارهای پایه در وب استفاده کن یا برای فعال‌سازی هوش مصنوعی، نسخه رسمی اندروید رو از بازار و مایکت بگیر.
         </p>
 
-        <!-- باکس ظرفیت ۱۰۰۰ نفری و سهمیه دقیق ۴ درخواست روزانه -->
+        <!-- باکس ظرفیت ۱۰۰۰ نفری زنده (متصل به سرور کلودفلر) -->
         <div class="scarcity-box">
             <div class="scarcity-top">
-                <span>🎟️ ظرفیت باقی‌مانده اشتراک بتا در این ماه:</span>
-                <span style="color:var(--accent);">۱۴۲ نفر از ۱,۰۰۰ نفر باقی مانده!</span>
+                <span>🎟️ ظرفیت باقی‌مانده اشتراک بتا (زنده از سرور):</span>
+                <span id="liveBetaCapacityText" style="color:var(--primary);">⏳ در حال استعلام از کلودفلر...</span>
             </div>
             <div class="progress-track" style="height:10px;">
-                <div class="progress-fill" style="width:85.8%; background:linear-gradient(90deg, var(--primary), var(--accent));"></div>
+                <div class="progress-fill" id="liveBetaProgressBar" style="width:0%; background:linear-gradient(90deg, var(--primary), var(--accent));"></div>
             </div>
 
             <div class="quota-badges">
@@ -521,15 +574,6 @@
                 <div class="quota-item">📸 روزی ۱ تحلیل عکس غذا</div>
                 <div class="quota-item">💪 ماهی ۱ برنامه ورزشی کامل</div>
             </div>
-
-            <!-- ==================================================================
-                 📢 [غیرفعال شده برای فاز اول] متن تبلیغات ویدیویی جایزه‌دار تپسل
-                 هر وقت تپسل رو فعال کردی، این خط رو از کامنت دربیار:
-                 
-                 <div style="font-size:11px; color:var(--text-muted); margin-top:8px; text-align:center;">
-                     ✨ در اپلیکیشن اندروید می‌تونی با تماشای ۲۰ تبلیغ ویدیویی، ۲۴ ساعت اشتراک VIP رایگان بگیری!
-                 </div>
-                 ================================================================== -->
         </div>
 
         <!-- ======================================================================
@@ -565,13 +609,6 @@
     </section>
 
     <!-- ==========================================================================
-         📢 [غیرفعال شده برای فاز اول] جایگاه تبلیغات بنری یکتانت (بالای صفحه)
-         هر وقت سایت بازدید گرفت و یکتانت رو وصل کردی، این بخش رو از کامنت دربیار:
-         
-         <div class="yektanet-inline-slot" id="yektanet-pos-top"></div>
-         ========================================================================== -->
-
-    <!-- ==========================================================================
          بخش ۲: هدر پلتفرم بادی‌مود (ورود با گوگل یا ربات بله)
          ========================================================================== -->
     <header class="app-header">
@@ -590,7 +627,7 @@
                 <span id="headerAuthText">🔐 ورود / ثبت‌نام (گوگل / بله)</span>
             </button>
             <button class="vip-trigger-btn" onclick="openCyber403Modal('خرید اشتراک بتا و بادی‌کوین')">🚀 اشتراک بتا</button>
-            <button class="icon-btn" id="themeToggleBtn" title="تغییر تم">☀️</button>
+            <button class="icon-btn" id="themeToggleBtn" title="تغییر تم (هماهنگ با گوشی)">☀️</button>
         </div>
     </header>
 
@@ -726,27 +763,27 @@
             <div id="loggedItemsContainer"></div>
         </div>
 
-        <!-- بانک جامع خوراکی‌ها -->
+        <!-- جستجوی هوشمند بانک غذا (لیست غذاها مخفی است تا زمانی که کاربر سرچ کند) -->
         <div class="card">
             <div class="card-header">
-                <div class="card-title">📚 بانک جامع خوراکی‌های ایران (۱۶۰+ آیتم با تغییر واحد)</div>
-                <button class="btn-primary" id="openCustomFoodModalBtn" style="font-size:12px; padding:7px 12px;">+ خوراکی جدید</button>
+                <div class="card-title">🔍 جستجو و افزودن خوراکی (از بین ۱۶۰+ خوراکی ایرانی)</div>
+                <button class="btn-primary" id="openCustomFoodModalBtn" style="font-size:12px; padding:7px 12px;">+ خوراکی سفارشی</button>
             </div>
 
-            <input type="text" id="foodSearchInput" class="search-input" placeholder="جستجو کن رفیق (مثلاً: چلوکباب، آب هویج، شله‌زرد، شیرینی زبان، ذرت مکزیکی، شیره خرما، گلابی...)">
+            <input type="text" id="foodSearchInput" class="search-input" placeholder="اسم خوراکی رو بنویس تا پیدا بشه (مثلاً: چلوکباب، سنگک، آب هویج، سیب، شله‌زرد...)">
 
             <div class="cat-chips">
-                <button class="cat-chip active" data-cat="all">همه (۱۶۰+)</button>
-                <button class="cat-chip" data-cat="persian">پلو، خورشت و آش (بشقاب/کاسه/پرس)</button>
-                <button class="cat-chip" data-cat="protein">کباب، فست‌فود و پروتئین</button>
-                <button class="cat-chip" data-cat="fruit">تمام میوه‌ها (۳۸ میوه)</button>
-                <button class="cat-chip" data-cat="juice">آبمیوه‌ها (لیوان ۲۰۰cc)</button>
-                <button class="cat-chip" data-cat="drink">نوشیدنی گرم، سرد و شربت</button>
-                <button class="cat-chip" data-cat="dessert">دسر، بستنی و سنتی</button>
-                <button class="cat-chip" data-cat="pastry">کیک و شیرینی قنادی</button>
-                <button class="cat-chip" data-cat="snack">آجیل، تنقلات و عصرانه</button>
-                <button class="cat-chip" data-cat="syrup">شیره‌ها، صبحانه و لبنیات</button>
-                <button class="cat-chip" data-cat="bread">نان و غلات</button>
+                <button class="cat-chip active" data-cat="none">⌨️ فقط با جستجو</button>
+                <button class="cat-chip" data-cat="persian">پلو، خورشت و آش</button>
+                <button class="cat-chip" data-cat="protein">کباب و پروتئین</button>
+                <button class="cat-chip" data-cat="fruit">میوه‌ها</button>
+                <button class="cat-chip" data-cat="juice">آبمیوه‌ها</button>
+                <button class="cat-chip" data-cat="drink">نوشیدنی و شربت</button>
+                <button class="cat-chip" data-cat="dessert">دسر و بستنی</button>
+                <button class="cat-chip" data-cat="pastry">کیک و شیرینی</button>
+                <button class="cat-chip" data-cat="snack">آجیل و تنقلات</button>
+                <button class="cat-chip" data-cat="syrup">شیره‌ها و صبحانه</button>
+                <button class="cat-chip" data-cat="bread">نان‌ها</button>
                 <button class="cat-chip" data-cat="custom">سفارشی من</button>
             </div>
 
@@ -876,20 +913,28 @@
             <button class="btn-primary" id="saveManualGoalsBtn" style="width:100%;">ذخیره دستی</button>
         </div>
     </div>
-</div>
 
-<!-- ==========================================================================
-     📢 [غیرفعال شده برای فاز اول] بنر چسبان تبلیغاتی پایین صفحه (Sticky Ad Banner)
-     هر وقت خواستی تبلیغ پایین صفحه رو روشن کنی، این بلوک رو از کامنت دربیار:
-     
-     <div class="sticky-ad-banner" id="yektanet-pos-sticky">
-         <div>
-             <span class="ad-tag">پیشنهاد ویژه</span>
-             <span>اپلیکیشن اندروید بادی‌مود رو نصب کن و جزو ۱۰۰۰ نفر اول بتا باش!</span>
-         </div>
-         <button class="vip-trigger-btn" style="padding:4px 10px; font-size:10px;" onclick="openCyber403Modal('نصب اپلیکیشن اندروید')">نصب اپ</button>
-     </div>
-     ========================================================================== -->
+    <!-- ==========================================================================
+         بخش فوتر سایبرپانکی + نشان رسمی Hosted on GitHub Pages (مخصوص وب‌سایت)
+         ========================================================================== -->
+    <footer class="app-footer">
+        <div style="font-size:14px; font-weight:900; color:var(--primary); margin-bottom:4px;">
+            ⚡ BodyMod | بادی‌مود: بدن مود شده
+        </div>
+        <div style="font-size:12px; color:var(--text-muted);">
+            طراحی و توسعه توسط <strong>Matin Mohammadi</strong> — تمامی حقوق محفوظ است © ۲۰۲۶
+        </div>
+
+        <!-- نشان استاندارد Hosted on GitHub Pages -->
+        <a href="https://github.com/matin-creator-developer/bodymod" target="_blank" rel="noopener" class="github-pages-badge">
+            <svg height="18" width="18" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+            </svg>
+            <span>Hosted on <strong>GitHub Pages</strong></span>
+        </a>
+    </footer>
+
+</div>
 
 <!-- ==========================================================================
      پاپ‌آپ امنیتی ۴۰۳ سایبرپانکی (رد کردن خرید و هوش مصنوعی در وب و هدایت به بازار/مایکت)
@@ -1061,6 +1106,27 @@
         document.getElementById('cyber403Modal').classList.add('open');
     };
 
+    // --- دریافت زنده ظرفیت واقعی ۱۰۰۰ نفر بتا از کلودفلر ورکر ---
+    const fetchLiveBetaStatus = async () => {
+        const textEl = document.getElementById('liveBetaCapacityText');
+        const barEl = document.getElementById('liveBetaProgressBar');
+        try {
+            const res = await fetch(`${WORKER_BASE_URL}/api/beta/status`);
+            if (!res.ok) throw new Error('Not ready');
+            const data = await res.json();
+            const total = data.totalCapacity || 1000;
+            const sold = data.soldCount || 0;
+            const remaining = Math.max(0, total - sold);
+            const pct = Math.min(100, (sold / total) * 100);
+            textEl.textContent = `${toFa(remaining)} نفر از ${toFa(total)} نفر باقی مانده! (${toFa(sold)} عضو فعال)`;
+            barEl.style.width = `${pct}%`;
+        } catch {
+            // تا قبل از استقرار کد جدید کلودفلر، عدد واقعی ۱۰۰۰ از ۱۰۰۰ نمایش داده می‌شود
+            textEl.textContent = `${toFa(1000)} نفر از ${toFa(1000)} نفر باقی مانده!`;
+            barEl.style.width = `0%`;
+        }
+    };
+
     // --- دیتابیس ۱۶۰+ خوراکی، میوه، آبمیوه، دسر و شیرینی ایرانی ---
     const createFood = (id, name, cat, cal100, prot100, carb100, fat100, unitsObj) => ({
         id, name, cat, cal100, prot100, carb100, fat100, units: unitsObj
@@ -1172,21 +1238,38 @@
         createFood('b_lavash', 'نان لواش / تافتون / تست', 'bread', 275, 8.6, 56.0, 1.5, { 'ورق': 30, 'کف دست': 20, '۱۰۰ گرم': 100 })
     ];
 
-    const STORAGE_KEY = 'bodymod_web_clean_v1';
+    const STORAGE_KEY = 'bodymod_web_clean_v2';
     const todayISO = getLocalISODate(new Date());
 
+    // تشخیص اولیه تم بر اساس گوشی کاربر
+    const getInitialTheme = () => {
+        const saved = localStorage.getItem('bodymod_user_theme');
+        if (saved) return saved;
+        return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    };
+
     let state = {
-        theme: 'dark',
+        theme: getInitialTheme(),
         startDate: todayISO,
         selectedDate: todayISO,
         selectedMeal: 'breakfast',
-        selectedCat: 'all',
+        selectedCat: 'none',
         authUser: { email: '', phone: '', loggedIn: false },
         userProfile: { nickname: '', gender: 'male', age: 21, height: 178, weight: 75, activity: 1.55, goalMode: 'maintain' },
         goals: { cal: 2000, prot: 140, carb: 220, fat: 65, waterGlasses: 10, waterAuto: true },
         customFoods: [],
         daysLog: {}
     };
+
+    // گوش دادن به تغییر زنده تم گوشی کاربر (اگر کاربر تم گوشیش رو عوض کرد، سایت هم اتوماتیک عوض بشه)
+    if (window.matchMedia) {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('bodymod_user_theme')) {
+                state.theme = e.matches ? 'dark' : 'light';
+                renderAll();
+            }
+        });
+    }
 
     const computeAutoWaterGlasses = (cal, weightKg, goalMode) => {
         const baseMl = Math.round((cal * 0.6) + (weightKg * 18));
@@ -1199,7 +1282,13 @@
             const raw = localStorage.getItem(STORAGE_KEY);
             if (raw) {
                 const parsed = JSON.parse(raw);
-                state = { ...state, ...parsed, userProfile: { ...state.userProfile, ...(parsed.userProfile || {}) }, goals: { ...state.goals, ...(parsed.goals || {}) } };
+                state = {
+                    ...state,
+                    ...parsed,
+                    theme: getInitialTheme(),
+                    userProfile: { ...state.userProfile, ...(parsed.userProfile || {}) },
+                    goals: { ...state.goals, ...(parsed.goals || {}) }
+                };
             }
             state.selectedDate = getLocalISODate(new Date());
         } catch (e) { console.error(e); }
@@ -1366,7 +1455,7 @@
         const items = dayObj.meals[state.selectedMeal] || [];
         const mealContainer = document.getElementById('loggedItemsContainer');
         if (items.length === 0) {
-            mealContainer.innerHTML = `<div style="text-align:center; padding:16px; color:var(--text-muted); font-size:12px;">هنوز چیزی توی این وعده ثبت نکردی رفیق! از لیست پایین اضافه کن.</div>`;
+            mealContainer.innerHTML = `<div style="text-align:center; padding:16px; color:var(--text-muted); font-size:12px;">هنوز چیزی توی این وعده ثبت نکردی رفیق! از کادر جستجوی پایین پیدا کن و اضافه کن.</div>`;
         } else {
             mealContainer.innerHTML = items.map((item, idx) => {
                 const food = getAllFoods().find(f => f.id === item.id) || item;
@@ -1391,30 +1480,50 @@
             }).join('');
         }
 
+        // --- رندر بانک غذا (فقط زمانی که کاربر سرچ کند یا دسته‌بندی انتخاب کند نمایش داده می‌شود) ---
         const q = document.getElementById('foodSearchInput').value.trim().toLowerCase();
-        const filteredFoods = getAllFoods().filter(f => (state.selectedCat === 'all' || f.cat === state.selectedCat) && (!q || f.name.toLowerCase().includes(q)));
-        document.getElementById('foodBankList').innerHTML = filteredFoods.map(f => {
-            const unitKeys = Object.keys(f.units);
-            const firstUnit = unitKeys[0];
-            const defaultCal = Math.round(f.cal100 * (f.units[firstUnit] / 100));
-            const unitOptions = unitKeys.map(u => `<option value="${u}">${u} (${toFa(f.units[u])})</option>`).join('');
-            return `
-                <div class="food-bank-item">
-                    <div>
-                        <div style="font-size:13px; font-weight:800;">${f.name}</div>
-                        <div style="font-size:11px; color:var(--text-muted);">
-                            هر ${firstUnit}: <strong style="color:var(--primary);">${toFa(defaultCal)} کالری</strong>
-                        </div>
-                    </div>
-                    <div class="bank-add-controls">
-                        <input type="number" id="qty_${f.id}" class="qty-input" value="1" min="0.25" step="any" style="width:52px;">
-                        <select id="unit_${f.id}" class="unit-select">${unitOptions}</select>
-                        <button class="add-food-btn" onclick="addFoodFromBank('${f.id}')">+ ثبت</button>
-                    </div>
+        const foodBankEl = document.getElementById('foodBankList');
+
+        if (!q && state.selectedCat === 'none') {
+            foodBankEl.innerHTML = `
+                <div style="text-align:center; padding:16px; color:var(--text-muted); font-size:12px; border:1px dashed var(--border-color); border-radius:12px;">
+                    🔎 اسم هر خوراکی، میوه، نوشیدنی یا دسری رو که خوردی توی کادر بالا تایپ کن (یا روی دسته‌بندی‌ها بزن) تا با واحد دلخواهت (بشقاب، کاسه، پرس، لیوان و...) بیاد!
                 </div>
             `;
-        }).join('');
+        } else {
+            const filteredFoods = getAllFoods().filter(f =>
+                (state.selectedCat === 'none' || f.cat === state.selectedCat) &&
+                (!q || f.name.toLowerCase().includes(q))
+            );
 
+            if (filteredFoods.length === 0) {
+                foodBankEl.innerHTML = `<div style="text-align:center; padding:16px; color:var(--text-muted); font-size:12px;">موردی پیدا نشد رفیق! می‌تونی با دکمه «+ خوراکی سفارشی» خودت اضافش کنی.</div>`;
+            } else {
+                foodBankEl.innerHTML = filteredFoods.map(f => {
+                    const unitKeys = Object.keys(f.units);
+                    const firstUnit = unitKeys[0];
+                    const defaultCal = Math.round(f.cal100 * (f.units[firstUnit] / 100));
+                    const unitOptions = unitKeys.map(u => `<option value="${u}">${u} (${toFa(f.units[u])})</option>`).join('');
+                    return `
+                        <div class="food-bank-item">
+                            <div>
+                                <div style="font-size:13px; font-weight:800;">${f.name}</div>
+                                <div style="font-size:11px; color:var(--text-muted);">
+                                    هر ${firstUnit}: <strong style="color:var(--primary);">${toFa(defaultCal)} کالری</strong>
+                                </div>
+                            </div>
+                            <div class="bank-add-controls">
+                                <input type="number" id="qty_${f.id}" class="qty-input" value="1" min="0.25" step="any" style="width:52px;">
+                                <select id="unit_${f.id}" class="unit-select">${unitOptions}</select>
+                                <button class="add-food-btn" onclick="addFoodFromBank('${f.id}')">+ ثبت</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        // رندر تاریخچه
         const dates = Object.keys(state.daysLog).filter(d => calcDayTotals(d).count > 0 || (state.daysLog[d].waterGlasses > 0)).sort((a, b) => b.localeCompare(a));
         const monthSel = document.getElementById('historyMonthFilter');
         const curM = monthSel.value || 'all';
@@ -1488,7 +1597,13 @@
     document.getElementById('nextDayBtn').addEventListener('click', () => { const d = parseISO(state.selectedDate); d.setDate(d.getDate() + 1); state.selectedDate = getLocalISODate(d); renderAll(); });
     document.getElementById('jumpTodayBtn').addEventListener('click', () => { state.selectedDate = getLocalISODate(new Date()); renderAll(); });
     document.getElementById('gregorianDatePicker').addEventListener('change', (e) => { if (e.target.value) { state.selectedDate = e.target.value; renderAll(); } });
-    document.getElementById('themeToggleBtn').addEventListener('click', () => { state.theme = state.theme === 'dark' ? 'light' : 'dark'; renderAll(); });
+
+    // دکمه تغییر دستی تم (اگر کاربر دستی زد، ذخیره می‌شود)
+    document.getElementById('themeToggleBtn').addEventListener('click', () => {
+        state.theme = state.theme === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('bodymod_user_theme', state.theme);
+        renderAll();
+    });
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -1632,10 +1747,12 @@
         const scale = 100 / baseGram;
         state.customFoods.unshift(createFood('custom_' + Date.now(), name, 'custom', Math.round(cal * scale), +(prot * scale).toFixed(1), +(carb * scale).toFixed(1), +(fat * scale).toFixed(1), { [unitName]: baseGram, '۱۰۰ گرم': 100, 'گرم': 1 }));
         document.getElementById('customFoodModal').classList.remove('open');
+        state.selectedCat = 'custom';
         renderAll(); syncToCloudflare();
     });
 
     loadState();
+    fetchLiveBetaStatus();
     window.addEventListener('load', initGoogleAuthButton);
     renderAll();
 </script>
