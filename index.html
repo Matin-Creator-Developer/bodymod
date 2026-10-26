@@ -360,15 +360,42 @@
             border-radius: 14px; padding: 12px; margin: 12px 0; font-size: 12px; line-height: 1.7;
         }
 
+        /* فوتر سایبرپانکی با جایگاه رسمی اینماد و گیت‌هاب پیجز */
         .app-footer {
             margin-top: 24px; padding: 18px 14px; background: var(--bg-card);
             border: 1px solid var(--border-color); border-top: 2px solid var(--primary);
             border-radius: var(--radius-lg); text-align: center; box-shadow: var(--shadow);
         }
 
+        .footer-badges-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .enamad-box {
+            background: #ffffff;
+            padding: 6px 10px;
+            border-radius: 14px;
+            border: 1px solid var(--border-color);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        .enamad-box img {
+            max-height: 68px;
+            width: auto;
+            display: block;
+        }
+
         .github-pages-badge {
-            display: inline-flex; align-items: center; gap: 8px; margin-top: 10px;
-            padding: 6px 14px; background: #24292f; color: #ffffff; border-radius: 999px;
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 8px 14px; background: #24292f; color: #ffffff; border-radius: 999px;
             font-size: 12px; font-weight: 700; text-decoration: none;
             border: 1px solid rgba(255, 255, 255, 0.15); direction: ltr;
         }
@@ -589,7 +616,7 @@
             <div id="loggedItemsContainer"></div>
         </div>
 
-        <!-- جستجوی هوشمند بانک غذا (مخفی تا زمان سرچ) -->
+        <!-- جستجوی هوشمند بانک غذا -->
         <div class="card">
             <div class="card-header">
                 <div class="card-title">🔍 جستجوی خوراکی (۱۶۰+ غذای ایرانی)</div>
@@ -735,7 +762,9 @@
         </div>
     </div>
 
-    <!-- فوتر سایبرپانکی + نشان رسمی Hosted on GitHub Pages -->
+    <!-- ==========================================================================
+         فوتر سایبرپانکی + لوگوی رسمی اینماد + نشان Hosted on GitHub Pages
+         ========================================================================== -->
     <footer class="app-footer">
         <div style="font-size:14px; font-weight:900; color:var(--primary); margin-bottom:4px;">
             ⚡ BodyMod | بادی‌مود: بدن مود شده
@@ -744,12 +773,22 @@
             طراحی و توسعه توسط <strong>Matin Mohammadi</strong> — تمامی حقوق محفوظ است © ۲۰۲۶
         </div>
 
-        <a href="https://github.com/Matin-Creator-Developer/bodymod" target="_blank" rel="noopener" class="github-pages-badge">
-            <svg height="18" width="18" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
-            </svg>
-            <span>Hosted on <strong>GitHub Pages</strong></span>
-        </a>
+        <div class="footer-badges-row">
+            <!-- نماد اعتماد الکترونیکی (اینماد رسمی متین محمدی) -->
+            <div class="enamad-box">
+                <a referrerpolicy='origin' target='_blank' href='https://trustseal.enamad.ir/?id=8343989&Code=40zScmgKCCjZYabK6Vv5ClA1QAUcDim5'>
+                    <img referrerpolicy='origin' src='https://trustseal.enamad.ir/logo.aspx?id=8343989&Code=40zScmgKCCjZYabK6Vv5ClA1QAUcDim5' alt='نماد اعتماد الکترونیکی بادی‌مود' style='cursor:pointer' code='40zScmgKCCjZYabK6Vv5ClA1QAUcDim5'>
+                </a>
+            </div>
+
+            <!-- نشان رسمی میزبانی روی GitHub Pages -->
+            <a href="https://github.com/Matin-Creator-Developer/bodymod" target="_blank" rel="noopener" class="github-pages-badge">
+                <svg height="18" width="18" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+                <span>Hosted on <strong>GitHub Pages</strong></span>
+            </a>
+        </div>
     </footer>
 
 </div>
@@ -781,9 +820,7 @@
     </div>
 </div>
 
-<!-- ==========================================================================
-     مودال مرحله ۱: ورود تمیز با دکمه رسمی گوگل + شماره موبایل بله
-     ========================================================================== -->
+<!-- مودال مرحله ۱: ورود تمیز با دکمه رسمی گوگل + شماره موبایل بله -->
 <div class="modal-backdrop" id="authModal">
     <div class="modal-box">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -795,7 +832,7 @@
             اول با گوگل یا شماره موبایل اکانت «بله» وارد شو؛ بلافاصله بعدش مشخصات بدنت و هدفت رو می‌گیریم تا پروفایلت توی کلودفلر ساخته بشه!
         </p>
 
-        <!-- ۱. دکمه رسمی خود گوگل (تک و مرتب) -->
+        <!-- ۱. دکمه رسمی خود گوگل -->
         <div id="googleButtonContainer" style="display:flex; justify-content:center; margin:14px 0;"></div>
 
         <!-- ۲. ورود با شماره موبایل در پیام‌رسان بله -->
@@ -822,9 +859,7 @@
     </div>
 </div>
 
-<!-- ==========================================================================
-     مودال مرحله ۲ (اجباری پس از ورود): تکمیل اطلاعات بدن، شهر، هدف و تایید قوانین
-     ========================================================================== -->
+<!-- مودال مرحله ۲ (اجباری پس از ورود): تکمیل اطلاعات بدن، شهر، هدف و تایید قوانین -->
 <div class="modal-backdrop" id="onboardingModal">
     <div class="modal-box">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
@@ -957,9 +992,6 @@
 </div>
 
 <script>
-    /* ==========================================================================
-       تنظیمات سرور کلودفلر و کلاینت آیدی گوگل متین عزیز
-       ========================================================================== */
     const WORKER_BASE_URL = "https://matin-creator-developer.workers.dev";
     const GOOGLE_CLIENT_ID = "308314086801-gb47cnlqkrpf9v42j1ptt82cg8gqr10a.apps.googleusercontent.com";
 
@@ -1142,7 +1174,7 @@
         createFood('b_lavash', 'نان لواش / تافتون / تست', 'bread', 275, 8.6, 56.0, 1.5, { 'ورق': 30, 'کف دست': 20, '۱۰۰ گرم': 100 })
     ];
 
-    const STORAGE_KEY = 'bodymod_web_clean_v5';
+    const STORAGE_KEY = 'bodymod_web_clean_v6';
     const todayISO = getLocalISODate(new Date());
 
     const getInitialTheme = () => {
@@ -1345,7 +1377,6 @@
         alert(`دمت گرم ${nickname} عزیز از ${city}! 🎉\nپرونده‌ات در دیتابیس کلودفلر ثبت شد.\n⚡ هدف روزانه: ${toFa(targetCal)} کالری | 💧 آب: ${toFa(state.goals.waterGlasses)} لیوان`);
     });
 
-    // ورود رسمی با گوگل (تک دکمه استاندارد)
     window.handleGoogleCredentialResponse = async (response) => {
         const payload = parseJwt(response.credential);
         if (!payload) return;
@@ -1677,7 +1708,6 @@
     document.getElementById('foodSearchInput').addEventListener('input', renderAll);
     document.getElementById('historyMonthFilter').addEventListener('change', renderAll);
 
-    // ارسال کد تایید فقط به شماره موبایل بله
     document.getElementById('sendBaleOtpBtn').addEventListener('click', async () => {
         const phone = document.getElementById('balePhoneInput').value.trim();
         if (!phone || !/^09\d{9}$/.test(phone)) {
