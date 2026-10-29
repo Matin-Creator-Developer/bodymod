@@ -1,0 +1,51 @@
+name: Build Android APK
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'app.html'
+      - '.github/workflows/build-apk.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Java (Android SDK needs it)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Install Cordova
+        run: npm install -g cordova
+
+      - name: Create App Container
+        run: |
+          # ساخت یه پروژه اندرویدی خالی
+          cordova create bodymod-app com.matin.bodymod "BodyMod"
+          # پاک کردن فایل‌های پیش‌فرض و تزریق فایل app.html تو
+          rm -rf bodymod-app/www/*
+          cp app.html bodymod-app/www/index.html
+
+      - name: Build APK (Compiling)
+        working-directory: ./bodymod-app
+        run: |
+          cordova platform add android
+          cordova build android
+
+      - name: Upload APK for Download
+        uses: actions/upload-artifact@v4
+        with:
+          name: bodymod-app-debug
+          path: bodymod-app/platforms/android/app/build/outputs/apk/debug/app-debug.apk
