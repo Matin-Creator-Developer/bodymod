@@ -40,6 +40,7 @@
             --carbs: #f59e0b;
             --fat: #ec4899;
             --success: #10b981;
+            --warning: #f59e0b;
             --danger: #ef4444;
             --shadow: 0 6px 24px -4px rgba(15, 23, 42, 0.07);
             --radius-lg: 20px;
@@ -216,7 +217,7 @@
             direction: ltr;
         }
 
-        /* هدر وب‌سایت (بدون آیکون وضعیت اینترنت) */
+        /* هدر وب‌سایت (بدون آیکون وای‌فای) */
         .app-header {
             display: flex;
             align-items: center;
@@ -302,6 +303,41 @@
             font-weight: 900;
             cursor: pointer;
             white-space: nowrap;
+        }
+
+        /* کادر استاندارد شماره موبایل با پیش‌وند ثابت 0 */
+        .phone-input-wrapper {
+            display: flex;
+            align-items: center;
+            direction: ltr;
+            background: var(--bg-muted);
+            border: 1.5px solid var(--border-color);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .phone-input-wrapper:focus-within {
+            border-color: var(--primary);
+        }
+        .phone-zero-prefix {
+            background: var(--bg-card);
+            color: var(--primary);
+            font-weight: 900;
+            font-size: 14px;
+            padding: 9px 12px;
+            border-right: 1px solid var(--border-color);
+            user-select: none;
+        }
+        .phone-input-field {
+            border: none !important;
+            background: transparent !important;
+            flex: 1;
+            padding: 9px 10px;
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--text-main);
+            outline: none;
+            text-align: left;
+            letter-spacing: 1px;
         }
 
         /* منوی همبرگری کشویی */
@@ -732,7 +768,7 @@
     <div class="compact-beta-bar">
         <div>
             <strong style="color:var(--accent);">🎟️ ظرفیت اشتراک بتا:</strong>
-            <span id="liveBetaCapacityText" style="font-weight:800;">در حال استعلام...</span>
+            <span id="liveBetaCapacityText" style="font-weight:800;">۱۰۰۰ از ۱۰۰۰ نفر</span>
             <span style="margin: 0 4px; color:var(--border-color);">|</span>
             <span style="color:var(--primary); font-weight:800;">هوش مصنوعی ویژه اپلیکیشن اندروید</span>
         </div>
@@ -1021,7 +1057,7 @@
 
 </div>
 
-<!-- مودال ورود -->
+<!-- مودال ورود (با پیش‌وند ثابت 0 برای شماره موبایل و ایگنور خودکار 0 اضافی) -->
 <div class="modal-backdrop" id="authModal">
     <div class="modal-box">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
@@ -1030,23 +1066,25 @@
         </div>
 
         <p style="font-size:11px; color:var(--text-muted); margin-bottom:12px;">
-            با گوگل یا شماره موبایل اکانت «بله» وارد شو تا اطلاعاتت بین سایت و اپلیکیشن اندروید سینک بشه!
+            با شماره موبایل اکانت «بله» یا حساب گوگل وارد شو تا اطلاعاتت بین سایت و اپلیکیشن اندروید سینک بشه!
         </p>
 
-        <div id="googleButtonContainer" style="display:flex; justify-content:center; margin:12px 0;"></div>
-
-        <div style="border-top:1px dashed var(--border-color); padding-top:12px; margin-top:10px;">
+        <!-- بخش ورود با شماره موبایل بله (با پیش‌وند ثابت 0) -->
+        <div style="margin-bottom:14px;">
             <div style="font-size:12px; font-weight:800; color:var(--primary); margin-bottom:8px;">
-                💬 ورود با شماره موبایل (از طریق ربات «بله»):
+                💬 ورود سریع با شماره موبایل (از طریق ربات «بله»):
             </div>
             <div class="form-grid">
                 <div class="form-group full">
-                    <label class="form-label">شماره موبایل اکانت بله *</label>
-                    <input type="tel" inputmode="numeric" id="balePhoneInput" class="form-control" placeholder="09058586834" dir="ltr" style="text-align:left;">
+                    <label class="form-label">شماره موبایل اکانت بله (بدون صفر اول) *</label>
+                    <div class="phone-input-wrapper">
+                        <span class="phone-zero-prefix">0</span>
+                        <input type="tel" inputmode="numeric" maxlength="10" id="balePhoneInput" class="phone-input-field" placeholder="9xxxxxxxxx">
+                    </div>
                 </div>
                 <div class="form-group full" id="baleOtpGroup" style="display:none;">
-                    <label class="form-label">کد تایید ۶ رقمی بله *</label>
-                    <input type="tel" inputmode="numeric" id="baleOtpInput" class="form-control" placeholder="123456" dir="ltr" style="text-align:center;">
+                    <label class="form-label">کد تایید ۶ رقمی ارسال شده در بله *</label>
+                    <input type="tel" inputmode="numeric" maxlength="6" id="baleOtpInput" class="form-control" placeholder="------" dir="ltr" style="text-align:center; font-size:16px; letter-spacing:4px;">
                 </div>
             </div>
             <div style="display:flex; gap:8px;">
@@ -1054,6 +1092,12 @@
                 <button class="btn-primary" id="verifyBaleOtpBtn" style="flex:1; display:none; background:var(--success);">✅ تایید و ادامه</button>
                 <button class="nav-arrow-btn" id="logoutBtn" style="display:none; color:var(--danger);">خروج</button>
             </div>
+        </div>
+
+        <!-- بخش ورود با گوگل -->
+        <div style="border-top:1px dashed var(--border-color); padding-top:12px; text-align:center;">
+            <div style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">یا ورود با حساب گوگل:</div>
+            <div id="googleButtonContainer" style="display:flex; justify-content:center; margin:6px 0;"></div>
         </div>
     </div>
 </div>
@@ -1167,6 +1211,7 @@
     const GOOGLE_CLIENT_ID = "308314086801-gb47cnlqkrpf9v42j1ptt82cg8gqr10a.apps.googleusercontent.com";
 
     const toFa = (n) => (n === null || n === undefined) ? '۰' : String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+    const toEnDigits = (s) => String(s || '').replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
     const getLocalISODate = (d = new Date()) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
     const parseISO = (s) => {
         if (!s || !s.includes('-')) return new Date();
@@ -1190,6 +1235,27 @@
         if (diff === -1) return 'دیروز';
         if (diff === 1) return 'فردا';
         return diff < -1 ? `${toFa(Math.abs(diff))} روز قبل` : `${toFa(diff)} روز بعد`;
+    };
+
+    /* ==========================================================================
+       فیلتر هوشمند کادر شماره موبایل: حذف خودکار صفر اول و شروع اجباری از 9
+       ========================================================================== */
+    const balePhoneInputEl = document.getElementById('balePhoneInput');
+    balePhoneInputEl.addEventListener('input', (e) => {
+        let val = toEnDigits(e.target.value).replace(/\D/g, '');
+        if (val.startsWith('98')) val = val.slice(2);
+        while (val.startsWith('0')) {
+            val = val.slice(1);
+        }
+        if (val.length > 0 && !val.startsWith('9')) {
+            val = '';
+        }
+        e.target.value = val.slice(0, 10);
+    });
+
+    const getFormattedFullPhone = () => {
+        const raw10 = toEnDigits(balePhoneInputEl.value).replace(/\D/g, '');
+        return raw10.length === 10 && raw10.startsWith('9') ? ('0' + raw10) : '';
     };
 
     window.openModalById = (id) => {
@@ -1217,7 +1283,7 @@
         el.textContent = msg;
         el.classList.add('show');
         clearTimeout(toastTimer);
-        toastTimer = setTimeout(() => el.classList.remove('show'), 3800);
+        toastTimer = setTimeout(() => el.classList.remove('show'), 4000);
     };
 
     /* تضمین حداقل ۲.۵ ثانیه نمایش لودینگ حرکت شنا */
@@ -1289,7 +1355,7 @@
         createFood('b_sangak', 'نان سنگک / بربری / لواش', 'bread', 265, 8.5, 54.0, 1.4, U_BREAD)
     ];
 
-    const STORAGE_KEY = 'bodymod_web_official_v5';
+    const STORAGE_KEY = 'bodymod_web_official_v6';
     const getInitialTheme = () => {
         try {
             const saved = localStorage.getItem('bodymod_user_theme');
@@ -1415,7 +1481,7 @@
                 badge.textContent = '☁️ سینک ابری فعال';
             }
         } catch {
-            badge.textContent = '💾 ذخیره در مرورگر';
+            badge.textContent = '⚠️ کلودفلر مسدود (ذخیره در مرورگر)';
         } finally {
             if (showLoader) hidePushupLoader();
         }
@@ -1424,7 +1490,7 @@
     const fetchLiveBetaStatus = async () => {
         const textEl = document.getElementById('liveBetaCapacityText');
         try {
-            const res = await fetch(`${WORKER_BASE_URL}/api/beta/status`);
+            const res = await fetch(`${WORKER_BASE_URL}/api/beta/status?_t=${Date.now()}`);
             if (!res.ok) throw new Error();
             const data = await res.json();
             textEl.textContent = `${toFa(data.remaining)} از ${toFa(data.totalCapacity)} نفر باقی‌مانده`;
@@ -1469,12 +1535,12 @@
     document.getElementById('submitOnboardingBtn').addEventListener('click', async () => {
         const nickname = document.getElementById('obName').value.trim();
         const city = document.getElementById('obCity').value.trim();
-        const bDay = parseInt(document.getElementById('obBirthDay').value);
-        const bMonth = parseInt(document.getElementById('obBirthMonth').value);
-        const bYear = parseInt(document.getElementById('obBirthYear').value);
+        const bDay = parseInt(toEnDigits(document.getElementById('obBirthDay').value));
+        const bMonth = parseInt(toEnDigits(document.getElementById('obBirthMonth').value));
+        const bYear = parseInt(toEnDigits(document.getElementById('obBirthYear').value));
         const gender = document.getElementById('obGender').value;
-        const height = parseFloat(document.getElementById('obHeight').value);
-        const weight = parseFloat(document.getElementById('obWeight').value);
+        const height = parseFloat(toEnDigits(document.getElementById('obHeight').value));
+        const weight = parseFloat(toEnDigits(document.getElementById('obWeight').value));
         const activity = parseFloat(document.getElementById('obActivity').value) || 1.55;
         const goalMode = document.getElementById('obGoalMode').value;
         const termsAccepted = document.getElementById('obTermsAccept').checked;
@@ -1520,6 +1586,7 @@
             try {
                 google.accounts.id.initialize({
                     client_id: GOOGLE_CLIENT_ID,
+                    ux_mode: 'popup',
                     callback: async (response) => {
                         const base64 = response.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
                         const payload = JSON.parse(decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')));
@@ -1537,9 +1604,9 @@
     };
 
     document.getElementById('sendBaleOtpBtn').addEventListener('click', async () => {
-        const phone = document.getElementById('balePhoneInput').value.trim();
-        if (!phone || !/^09\d{9}$/.test(phone)) {
-            showToast('شماره موبایل ۱۱ رقمی معتبر وارد کن رفیق! 📱');
+        const fullPhone = getFormattedFullPhone();
+        if (!fullPhone) {
+            showToast('شماره موبایلت رو از 9 وارد کن (مثلاً 914xxxxxxx)! 📱');
             return;
         }
 
@@ -1548,7 +1615,7 @@
             const res = await fetch(`${WORKER_BASE_URL}/api/auth/bale/send-otp`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone })
+                body: JSON.stringify({ phone: fullPhone })
             });
             const data = await res.json();
             hidePushupLoader(() => {
@@ -1562,21 +1629,21 @@
                 showToast('کد تایید ۶ رقمی به پیام‌رسان «بله» ارسال شد! 📲');
             });
         } catch {
-            hidePushupLoader(() => showToast('خطا در ارتباط با سرور کلودفلر!'));
+            hidePushupLoader(() => showToast('⚠️ سرور کلودفلر روی خطت مسدوده! فیلترشکنت رو روشن کن رفیق.'));
         }
     });
 
     document.getElementById('verifyBaleOtpBtn').addEventListener('click', async () => {
-        const phone = document.getElementById('balePhoneInput').value.trim();
-        const code = document.getElementById('baleOtpInput').value.trim();
-        if (!phone || !code) { showToast('کد ۶ رقمی رو وارد کن رفیق!'); return; }
+        const fullPhone = getFormattedFullPhone();
+        const code = toEnDigits(document.getElementById('baleOtpInput').value).trim();
+        if (!fullPhone || !code) { showToast('کد ۶ رقمی رو وارد کن رفیق!'); return; }
 
         showPushupLoader('درحال تمرین... (بررسی کد تایید)');
         try {
             const res = await fetch(`${WORKER_BASE_URL}/api/auth/bale/verify-otp`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone, code })
+                body: JSON.stringify({ phone: fullPhone, code })
             });
             const data = await res.json();
             hidePushupLoader(async () => {
@@ -1589,13 +1656,13 @@
                     state.vipExpiresAt = data.user.vipExpiresAt ?? state.vipExpiresAt;
                     if (data.user.userProfile) state.userProfile = { ...state.userProfile, ...data.user.userProfile };
                 }
-                state.authUser = { email: '', phone, loggedIn: true };
+                state.authUser = { email: '', phone: fullPhone, loggedIn: true };
                 closeModalById('authModal');
                 if (!state.userProfile.profileCompleted) openOnboardingModal(false);
                 else { await syncToCloudflare(false); renderAll(); }
             });
         } catch {
-            hidePushupLoader(() => showToast('خطا در ارتباط با سرور!'));
+            hidePushupLoader(() => showToast('⚠️ ارتباط با کلودفلر برقرار نشد! فیلترشکن رو بررسی کن.'));
         }
     });
 

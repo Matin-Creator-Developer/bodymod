@@ -1,49 +1,95 @@
-name: Build Android APK
+name: Build BodyMod Official Android APK
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - 'app.html'
-      - '.github/workflows/build-apk.yml'
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: ubuntu-24.04
+  build-android:
+    runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
+      - name: 📥 دریافت کدهای پروژه از ریپازیتوری
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: ☕ نصب جاوا (JDK 17)
+        uses: actions/setup-java@v4
         with:
-          node-version: '24'
-
-      - name: Setup Java
-        uses: actions/setup-java@v5
-        with:
-          distribution: 'zulu'
+          distribution: 'temurin'
           java-version: '17'
 
-      - name: Install Cordova
-        run: npm install -g cordova
+      - name: 🤖 راه‌اندازی Android SDK رسمی گوگل
+        uses: android-actions/setup-android@v3
 
-      - name: Create App Container
+      - name: 🛠️ نصب ابزارهای Build-Tools و پلتفرم اندروید ۳۴
         run: |
-          cordova create bodymod-app com.matin.bodymod "BodyMod"
-          rm -rf bodymod-app/www/*
-          cp app.html bodymod-app/www/index.html
+          yes | sdkmanager --licenses || true
+          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
-      - name: Build APK
-        working-directory: ./bodymod-app
+      - name: 🟢 نصب Node.js و Apache Cordova
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📦 ساخت پروژه نیتیو اندروید BodyMod
         run: |
-          cordova platform add android
-          cordova build android
+          npm install -g cordova
+          cordova create bodymod_native ir.matinmohammadi.bodymod "BodyMod"
+          cd bodymod_native
 
-      - name: Upload APK
+          rm -rf www/*
+          if [ -f "../app.html" ]; then
+            cp ../app.html www/index.html
+          else
+            cp ../index.html www/index.html
+          fi
+
+          if [ -f "../icon.png" ]; then
+            cp ../icon.png ./icon.png
+          fi
+
+          cat << 'EOF' > config.xml
+          <?xml version='1.0' encoding='utf-8'?>
+          <widget id="ir.matinmohammadi.bodymod" version="1.0.2" android-versionCode="3" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android">
+              <name>BodyMod</name>
+              <description>سوپراپلیکیشن کالری‌شمار و تناسب اندام هوشمند بادی‌مود</description>
+              <author email="diaperloveradultbaby5@gmail.com" href="https://bodymod.matin-mohammadi.ir">Matin Mohammadi</author>
+              <content src="index.html" />
+              <access origin="*" />
+              <allow-intent href="http://*/*" />
+              <allow-intent href="https://*/*" />
+              <allow-navigation href="*" />
+              <preference name="Scheme" value="https" />
+              <preference name="Hostname" value="localhost" />
+              <preference name="MixedContentMode" value="0" />
+              <preference name="DisallowOverscroll" value="true" />
+              <preference name="AndroidPersistentFileLocation" value="Compatibility" />
+              <platform name="android">
+                  <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
+                      <application android:usesCleartextTraffic="true" />
+                  </edit-config>
+              </platform>
+          </widget>
+          EOF
+
+          cordova platform add android@13.0.0
+          cordova build android --release -- --packageType=apk
+
+      - name: 🔐 ساخت کلید امضای دیجیتال رسمی (Keystore) و امضای APK
+        run: |
+          cd bodymod_native/platforms/android/app/build/outputs/apk/release
+          
+          keytool -genkey -v -keystore bodymod-release.keystore -alias bodymod_key -keyalg RSA -keysize 2048 -validity 10000 -storepass MatinBodyMod2026 -keypass MatinBodyMod2026 -dname "CN=Matin Mohammadi, OU=BodyMod, O=MatinCreator, L=Urmia, S=WestAzerbaijan, C=IR"
+          
+          $ANDROID_HOME/build-tools/34.0.0/zipalign -v -p 4 app-release-unsigned.apk BodyMod-v1.0.2-Aligned.apk
+          $ANDROID_HOME/build-tools/34.0.0/apksigner sign --ks bodymod-release.keystore --ks-key-alias bodymod_key --ks-pass pass:MatinBodyMod2026 --key-pass pass:MatinBodyMod2026 --out BodyMod-Official-Market.apk BodyMod-v1.0.2-Aligned.apk
+
+      - name: 🎁 خروجی گرفتن فایل APK آماده نصب
         uses: actions/upload-artifact@v4
         with:
-          name: bodymod-app-debug
-          path: bodymod-app/platforms/android/app/build/outputs/apk/debug/app-debug.apk
+          name: BodyMod-Android-Package
+          path: |
+            bodymod_native/platforms/android/app/build/outputs/apk/release/BodyMod-Official-Market.apk
+            bodymod_native/platforms/android/app/build/outputs/apk/release/bodymod-release.keystore
+
