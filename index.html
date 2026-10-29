@@ -3,20 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BodyMod | بادی‌مود: بدن مود شده</title>
+    <title>BodyMod | وب‌اپلیکیشن رسمی بادی‌مود: بدن مود شده</title>
     <!-- اسکریپت رسمی ورود با گوگل -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
-    <!-- تشخیص فوری تم گوشی کاربر (دارک/لایت) -->
+    <!-- تشخیص فوری تم سیستم کاربر (دارک/لایت) -->
     <script>
         (function() {
-            const savedTheme = localStorage.getItem('bodymod_user_theme');
-            if (savedTheme) {
-                document.documentElement.setAttribute('data-theme', savedTheme);
-            } else {
-                const isSystemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-                document.documentElement.setAttribute('data-theme', isSystemDark ? 'dark' : 'light');
-            }
+            try {
+                const savedTheme = localStorage.getItem('bodymod_user_theme');
+                if (savedTheme) {
+                    document.documentElement.setAttribute('data-theme', savedTheme);
+                } else {
+                    const isSystemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    document.documentElement.setAttribute('data-theme', isSystemDark ? 'dark' : 'light');
+                }
+            } catch (e) {}
         })();
     </script>
 
@@ -60,59 +62,246 @@
             --shadow: 0 10px 32px -5px rgba(0, 0, 0, 0.65);
         }
 
-        * {
+        *, *::before, *::after {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            max-width: 100%;
             font-family: system-ui, -apple-system, 'Segoe UI', Tahoma, sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
 
-        body {
+        html, body {
+            width: 100%;
+            overflow-x: hidden;
             background-color: var(--bg-main);
             color: var(--text-main);
             line-height: 1.65;
             padding-bottom: 30px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
             transition: background-color 0.25s, color 0.25s;
         }
 
-        .container { max-width: 760px; margin: 0 auto; padding: 12px; }
+        /* قفل اسکرول صفحه پشتی هنگام باز بودن پاپ‌آپ */
+        body.modal-open {
+            overflow: hidden !important;
+        }
 
-        /* هدر مینیمال با منوی همبرگری */
+        .container {
+            width: 100%;
+            max-width: 740px;
+            margin: 0 auto;
+            padding: 10px;
+            overflow-x: hidden;
+        }
+
+        /* ==========================================================================
+           ۱. انیمیشن لودینگ انسان در حال حرکت شنا (حداقل ۲.۵ ثانیه نمایش)
+           ========================================================================== */
+        .pushup-loader-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(7, 10, 18, 0.95);
+            backdrop-filter: blur(8px);
+            z-index: 5000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+        .pushup-loader-overlay.active { display: flex; }
+
+        .pushup-stage {
+            width: 200px;
+            height: 120px;
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            margin-bottom: 14px;
+        }
+
+        .pushup-floor {
+            position: absolute;
+            bottom: 8px;
+            width: 170px;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, var(--primary), var(--accent), transparent);
+            border-radius: 99px;
+            box-shadow: 0 0 14px var(--primary);
+        }
+
+        .pushup-body-group {
+            transform-origin: 35px 88px;
+            animation: pushupMotion 1.1s ease-in-out infinite;
+        }
+
+        .pushup-upper-arm {
+            animation: armBend 1.1s ease-in-out infinite;
+            transform-origin: 135px 52px;
+        }
+
+        @keyframes pushupMotion {
+            0%, 100% { transform: rotate(0deg) translateY(0px); }
+            50% { transform: rotate(14deg) translateY(12px); }
+        }
+
+        @keyframes armBend {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(-22deg); }
+        }
+
+        .pushup-title {
+            font-size: 16px;
+            font-weight: 900;
+            color: #00f5d4;
+            text-shadow: 0 0 12px rgba(0, 245, 212, 0.4);
+            animation: pulseText 1.2s infinite;
+        }
+
+        @keyframes pulseText {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.55; }
+        }
+
+        /* نوتیفیکیشن داخلی */
+        .cyber-toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(120px);
+            background: #0f1626;
+            color: #ffffff;
+            border: 1.5px solid var(--primary);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.65);
+            padding: 12px 18px;
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 800;
+            z-index: 6000;
+            width: 92%;
+            max-width: 420px;
+            text-align: center;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .cyber-toast.show { transform: translateX(-50%) translateY(0); }
+
+        /* نوار کانال بله بالای وب‌سایت */
+        .bale-channel-bar {
+            background: linear-gradient(135deg, rgba(0, 180, 216, 0.14), rgba(114, 9, 183, 0.14));
+            border: 1px solid var(--primary);
+            border-radius: 14px;
+            padding: 9px 12px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .bale-link {
+            color: var(--primary);
+            text-decoration: none;
+            background: var(--bg-card);
+            padding: 4px 10px;
+            border-radius: 99px;
+            border: 1px solid var(--primary);
+            font-size: 11px;
+            direction: ltr;
+        }
+
+        /* هدر وب‌سایت (بدون آیکون وضعیت اینترنت) */
         .app-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             background: var(--bg-card);
-            padding: 12px 14px;
+            padding: 10px 12px;
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow);
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             border: 1px solid var(--border-color);
             border-bottom: 2px solid var(--primary);
-            position: sticky;
-            top: 8px;
-            z-index: 100;
+            gap: 8px;
         }
 
-        .header-right { display: flex; align-items: center; gap: 10px; }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+            flex: 1;
+        }
 
         .hamburger-btn {
-            width: 42px; height: 42px; border-radius: 12px;
-            background: var(--bg-muted); border: 1px solid var(--border-color);
-            color: var(--primary); display: flex; align-items: center;
-            justify-content: center; font-size: 22px; cursor: pointer;
+            width: 40px;
+            height: 40px;
+            flex-shrink: 0;
+            border-radius: 12px;
+            background: var(--bg-muted);
+            border: 1px solid var(--border-color);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
         }
 
-        .brand-title h1 { font-size: 15px; font-weight: 900; color: var(--primary); display: flex; align-items: center; gap: 6px; }
-        .greeting-line { font-size: 11px; font-weight: 700; color: var(--text-muted); }
-        .header-left { display: flex; align-items: center; gap: 8px; }
+        .brand-title { min-width: 0; flex: 1; }
+        .brand-title h1 {
+            font-size: 14px;
+            font-weight: 900;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        .greeting-line {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
 
         .auth-pill-btn {
             background: linear-gradient(135deg, var(--primary), #00bbf9);
-            color: #070a12; border: none; padding: 8px 14px;
-            border-radius: 999px; font-size: 12px; font-weight: 900;
-            cursor: pointer; box-shadow: 0 4px 12px var(--primary-glow);
+            color: #070a12;
+            border: none;
+            padding: 7px 12px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 900;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .coin-pill {
+            background: var(--bg-muted);
+            border: 1px solid var(--carbs);
+            color: var(--carbs);
+            padding: 5px 9px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 900;
+            cursor: pointer;
+            white-space: nowrap;
         }
 
         /* منوی همبرگری کشویی */
@@ -123,23 +312,23 @@
         .drawer-backdrop.open { display: block; }
 
         .side-drawer {
-            position: fixed; top: 0; right: -310px; width: 290px; height: 100vh;
+            position: fixed; top: 0; right: -310px; width: 285px; max-width: 85vw; height: 100vh;
             background: var(--bg-card); border-left: 2px solid var(--primary);
             box-shadow: -10px 0 35px rgba(0, 0, 0, 0.6); z-index: 1600;
-            padding: 18px 14px; display: flex; flex-direction: column;
-            justify-content: space-between; transition: right 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 16px 12px; display: flex; flex-direction: column;
+            justify-content: space-between; transition: right 0.28s ease;
             overflow-y: auto;
         }
         .side-drawer.open { right: 0; }
 
         .drawer-header {
             display: flex; align-items: center; justify-content: space-between;
-            padding-bottom: 14px; border-bottom: 1px dashed var(--border-color); margin-bottom: 12px;
+            padding-bottom: 12px; border-bottom: 1px dashed var(--border-color); margin-bottom: 10px;
         }
 
         .drawer-user-card {
             background: var(--bg-muted); border: 1px solid var(--border-color);
-            border-radius: 14px; padding: 12px; margin-bottom: 14px;
+            border-radius: 14px; padding: 12px; margin-bottom: 12px;
         }
 
         .drawer-nav-list { display: flex; flex-direction: column; gap: 6px; }
@@ -149,13 +338,12 @@
             width: 100%; padding: 11px 12px; border-radius: 12px;
             border: 1px solid transparent; background: transparent;
             color: var(--text-main); font-size: 13px; font-weight: 800;
-            cursor: pointer; text-align: right; transition: background 0.2s;
+            cursor: pointer; text-align: right;
         }
-        .drawer-item:hover { background: var(--bg-muted); }
         .drawer-item.active { background: var(--primary-glow); color: var(--primary); border-color: var(--primary); }
 
         .drawer-footer {
-            margin-top: 20px; padding-top: 12px;
+            margin-top: 16px; padding-top: 12px;
             border-top: 1px dashed var(--border-color);
             display: flex; flex-direction: column; gap: 8px;
         }
@@ -163,24 +351,25 @@
         .compact-beta-bar {
             background: var(--bg-card); border: 1px solid var(--border-color);
             border-right: 4px solid var(--accent); border-radius: 14px;
-            padding: 10px 14px; margin-bottom: 12px; display: flex;
+            padding: 10px 12px; margin-bottom: 10px; display: flex;
             align-items: center; justify-content: space-between;
-            flex-wrap: wrap; gap: 8px; font-size: 12px;
+            flex-wrap: wrap; gap: 8px; font-size: 11px;
         }
 
         .date-navigator {
-            background: var(--bg-card); border-radius: var(--radius-lg); padding: 12px 14px;
+            background: var(--bg-card); border-radius: var(--radius-lg); padding: 12px;
             margin-bottom: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color);
         }
 
-        .date-nav-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .date-nav-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
         .nav-arrow-btn {
             background: var(--bg-muted); border: 1px solid var(--border-color); color: var(--text-main);
-            padding: 7px 12px; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 700;
+            padding: 7px 10px; border-radius: 10px; cursor: pointer; font-size: 11px; font-weight: 800;
+            white-space: nowrap;
         }
 
-        .current-date-box { text-align: center; flex: 1; }
-        .shamsi-date-title { font-size: 14px; font-weight: 800; }
+        .current-date-box { text-align: center; flex: 1; min-width: 0; }
+        .shamsi-date-title { font-size: 13px; font-weight: 900; }
         .relative-day-pill {
             display: inline-block; margin-top: 2px; padding: 2px 10px; border-radius: 999px;
             font-size: 11px; font-weight: 800; background: var(--primary-glow); color: var(--primary);
@@ -189,66 +378,67 @@
         .date-nav-bottom {
             display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
             gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border-color);
-            font-size: 12px; color: var(--text-muted);
+            font-size: 11px; color: var(--text-muted);
         }
 
-        .tab-section { display: none; }
+        .tab-section { display: none; width: 100%; overflow-x: hidden; }
         .tab-section.active { display: block; }
 
         .card {
-            background: var(--bg-card); border-radius: var(--radius-lg); padding: 16px;
-            margin-bottom: 14px; box-shadow: var(--shadow); border: 1px solid var(--border-color);
+            background: var(--bg-card); border-radius: var(--radius-lg); padding: 14px;
+            margin-bottom: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color);
+            width: 100%; overflow: hidden;
         }
 
         .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
-        .card-title { font-size: 14px; font-weight: 800; display: flex; align-items: center; gap: 6px; }
+        .card-title { font-size: 13px; font-weight: 900; display: flex; align-items: center; gap: 6px; }
 
-        .dashboard-grid { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: center; }
-        @media (min-width: 540px) { .dashboard-grid { grid-template-columns: 185px 1fr; } }
+        .dashboard-grid { display: grid; grid-template-columns: 1fr; gap: 14px; align-items: center; }
+        @media (min-width: 540px) { .dashboard-grid { grid-template-columns: 175px 1fr; } }
 
         .ring-wrapper { display: flex; flex-direction: column; align-items: center; position: relative; }
-        .ring-svg { width: 150px; height: 150px; transform: rotate(-90deg); }
+        .ring-svg { width: 145px; height: 145px; transform: rotate(-90deg); }
         .ring-bg { fill: none; stroke: var(--bg-muted); stroke-width: 12; }
         .ring-progress { fill: none; stroke: var(--primary); stroke-width: 12; stroke-linecap: round; transition: stroke-dashoffset 0.4s ease; }
 
         .ring-center-text { position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
-        .ring-cal-num { font-size: 22px; font-weight: 900; color: var(--primary); }
+        .ring-cal-num { font-size: 21px; font-weight: 900; color: var(--primary); }
         .ring-cal-label { font-size: 11px; color: var(--text-muted); }
 
-        .calorie-diff-banner { margin-top: 8px; padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 800; }
+        .calorie-diff-banner { margin-top: 8px; padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 800; text-align: center; }
         .diff-under { background: var(--primary-glow); color: var(--primary); }
         .diff-over { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
         .diff-exact { background: var(--water-light); color: var(--water); }
 
-        .macros-bars { display: flex; flex-direction: column; gap: 10px; }
-        .macro-item { background: var(--bg-muted); padding: 10px 12px; border-radius: 12px; }
-        .macro-top { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; margin-bottom: 5px; }
+        .macros-bars { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+        .macro-item { background: var(--bg-muted); padding: 9px 11px; border-radius: 12px; }
+        .macro-top { display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; margin-bottom: 5px; }
         .progress-track { width: 100%; height: 8px; background: var(--border-color); border-radius: 999px; overflow: hidden; }
         .progress-fill { height: 100%; border-radius: 999px; transition: width 0.3s; }
 
         .water-card { border: 1px solid rgba(0, 187, 249, 0.4); background: linear-gradient(180deg, var(--bg-card) 0%, var(--water-light) 220%); }
-        .water-controls-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
-        .water-btns { display: flex; align-items: center; gap: 8px; }
-        .water-btn { background: var(--water); color: #070a12; border: none; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 900; cursor: pointer; }
+        .water-controls-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+        .water-btns { display: flex; align-items: center; gap: 6px; }
+        .water-btn { background: var(--water); color: #070a12; border: none; padding: 8px 12px; border-radius: 10px; font-size: 12px; font-weight: 900; cursor: pointer; }
         .water-btn.minus { background: var(--bg-muted); color: var(--text-main); border: 1px solid var(--border-color); }
 
         .glasses-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
         .glass-icon {
-            width: 34px; height: 38px; border-radius: 6px 6px 10px 10px;
+            width: 32px; height: 36px; border-radius: 6px 6px 10px 10px;
             border: 2px solid var(--water); display: flex; align-items: center;
-            justify-content: center; font-size: 14px; cursor: pointer; background: var(--bg-card);
+            justify-content: center; font-size: 13px; cursor: pointer; background: var(--bg-card);
         }
         .glass-icon.filled { background: var(--water); color: #070a12; }
 
         .water-edit-box {
-            display: flex; align-items: center; gap: 6px; font-size: 12px;
+            display: flex; align-items: center; gap: 6px; font-size: 11px;
             background: var(--bg-card); padding: 6px 10px; border-radius: 10px; border: 1px solid var(--border-color);
         }
 
-        .meals-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
+        .meals-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 12px; }
         .meal-tab {
-            padding: 8px 4px; border-radius: 10px; border: 1px solid var(--border-color);
-            background: var(--bg-muted); color: var(--text-muted); font-size: 12px; font-weight: 700;
+            padding: 8px 2px; border-radius: 10px; border: 1px solid var(--border-color);
+            background: var(--bg-muted); color: var(--text-muted); font-size: 11px; font-weight: 800;
             cursor: pointer; text-align: center;
         }
         .meal-tab.active { background: var(--primary-glow); color: var(--primary); border-color: var(--primary); }
@@ -259,52 +449,44 @@
             margin-bottom: 8px; flex-wrap: wrap; gap: 8px;
         }
 
-        .logged-controls { display: flex; align-items: center; gap: 6px; }
+        .logged-controls { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
         .qty-input {
-            width: 58px; padding: 6px; text-align: center; border-radius: 8px;
+            width: 54px; padding: 6px; text-align: center; border-radius: 8px;
             border: 1px solid var(--border-color); background: var(--bg-card);
             color: var(--text-main); font-size: 12px; font-weight: 700;
         }
 
         .unit-select {
             padding: 6px 8px; border-radius: 8px; border: 1px solid var(--border-color);
-            background: var(--bg-card); color: var(--text-main); font-size: 12px; font-weight: 700;
+            background: var(--bg-card); color: var(--text-main); font-size: 11px; font-weight: 700;
+            max-width: 145px; text-overflow: ellipsis;
         }
 
         .del-btn { background: rgba(239, 68, 68, 0.18); color: var(--danger); border: none; width: 28px; height: 28px; border-radius: 8px; cursor: pointer; font-weight: bold; }
 
         .search-input {
-            width: 100%; padding: 12px 14px; border-radius: 12px;
+            width: 100%; padding: 11px 12px; border-radius: 12px;
             border: 1px solid var(--primary); background: var(--bg-muted);
-            color: var(--text-main); font-size: 13px; margin-bottom: 10px; outline: none;
+            color: var(--text-main); font-size: 12px; margin-bottom: 10px; outline: none;
         }
 
         .cat-chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 10px; }
         .cat-chip {
-            padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border-color);
-            background: var(--bg-muted); color: var(--text-muted); font-size: 12px; font-weight: 700;
-            cursor: pointer; white-space: nowrap;
+            padding: 6px 11px; border-radius: 999px; border: 1px solid var(--border-color);
+            background: var(--bg-muted); color: var(--text-muted); font-size: 11px; font-weight: 800;
+            cursor: pointer; white-space: nowrap; flex-shrink: 0;
         }
         .cat-chip.active { background: var(--primary); color: #070a12; border-color: var(--primary); }
 
-        .food-bank-grid { display: flex; flex-direction: column; gap: 8px; max-height: 360px; overflow-y: auto; }
+        .food-bank-grid { display: flex; flex-direction: column; gap: 8px; max-height: 350px; overflow-y: auto; }
         .food-bank-item {
-            display: flex; align-items: center; justify-content: space-between; padding: 10px 12px;
+            display: flex; align-items: center; justify-content: space-between; padding: 10px;
             border-radius: 12px; background: var(--bg-muted); border: 1px solid var(--border-color);
             flex-wrap: wrap; gap: 8px;
         }
 
-        .bank-add-controls { display: flex; align-items: center; gap: 6px; }
-        .add-food-btn { background: var(--primary); color: #070a12; border: none; padding: 7px 12px; border-radius: 9px; font-size: 12px; font-weight: 900; cursor: pointer; }
-
-        .store-buttons-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-        .store-btn {
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-            padding: 12px 10px; border-radius: 14px; text-decoration: none;
-            font-size: 13px; font-weight: 900; cursor: pointer;
-        }
-        .store-btn.bazaar { background: linear-gradient(135deg, #10b981, #047857); color: #fff; }
-        .store-btn.myket { background: linear-gradient(135deg, #00bbf9, #0077b6); color: #fff; }
+        .bank-add-controls { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+        .add-food-btn { background: var(--primary); color: #070a12; border: none; padding: 7px 11px; border-radius: 9px; font-size: 11px; font-weight: 900; cursor: pointer; }
 
         .donate-banner {
             background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(247, 37, 133, 0.15));
@@ -313,56 +495,91 @@
         }
         .donate-btn {
             background: var(--carbs); color: #070a12; text-decoration: none;
-            padding: 9px 16px; border-radius: 12px; font-size: 12px; font-weight: 900;
+            padding: 9px 14px; border-radius: 12px; font-size: 12px; font-weight: 900;
+            text-align: center;
         }
 
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-        .form-group { display: flex; flex-direction: column; gap: 4px; }
-        .form-group.full { grid-column: span 2; }
-        .form-label { font-size: 12px; font-weight: 700; color: var(--text-muted); }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-bottom: 12px;
+            width: 100%;
+        }
+        @media (min-width: 480px) {
+            .form-grid { grid-template-columns: 1fr 1fr; }
+            .form-group.full { grid-column: span 2; }
+        }
+
+        .form-group { display: flex; flex-direction: column; gap: 4px; min-width: 0; width: 100%; }
+        .form-label { font-size: 11px; font-weight: 800; color: var(--text-muted); }
         .form-control {
-            padding: 9px 12px; border-radius: 10px; border: 1px solid var(--border-color);
-            background: var(--bg-muted); color: var(--text-main); font-size: 13px; font-weight: 600;
+            width: 100%;
+            min-width: 0;
+            padding: 9px 10px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-muted);
+            color: var(--text-main);
+            font-size: 12px;
+            font-weight: 700;
+            text-overflow: ellipsis;
         }
 
         .btn-primary {
             background: var(--primary); color: #070a12; border: none; padding: 10px 14px;
-            border-radius: 10px; font-size: 13px; font-weight: 900; cursor: pointer;
+            border-radius: 10px; font-size: 12px; font-weight: 900; cursor: pointer;
+            text-align: center;
         }
 
         .vip-trigger-btn {
             background: linear-gradient(135deg, var(--accent), #7209b7);
             color: white; border: none; padding: 7px 12px; border-radius: 999px;
-            font-size: 12px; font-weight: 800; cursor: pointer;
+            font-size: 11px; font-weight: 800; cursor: pointer;
         }
 
         .icon-btn {
             background: var(--bg-muted); border: 1px solid var(--border-color);
-            color: var(--text-main); width: 36px; height: 36px; border-radius: 10px;
-            display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px;
+            color: var(--text-main); width: 34px; height: 34px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 15px; flex-shrink: 0;
         }
 
+        /* سیستم ضد قفل کیبورد برای تمام پاپ‌آپ‌ها */
         .modal-backdrop {
-            position: fixed; inset: 0; background: rgba(7, 10, 18, 0.88);
-            backdrop-filter: blur(7px); display: none; align-items: center;
-            justify-content: center; z-index: 2000; padding: 14px;
+            position: fixed;
+            inset: 0;
+            background: rgba(7, 10, 18, 0.88);
+            backdrop-filter: blur(7px);
+            display: none;
+            align-items: flex-start;
+            justify-content: center;
+            z-index: 2000;
+            padding: 16px 12px 150px 12px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
         .modal-backdrop.open { display: flex; }
+
         .modal-box {
-            background: var(--bg-card); width: 100%; max-width: 480px;
-            border-radius: 22px; padding: 20px; border: 1px solid var(--primary);
+            background: var(--bg-card);
+            width: 100%;
+            max-width: 460px;
+            margin: auto 0;
+            border-radius: 20px;
+            padding: 18px 16px;
+            border: 1px solid var(--primary);
             box-shadow: 0 0 30px var(--primary-glow);
-            max-height: 92vh; overflow-y: auto;
+            overflow-x: hidden;
         }
 
         .privacy-terms-box {
             background: var(--bg-muted); border: 1px dashed var(--primary);
-            border-radius: 14px; padding: 12px; margin: 12px 0; font-size: 12px; line-height: 1.7;
+            border-radius: 14px; padding: 10px; margin: 10px 0; font-size: 11px; line-height: 1.7;
         }
 
-        /* فوتر سایبرپانکی با جایگاه رسمی اینماد و گیت‌هاب پیجز */
-        .app-footer {
-            margin-top: 24px; padding: 18px 14px; background: var(--bg-card);
+        /* فوتر رسمی وب‌سایت همراه با اینماد و بج GitHub Pages */
+        .site-footer {
+            margin-top: 22px; padding: 18px 14px; background: var(--bg-card);
             border: 1px solid var(--border-color); border-top: 2px solid var(--primary);
             border-radius: var(--radius-lg); text-align: center; box-shadow: var(--shadow);
         }
@@ -386,22 +603,49 @@
             justify-content: center;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
         }
+        .enamad-box img { max-height: 68px; width: auto; display: block; }
 
-        .enamad-box img {
-            max-height: 68px;
-            width: auto;
-            display: block;
-        }
-
-        .github-pages-badge {
-            display: inline-flex; align-items: center; gap: 8px;
-            padding: 8px 14px; background: #24292f; color: #ffffff; border-radius: 999px;
-            font-size: 12px; font-weight: 700; text-decoration: none;
-            border: 1px solid rgba(255, 255, 255, 0.15); direction: ltr;
+        .gh-pages-badge {
+            background: var(--bg-muted);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 800;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
     </style>
 </head>
 <body>
+
+<!-- ==========================================================================
+     ۱. صفحه لودینگ انسان در حال حرکت شنا (حداقل ۲.۵ ثانیه نمایش)
+     ========================================================================== -->
+<div class="pushup-loader-overlay" id="pushupLoader">
+    <div class="pushup-stage">
+        <div class="pushup-floor"></div>
+        <svg width="180" height="105" viewBox="0 0 180 105" fill="none">
+            <line x1="138" y1="86" x2="138" y2="56" stroke="#00f5d4" stroke-width="6" stroke-linecap="round"/>
+            <circle cx="138" cy="87" r="4" fill="#f72585"/>
+            <g class="pushup-body-group">
+                <line x1="32" y1="86" x2="85" y2="68" stroke="#00bbf9" stroke-width="7" stroke-linecap="round"/>
+                <line x1="85" y1="68" x2="136" y2="50" stroke="#00f5d4" stroke-width="8" stroke-linecap="round"/>
+                <circle cx="30" cy="87" r="5" fill="#f72585"/>
+                <circle cx="152" cy="44" r="11" fill="#0f1626" stroke="#00f5d4" stroke-width="4"/>
+                <line class="pushup-upper-arm" x1="136" y1="50" x2="138" y2="62" stroke="#f72585" stroke-width="6" stroke-linecap="round"/>
+            </g>
+        </svg>
+    </div>
+    <div class="pushup-title" id="pushupLoaderText">درحال تمرین... (لودینگ)</div>
+    <div style="font-size:11px; color:#94a3b8; margin-top:4px;">وب‌اپلیکیشن رسمی BodyMod</div>
+</div>
+
+<!-- نوتیفیکیشن داخلی -->
+<div class="cyber-toast" id="cyberToast"></div>
 
 <!-- منوی همبرگری کشویی -->
 <div class="drawer-backdrop" id="drawerBackdrop" onclick="closeDrawer()"></div>
@@ -409,8 +653,8 @@
     <div>
         <div class="drawer-header">
             <div style="display:flex; align-items:center; gap:8px;">
-                <span style="font-size:20px;">⚡</span>
-                <strong style="color:var(--primary); font-size:15px;">منوی BodyMod</strong>
+                <span style="font-size:18px;">⚡</span>
+                <strong style="color:var(--primary); font-size:14px;">منوی وب‌سایت BodyMod</strong>
             </div>
             <button class="icon-btn" onclick="closeDrawer()">✕</button>
         </div>
@@ -418,8 +662,9 @@
         <div class="drawer-user-card">
             <div style="font-size:13px; font-weight:900; color:var(--primary);" id="drawerUserName">کاربر مهمان 👋</div>
             <div style="font-size:11px; color:var(--text-muted); margin-top:2px;" id="drawerUserSub">برای ذخیره ابری وارد حساب شو</div>
-            <button class="btn-primary" style="width:100%; margin-top:8px; padding:7px; font-size:12px;" onclick="closeDrawer(); openAuthModal();">
-                🔐 ورود / تغییر حساب
+            <div style="font-size:11px; font-weight:800; color:var(--carbs); margin-top:4px;" id="drawerVipStatus">وضعیت: نسخه وب‌سایت</div>
+            <button class="btn-primary" style="width:100%; margin-top:8px; padding:8px; font-size:12px;" onclick="closeDrawer(); openAuthModal();">
+                🔐 ورود / ثبت‌نام در سایت
             </button>
         </div>
 
@@ -428,35 +673,27 @@
                 <span>🍽️ داشبورد کالری و آب</span>
                 <span>◀</span>
             </button>
-            <button class="drawer-item" data-tab="workoutTab" onclick="switchTab('workoutTab')">
-                <span>💪 برنامه تمرین و آتیش</span>
-                <span>◀</span>
-            </button>
-            <button class="drawer-item" data-tab="aiChatTab" onclick="switchTab('aiChatTab')">
-                <span>🤖 مربی هوش مصنوعی</span>
-                <span>◀</span>
+            <button class="drawer-item" data-tab="appFeaturesTab" onclick="switchTab('appFeaturesTab')">
+                <span>🤖 هوش مصنوعی و دانلود اپ اندروید</span>
+                <span style="background:var(--accent); color:#fff; font-size:10px; padding:1px 7px; border-radius:99px;">APP</span>
             </button>
             <button class="drawer-item" data-tab="historyTab" onclick="switchTab('historyTab')">
                 <span>📊 تاریخچه روزها و ماه‌ها</span>
                 <span>◀</span>
             </button>
             <button class="drawer-item" data-tab="settingsTab" onclick="switchTab('settingsTab')">
-                <span>⚙️ پروفایل و مشخصات بدن</span>
+                <span>⚙️ پرونده بدنی و مشخصات</span>
                 <span>◀</span>
-            </button>
-            <button class="drawer-item" data-tab="aboutAppTab" onclick="switchTab('aboutAppTab')">
-                <span>🚀 دانلود اپ و اشتراک بتا</span>
-                <span style="background:var(--accent); color:#fff; font-size:10px; padding:1px 7px; border-radius:99px;">ویژه</span>
             </button>
         </nav>
     </div>
 
     <div class="drawer-footer">
-        <button class="drawer-item" id="drawerThemeBtn" onclick="toggleTheme()" style="background:var(--bg-muted);">
+        <button class="drawer-item" onclick="toggleTheme()" style="background:var(--bg-muted);">
             <span>🌓 تغییر تم (تیره / روشن)</span>
             <span id="drawerThemeIcon">☀️</span>
         </button>
-        <a href="https://donito.me/mcd_donate" target="_blank" rel="noopener" class="donate-btn" style="text-align:center; display:block;">
+        <a href="https://donito.me/mcd_donate" target="_blank" rel="noopener" class="donate-btn" style="display:block;">
             ❤️ حمایت مالی (تومانی / رمزارزی)
         </a>
     </div>
@@ -464,61 +701,76 @@
 
 <div class="container">
 
-    <!-- هدر اصلی با دکمه همبرگری -->
+    <!-- نوار کانال بله بالای وب‌سایت -->
+    <div class="bale-channel-bar">
+        <span>📢 کانال رسمی بادی‌مود در پیام‌رسان بله:</span>
+        <a href="https://ble.ir/bodymod_channel" target="_blank" rel="noopener" class="bale-link">
+            📱 @bodymod_channel
+        </a>
+    </div>
+
+    <!-- هدر وب‌سایت (بدون آیکون وضعیت اینترنت) -->
     <header class="app-header">
         <div class="header-right">
-            <button class="hamburger-btn" onclick="openDrawer()" title="منوی برنامه">☰</button>
+            <button class="hamburger-btn" onclick="openDrawer()" title="منوی سایت">☰</button>
             <div class="brand-title">
-                <h1>⚡ BodyMod | بادی‌مود</h1>
+                <h1>⚡ BodyMod <span style="font-size:10px; background:var(--primary-glow); color:var(--primary); padding:2px 6px; border-radius:99px;">نسخه وب</span></h1>
                 <div class="greeting-line" id="userGreetingText">بدن و متابولیسم خودت رو هک کن!</div>
             </div>
         </div>
         <div class="header-left">
+            <div class="coin-pill" onclick="switchTab('appFeaturesTab')" title="موجودی بادی‌کوین">
+                🪙 <span id="headerCoinsCount">۳۰</span>
+            </div>
             <button class="auth-pill-btn" id="openAuthModalBtn" onclick="openAuthModal()">
                 <span id="headerAuthText">🔐 ورود / ثبت‌نام</span>
             </button>
         </div>
     </header>
 
-    <!-- نوار وضعیت ظرفیت بتا (زنده از دیتابیس BODYMOD_DB_KV) -->
+    <!-- نوار وضعیت ظرفیت بتا -->
     <div class="compact-beta-bar">
         <div>
             <strong style="color:var(--accent);">🎟️ ظرفیت اشتراک بتا:</strong>
-            <span id="liveBetaCapacityText" style="font-weight:800; color:var(--text-main);">در حال دریافت از سرور...</span>
+            <span id="liveBetaCapacityText" style="font-weight:800;">در حال استعلام...</span>
+            <span style="margin: 0 4px; color:var(--border-color);">|</span>
+            <span style="color:var(--primary); font-weight:800;">هوش مصنوعی ویژه اپلیکیشن اندروید</span>
         </div>
-        <div style="display:flex; gap:6px;">
-            <button class="vip-trigger-btn" onclick="switchTab('aboutAppTab')" style="font-size:11px; padding:5px 10px;">
-                📲 دانلود اپ / حمایت
-            </button>
-        </div>
+        <button class="vip-trigger-btn" onclick="switchTab('appFeaturesTab')">
+            📲 دریافت اپ اندروید
+        </button>
     </div>
 
-    <!-- نوار تقویم شمسی -->
+    <!-- نوار تقویم شمسی و استریک آتیش -->
     <section class="date-navigator">
         <div class="date-nav-top">
             <button class="nav-arrow-btn" id="prevDayBtn">▶ روز قبل</button>
             <div class="current-date-box">
-                <div class="shamsi-date-title" id="shamsiDateDisplay">...</div>
+                <div class="shamsi-date-title" id="shamsiDateDisplay">امروز</div>
                 <span class="relative-day-pill" id="relativeDayDisplay">امروز</span>
             </div>
             <button class="nav-arrow-btn" id="nextDayBtn">روز بعد ◀</button>
         </div>
         <div class="date-nav-bottom">
-            <div>🔥 روزشمار سیکل: <strong id="programDayCounter" style="color:var(--primary);">روز ۱</strong></div>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <span>🔥 استریک آتیش: <strong id="streakFireCount" style="color:var(--carbs);">۰ روز</strong></span>
+                <button class="btn-primary" id="checkInWorkoutBtn" style="padding:4px 9px; font-size:11px;">✅ ثبت تمرین امروز</button>
+            </div>
             <div style="display:flex; align-items:center; gap:6px;">
-                <span id="cloudSyncStatus" style="font-size:11px; color:var(--water); font-weight:700;">💾 حافظه مرورگر</span>
-                <input type="date" id="gregorianDatePicker" class="unit-select">
-                <button class="btn-primary" id="jumpTodayBtn" style="padding:4px 10px; font-size:11px; display:none;">امروز</button>
+                <span id="cloudSyncStatus" style="font-size:11px; color:var(--water); font-weight:700;">☁️ آماده سینک ابری</span>
+                <button class="btn-primary" id="jumpTodayBtn" style="padding:4px 8px; font-size:11px; display:none;">برگشت به امروز</button>
             </div>
         </div>
     </section>
 
-    <!-- TAB 1: DAILY TRACKER -->
+    <!-- ==========================================================================
+         TAB 1: DAILY TRACKER (کالری‌شمار و آب)
+         ========================================================================== -->
     <div id="trackerTab" class="tab-section active">
         <div class="card">
             <div class="card-header">
                 <div class="card-title" id="dashboardPersonalizedTitle">⚡ وضعیت کالری و ماکروهای امروزت</div>
-                <span id="goalBadgeText" style="font-size:12px; color:var(--text-muted); font-weight:700;">هدف: ۲۰۰۰ کالری</span>
+                <span id="goalBadgeText" style="font-size:11px; color:var(--text-muted); font-weight:800;">هدف: ۲۰۰۰ کالری</span>
             </div>
             <div class="dashboard-grid">
                 <div class="ring-wrapper">
@@ -568,9 +820,9 @@
 
             <div class="water-controls-row">
                 <div>
-                    <div style="font-size:17px; font-weight:900; color:var(--water);">
+                    <div style="font-size:16px; font-weight:900; color:var(--water);">
                         <span id="waterConsumedGlasses">۰</span> از <span id="waterTargetGlasses">۱۰</span> لیوان
-                        <span style="font-size:12px; color:var(--text-muted); font-weight:600;">
+                        <span style="font-size:11px; color:var(--text-muted); font-weight:600;">
                             (<span id="waterConsumedMl">۰</span> / <span id="waterTargetMl">۲۰۰۰</span> ml)
                         </span>
                     </div>
@@ -590,10 +842,10 @@
             <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-top:12px; padding-top:10px; border-top:1px dashed var(--border-color);">
                 <div class="water-edit-box">
                     <span>🎯 هدف (لیوان):</span>
-                    <input type="number" id="manualWaterGlassesInput" class="qty-input" min="4" max="30" value="10">
+                    <input type="tel" inputmode="numeric" id="manualWaterGlassesInput" class="qty-input" value="10">
                     <button class="btn-primary" id="saveManualWaterBtn" style="padding:5px 10px; font-size:11px; background:var(--water);">ذخیره</button>
                 </div>
-                <button class="nav-arrow-btn" id="resetAutoWaterBtn" style="font-size:11px;">🔄 خودکار</button>
+                <button class="nav-arrow-btn" id="resetAutoWaterBtn">🔄 خودکار</button>
             </div>
         </div>
 
@@ -601,8 +853,8 @@
         <div class="card">
             <div class="card-header">
                 <div class="card-title">🍲 وعده‌های ثبت شده امروز</div>
-                <button class="vip-trigger-btn" onclick="openCyber403Modal('تحلیل هوشمند عکس خوراکی با هوش مصنوعی')" style="font-size:11px;">
-                    📸 ارسال عکس غذا به AI
+                <button class="vip-trigger-btn" onclick="switchTab('appFeaturesTab')">
+                    📸 اسکن عکس غذا با AI (در اپ)
                 </button>
             </div>
 
@@ -619,7 +871,7 @@
         <!-- جستجوی هوشمند بانک غذا -->
         <div class="card">
             <div class="card-header">
-                <div class="card-title">🔍 جستجوی خوراکی (۱۶۰+ غذای ایرانی)</div>
+                <div class="card-title">🔍 جستجوی خوراکی</div>
                 <button class="btn-primary" id="openCustomFoodModalBtn" style="font-size:11px; padding:6px 10px;">+ خوراکی سفارشی</button>
             </div>
 
@@ -644,39 +896,55 @@
         </div>
     </div>
 
-    <!-- TAB 2: WORKOUT PLAN -->
-    <div id="workoutTab" class="tab-section">
-        <div class="card" style="text-align:center; padding:28px 18px;">
-            <div style="font-size:48px; margin-bottom:10px;">🔥💪</div>
-            <h3 style="font-size:18px; font-weight:900; color:var(--primary); margin-bottom:8px;">
-                طراحی برنامه تمرینی هوشمند (۳ تا ۱۲ ماهه) + سیستم آتیش!
-            </h3>
-            <p style="font-size:13px; color:var(--text-muted); max-width:520px; margin:0 auto 18px auto;">
-                توی اپلیکیشن اندروید بادی‌مود، هوش مصنوعی بر اساس مشخصات بدنت، شهر محل سکونت، محل تمرین (خونه یا باشگاه) و تجهیزاتت برات برنامه دقیق روزانه می‌چینه!
+    <!-- ==========================================================================
+         TAB 2: APP FEATURES & DONITO (معرفی امکانات هوش مصنوعی اپ اندروید + درگاه دونیتو)
+         ========================================================================== -->
+    <div id="appFeaturesTab" class="tab-section">
+        <div class="card" style="border:2px solid var(--primary);">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:8px;">
+                <span style="background:var(--accent-light); color:var(--accent); border:1px solid var(--accent); padding:3px 10px; border-radius:99px; font-size:11px; font-weight:900;">
+                    🔒 ویژه اپلیکیشن رسمی اندروید (کافه‌بازار و مایکت)
+                </span>
+                <span style="font-size:11px; font-weight:900; color:var(--primary);">۳۰+۲۰۰ بادی‌کوین</span>
+            </div>
+
+            <h3 style="font-size:16px; font-weight:900; margin-bottom:6px;">📲 چرا امکانات هوش مصنوعی فقط در اپلیکیشن اندروید فعال است؟</h3>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+                برای حفظ امنیت سرورهای هوش مصنوعی و اتصال مستقیم به درگاه پرداخت درون‌برنامه‌ای <strong>کافه‌بازار و مایکت</strong>، امکانات زیر انحصاراً در اپلیکیشن اندروید BodyMod باز هستند:
             </p>
-            <button class="vip-trigger-btn" style="padding:12px 24px; font-size:14px;" onclick="openCyber403Modal('برنامه‌ساز ورزشی و سیستم آتیش')">
-                📲 دریافت اپلیکیشن از بازار / مایکت
-            </button>
+
+            <div style="background:var(--bg-muted); padding:12px; border-radius:12px; font-size:12px; margin-bottom:12px; line-height:1.9;">
+                <div>✅ <strong>چت با مربی هوشمند:</strong> متصل به پرونده بدنی تو (روزی ۳ پیام تخصصی).</div>
+                <div>✅ <strong>تحلیل عکس غذا با دوربین:</strong> محاسبه کالری و ماکروها از روی عکس بشقاب غذا (روزی ۱ عکس).</div>
+                <div>✅ <strong>برنامه‌ساز ورزشی ۳ تا ۱۲ ماهه:</strong> مخصوص خانه یا باشگاه با هر تجهیزاتی که داری (ماهی ۱ برنامه).</div>
+                <div>✅ <strong>کارکرد ۱۰۰٪ آفلاین کالری‌شمار:</strong> بدون نیاز به اینترنت در هر شرایطی!</div>
+            </div>
+
+            <a href="https://ble.ir/bodymod_channel" target="_blank" rel="noopener" class="btn-primary" style="display:block; text-decoration:none; padding:12px; font-size:13px;">
+                📥 دانلود آخرین نسخه اپلیکیشن اندروید از کانال بله (@bodymod_channel)
+            </a>
+        </div>
+
+        <!-- بنر حمایت مالی مستقیم Donito (مخصوص نسخه وب‌سایت) -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">❤️ حمایت مالی از توسعه سرورهای هوش مصنوعی BodyMod</div>
+            </div>
+            <div class="donate-banner">
+                <div style="flex:1; min-width:200px;">
+                    <div style="font-size:13px; font-weight:900; color:var(--carbs);">🌍 درگاه رسمی Donito (تومانی و رمزارزی / کریپتو)</div>
+                    <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">
+                        با حمایت مالی دلخواه (از ۱۰ هزار تومان تا پرداخت رمزارزی بدون سقف)، به ارتقای دیتاسنتر و خروج سریع‌تر بادی‌مود از فاز آزمایشی کمک کن!
+                    </div>
+                </div>
+                <a href="https://donito.me/mcd_donate" target="_blank" rel="noopener" class="donate-btn">
+                    ❤️ ورود به درگاه Donito
+                </a>
+            </div>
         </div>
     </div>
 
-    <!-- TAB 3: AI CHAT -->
-    <div id="aiChatTab" class="tab-section">
-        <div class="card" style="text-align:center; padding:28px 18px;">
-            <div style="font-size:48px; margin-bottom:10px;">🤖⚡</div>
-            <h3 style="font-size:18px; font-weight:900; color:var(--primary); margin-bottom:8px;">
-                مربی هوش مصنوعی بادی‌مود (سهمیه بتا: روزی ۳ پیام + ۱ عکس غذا)
-            </h3>
-            <p style="font-size:13px; color:var(--text-muted); max-width:520px; margin:0 auto 18px auto;">
-                به دلایل امنیتی، چت با مربی هوشمند (که به کل اطلاعات پروفایل بدنت دسترسی داره تا دقیق راهنماییت کنه) منحصراً در داخل اپلیکیشن رسمی اندروید فعال است.
-            </p>
-            <button class="vip-trigger-btn" style="padding:12px 24px; font-size:14px;" onclick="openCyber403Modal('چت با هوش مصنوعی و دریافت بادی‌کوین')">
-                🔒 باز کردن در اپلیکیشن رسمی (کافه‌بازار / مایکت)
-            </button>
-        </div>
-    </div>
-
-    <!-- TAB 4: HISTORY -->
+    <!-- TAB 3: HISTORY -->
     <div id="historyTab" class="tab-section">
         <div class="card">
             <div class="card-header">
@@ -691,15 +959,15 @@
         </div>
     </div>
 
-    <!-- TAB 5: PROFILE & SETTINGS -->
+    <!-- TAB 4: PROFILE -->
     <div id="settingsTab" class="tab-section">
         <div class="card">
             <div class="card-header">
-                <div class="card-title">👤 پرونده ثبت‌شده تو در دیتابیس کلودفلر</div>
-                <button class="btn-primary" onclick="openOnboardingModal(true)" style="font-size:12px; padding:6px 12px;">✏️ ویرایش مشخصات و هدف</button>
+                <div class="card-title">👤 پرونده بدنی ثبت‌شده تو در کلودفلر</div>
+                <button class="btn-primary" onclick="openOnboardingModal(true)" style="font-size:11px; padding:6px 10px;">✏️ ویرایش مشخصات و هدف</button>
             </div>
-            <div id="profileSummaryBox" style="font-size:13px; color:var(--text-muted); line-height:1.9;">
-                هنوز وارد حساب نشدی رفیق! روی دکمه «ورود / ثبت‌نام» بالای صفحه بزن.
+            <div id="profileSummaryBox" style="font-size:12px; color:var(--text-muted); line-height:1.9;">
+                هنوز پرونده بدنی‌ت رو کامل نکردی رفیق! روی دکمه «ویرایش مشخصات و هدف» یا «ورود / ثبت‌نام» بزن.
             </div>
         </div>
 
@@ -708,185 +976,112 @@
             <div class="form-grid">
                 <div class="form-group full">
                     <label class="form-label">هدف کالری روزانه</label>
-                    <input type="number" id="manualCalInput" class="form-control" value="2000">
+                    <input type="tel" inputmode="numeric" id="manualCalInput" class="form-control" value="2000">
                 </div>
                 <div class="form-group">
                     <label class="form-label">پروتئین (g)</label>
-                    <input type="number" id="manualProtInput" class="form-control" value="140">
+                    <input type="tel" inputmode="numeric" id="manualProtInput" class="form-control" value="140">
                 </div>
                 <div class="form-group">
                     <label class="form-label">کربوهیدرات (g)</label>
-                    <input type="number" id="manualCarbInput" class="form-control" value="220">
+                    <input type="tel" inputmode="numeric" id="manualCarbInput" class="form-control" value="220">
                 </div>
                 <div class="form-group full">
                     <label class="form-label">چربی (g)</label>
-                    <input type="number" id="manualFatInput" class="form-control" value="65">
+                    <input type="tel" inputmode="numeric" id="manualFatInput" class="form-control" value="65">
                 </div>
             </div>
             <button class="btn-primary" id="saveManualGoalsBtn" style="width:100%;">ذخیره دستی</button>
         </div>
     </div>
 
-    <!-- TAB 6: ABOUT APP & DONATE -->
-    <div id="aboutAppTab" class="tab-section">
-        <div class="card">
-            <h2 style="font-size:18px; font-weight:900; color:var(--primary); margin-bottom:8px;">
-                🚀 نسخه اندروید BodyMod (فاز آزمایشی ۱۰۰۰ نفری)
-            </h2>
-            <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">
-                برای استفاده از مربی هوش مصنوعی (روزی ۳ پیام + ۱ تحلیل عکس خوراکی + ماهی ۱ برنامه ورزشی کامل)، اپلیکیشن رسمی رو از کافه‌بازار یا مایکت دانلود کن:
-            </p>
-
-            <div class="store-buttons-grid">
-                <a href="#BazaarLink" onclick="openCyber403Modal('دانلود از کافه‌بازار'); return false;" class="store-btn bazaar">
-                    <span>🛒</span>
-                    <span>دانلود از کافه‌بازار</span>
-                </a>
-                <a href="#MyketLink" onclick="openCyber403Modal('دانلود از مایکت'); return false;" class="store-btn myket">
-                    <span>📥</span>
-                    <span>دانلود از مایکت</span>
-                </a>
-            </div>
-
-            <div class="donate-banner">
-                <div style="flex:1; min-width:200px;">
-                    <div style="font-size:13px; font-weight:900; color:var(--carbs);">☕ حمایت از توسعه بادی‌مود (Donito)</div>
-                    <div style="font-size:11px; color:var(--text-muted);">
-                        امکان پرداخت تومانی یا رمزارزی (بیت‌کوین و تتر بدون سقف!) برای ارتقای سرورهای هوش مصنوعی ❤️
-                    </div>
-                </div>
-                <a href="https://donito.me/mcd_donate" target="_blank" rel="noopener" class="donate-btn">
-                    ❤️ حمایت مالی (دونیتو)
-                </a>
-            </div>
-        </div>
-    </div>
-
     <!-- ==========================================================================
-         فوتر سایبرپانکی + لوگوی رسمی اینماد + نشان Hosted on GitHub Pages
+         فوتر رسمی وب‌سایت همراه با کد دست‌نخورده اینماد و بج GitHub Pages
          ========================================================================== -->
-    <footer class="app-footer">
-        <div style="font-size:14px; font-weight:900; color:var(--primary); margin-bottom:4px;">
+    <footer class="site-footer">
+        <div style="font-size:13px; font-weight:900; color:var(--primary); margin-bottom:4px;">
             ⚡ BodyMod | بادی‌مود: بدن مود شده
         </div>
-        <div style="font-size:12px; color:var(--text-muted);">
+        <div style="font-size:11px; color:var(--text-muted);">
             طراحی و توسعه توسط <strong>Matin Mohammadi</strong> — تمامی حقوق محفوظ است © ۲۰۲۶
         </div>
 
         <div class="footer-badges-row">
-            <!-- نماد اعتماد الکترونیکی (اینماد رسمی متین محمدی) -->
+            <!-- کد رسمی و ۱۰۰٪ دست‌نخورده نماد اعتماد الکترونیکی (اینماد) -->
             <div class="enamad-box">
-                <a referrerpolicy='origin' target='_blank' href='https://trustseal.enamad.ir/?id=8343989&Code=40zScmgKCCjZYabK6Vv5ClA1QAUcDim5'>
-                    <img referrerpolicy='origin' src='https://trustseal.enamad.ir/logo.aspx?id=8343989&Code=40zScmgKCCjZYabK6Vv5ClA1QAUcDim5' alt='نماد اعتماد الکترونیکی بادی‌مود' style='cursor:pointer' code='40zScmgKCCjZYabK6Vv5ClA1QAUcDim5'>
-                </a>
+                <a referrerpolicy='origin' target='_blank' href='https://trustseal.enamad.ir/?id=8343989&Code=40zScmgKCCjZYabK6Vv5ClA1QAUcDim5'><img referrerpolicy='origin' src='https://trustseal.enamad.ir/logo.aspx?id=8343989&Code=40zScmgKCCjZYabK6Vv5ClA1QAUcDim5' alt='' style='cursor:pointer' code='40zScmgKCCjZYabK6Vv5ClA1QAUcDim5'></a>
             </div>
 
-            <!-- نشان رسمی میزبانی روی GitHub Pages -->
-            <a href="https://github.com/Matin-Creator-Developer/bodymod" target="_blank" rel="noopener" class="github-pages-badge">
-                <svg height="18" width="18" viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
-                </svg>
-                <span>Hosted on <strong>GitHub Pages</strong></span>
+            <!-- بج میزبانی روی GitHub Pages -->
+            <a href="https://pages.github.com/" target="_blank" rel="noopener" class="gh-pages-badge">
+                <span>🐙 Hosted on <strong>GitHub Pages</strong></span>
             </a>
         </div>
     </footer>
 
 </div>
 
-<!-- پاپ‌آپ امنیتی ۴۰۳ سایبرپانکی -->
-<div class="modal-backdrop" id="cyber403Modal">
-    <div class="modal-box" style="text-align:center;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <span style="font-size:11px; font-weight:900; color:var(--accent);">⛔ ERROR 403: CYBER-SECURITY LOCK</span>
-            <button class="icon-btn" onclick="document.getElementById('cyber403Modal').classList.remove('open')">✕</button>
-        </div>
-
-        <div style="font-size:44px; margin:8px 0;">🛡️📱</div>
-        <h3 style="font-size:16px; font-weight:900; color:var(--primary); margin-bottom:8px;">
-            رفیق! به دلایل امنیتی از طریق اپلیکیشن اقدام کن!
-        </h3>
-        <p style="font-size:12px; color:var(--text-muted); margin-bottom:16px;" id="cyber403ReasonText"></p>
-
-        <div class="store-buttons-grid">
-            <a href="#BazaarAppLink" class="store-btn bazaar">🛒 دانلود از کافه‌بازار</a>
-            <a href="#MyketAppLink" class="store-btn myket">📥 دانلود از مایکت</a>
-        </div>
-
-        <div style="margin-top:12px; padding-top:10px; border-top:1px dashed var(--border-color);">
-            <a href="https://donito.me/mcd_donate" target="_blank" rel="noopener" style="color:var(--carbs); font-size:12px; font-weight:800; text-decoration:none;">
-                ❤️ حمایت مالی تومانی یا رمزارزی (Donito)
-            </a>
-        </div>
-    </div>
-</div>
-
-<!-- مودال مرحله ۱: ورود تمیز با دکمه رسمی گوگل + شماره موبایل بله -->
+<!-- مودال ورود -->
 <div class="modal-backdrop" id="authModal">
     <div class="modal-box">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-            <h3 style="font-size:16px; font-weight:900; color:var(--primary);">🔐 گام اول: ورود به حساب BodyMod</h3>
-            <button class="icon-btn" onclick="document.getElementById('authModal').classList.remove('open')">✕</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h3 style="font-size:15px; font-weight:900; color:var(--primary);">🔐 ورود به حساب BodyMod</h3>
+            <button class="icon-btn" onclick="closeModalById('authModal')">✕</button>
         </div>
 
-        <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">
-            اول با گوگل یا شماره موبایل اکانت «بله» وارد شو؛ بلافاصله بعدش مشخصات بدنت و هدفت رو می‌گیریم تا پروفایلت توی کلودفلر ساخته بشه!
+        <p style="font-size:11px; color:var(--text-muted); margin-bottom:12px;">
+            با گوگل یا شماره موبایل اکانت «بله» وارد شو تا اطلاعاتت بین سایت و اپلیکیشن اندروید سینک بشه!
         </p>
 
-        <!-- ۱. دکمه رسمی خود گوگل -->
-        <div id="googleButtonContainer" style="display:flex; justify-content:center; margin:14px 0;"></div>
+        <div id="googleButtonContainer" style="display:flex; justify-content:center; margin:12px 0;"></div>
 
-        <!-- ۲. ورود با شماره موبایل در پیام‌رسان بله -->
         <div style="border-top:1px dashed var(--border-color); padding-top:12px; margin-top:10px;">
-            <div style="font-size:13px; font-weight:800; color:var(--primary); margin-bottom:8px;">
-                💬 یا ورود سریع با شماره موبایل (از طریق ربات «بله»):
+            <div style="font-size:12px; font-weight:800; color:var(--primary); margin-bottom:8px;">
+                💬 ورود با شماره موبایل (از طریق ربات «بله»):
             </div>
             <div class="form-grid">
                 <div class="form-group full">
                     <label class="form-label">شماره موبایل اکانت بله *</label>
-                    <input type="tel" id="balePhoneInput" class="form-control" placeholder="مثلاً: 0914xxxxxxx" dir="ltr" style="text-align:left;">
+                    <input type="tel" inputmode="numeric" id="balePhoneInput" class="form-control" placeholder="09058586834" dir="ltr" style="text-align:left;">
                 </div>
                 <div class="form-group full" id="baleOtpGroup" style="display:none;">
-                    <label class="form-label">کد تایید ۶ رقمی ارسال شده در بله *</label>
-                    <input type="number" id="baleOtpInput" class="form-control" placeholder="123456" dir="ltr" style="text-align:center;">
+                    <label class="form-label">کد تایید ۶ رقمی بله *</label>
+                    <input type="tel" inputmode="numeric" id="baleOtpInput" class="form-control" placeholder="123456" dir="ltr" style="text-align:center;">
                 </div>
             </div>
             <div style="display:flex; gap:8px;">
-                <button class="btn-primary" id="sendBaleOtpBtn" style="flex:1;">📲 ارسال کد تایید در بله</button>
-                <button class="btn-primary" id="verifyBaleOtpBtn" style="flex:1; display:none; background:var(--success);">✅ تایید کد و ادامه</button>
+                <button class="btn-primary" id="sendBaleOtpBtn" style="flex:1;">📲 ارسال کد تایید</button>
+                <button class="btn-primary" id="verifyBaleOtpBtn" style="flex:1; display:none; background:var(--success);">✅ تایید و ادامه</button>
                 <button class="nav-arrow-btn" id="logoutBtn" style="display:none; color:var(--danger);">خروج</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- مودال مرحله ۲ (اجباری پس از ورود): تکمیل اطلاعات بدن، شهر، هدف و تایید قوانین -->
+<!-- مودال تکمیل مشخصات بدنی (Onboarding) -->
 <div class="modal-backdrop" id="onboardingModal">
     <div class="modal-box">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h3 style="font-size:16px; font-weight:900; color:var(--primary);">🧬 تکمیل پرونده بدنی تو (اجباری)</h3>
-            <button class="icon-btn" id="closeOnboardingBtn" style="display:none;" onclick="document.getElementById('onboardingModal').classList.remove('open')">✕</button>
+            <h3 style="font-size:15px; font-weight:900; color:var(--primary);">🧬 تکمیل پرونده بدنی تو (اجباری)</h3>
+            <button class="icon-btn" id="closeOnboardingBtn" style="display:none;" onclick="closeModalById('onboardingModal')">✕</button>
         </div>
-
-        <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
-            این اطلاعات توی دیتابیس کلودفلر ذخیره می‌شه تا وقتی با هوش مصنوعی چت می‌کنی، دقیقاً بر اساس سن، شهر، قد، وزن و هدف خودت راهنماییت کنه!
-        </p>
 
         <div class="form-grid">
             <div class="form-group">
-                <label class="form-label">اسم کوچیکت چیه؟ *</label>
+                <label class="form-label">اسم کوچیکت *</label>
                 <input type="text" id="obName" class="form-control" placeholder="مثلاً: متین">
             </div>
             <div class="form-group">
-                <label class="form-label">شهر محل سکونت *</label>
+                <label class="form-label">شهر سکونت *</label>
                 <input type="text" id="obCity" class="form-control" placeholder="مثلاً: ارومیه">
             </div>
 
             <div class="form-group full">
                 <label class="form-label">تاریخ تولد (شمسی) *</label>
-                <div style="display:grid; grid-template-columns: 1fr 1fr 1.2fr; gap:8px;">
-                    <input type="number" id="obBirthDay" class="form-control" placeholder="روز (۱۴)" min="1" max="31">
-                    <input type="number" id="obBirthMonth" class="form-control" placeholder="ماه (۱۰)" min="1" max="12">
-                    <input type="number" id="obBirthYear" class="form-control" placeholder="سال (۱۳۸۳)" min="1320" max="1400">
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1.2fr; gap:6px;">
+                    <input type="tel" inputmode="numeric" id="obBirthDay" class="form-control" placeholder="روز (۱۴)">
+                    <input type="tel" inputmode="numeric" id="obBirthMonth" class="form-control" placeholder="ماه (۱۰)">
+                    <input type="tel" inputmode="numeric" id="obBirthYear" class="form-control" placeholder="سال (۱۳۸۳)">
                 </div>
             </div>
 
@@ -899,105 +1094,86 @@
                 </select>
             </div>
             <div class="form-group">
-                <label class="form-label">سطح تحرک روزانه *</label>
+                <label class="form-label">تحرک روزانه *</label>
                 <select id="obActivity" class="form-control">
                     <option value="1.2">کم‌تحرک</option>
-                    <option value="1.375">سبک (۱ تا ۳ روز ورزش)</option>
-                    <option value="1.55" selected>متوسط (۳ تا ۵ روز ورزش)</option>
-                    <option value="1.725">سنگین (۶ تا ۷ روز ورزش)</option>
+                    <option value="1.375">سبک</option>
+                    <option value="1.55" selected>متوسط</option>
+                    <option value="1.725">سنگین</option>
                 </select>
             </div>
 
             <div class="form-group">
                 <label class="form-label">قد (سانتی‌متر) *</label>
-                <input type="number" id="obHeight" class="form-control" placeholder="مثلاً: 178">
+                <input type="tel" inputmode="numeric" id="obHeight" class="form-control" placeholder="178">
             </div>
             <div class="form-group">
-                <label class="form-label">وزن فعلی (کیلوگرم) *</label>
-                <input type="number" id="obWeight" class="form-control" placeholder="مثلاً: 75">
+                <label class="form-label">وزن (کیلوگرم) *</label>
+                <input type="tel" inputmode="numeric" id="obWeight" class="form-control" placeholder="75">
             </div>
 
             <div class="form-group full">
-                <label class="form-label">هدفت چیه؟ * (فقط بعد از ثبت‌نام تعیین می‌شه)</label>
+                <label class="form-label">هدفت چیه؟ *</label>
                 <select id="obGoalMode" class="form-control">
-                    <option value="">هدفت رو انتخاب کن رفیق...</option>
-                    <option value="lose">۱. کات و کاهش وزن (چربی‌سوزی و لاغری)</option>
-                    <option value="maintain">۲. تثبیت وزن و فیت موندن بدن</option>
-                    <option value="gain_weight">۳. افزایش وزن و پر شدن بدن (بدون رژیم سنگین)</option>
-                    <option value="muscle">۴. عضله‌سازی و حجم خشک ورزشی (پروتئین بالا)</option>
+                    <option value="">هدفت رو انتخاب کن...</option>
+                    <option value="lose">۱. کات و کاهش وزن</option>
+                    <option value="maintain">۲. تثبیت وزن</option>
+                    <option value="gain_weight">۳. افزایش وزن عمومی</option>
+                    <option value="muscle">۴. عضله‌سازی ورزشی</option>
                 </select>
             </div>
         </div>
 
         <div class="privacy-terms-box">
-            <div style="font-weight:900; color:var(--primary); margin-bottom:4px;">🛡️ قوانین و تعهدنامه حریم خصوصی:</div>
-            <p style="color:var(--text-main);">
-                «عزیز من این اطلاعات لازمه تا بتونیم کمکت کنیم و این اطلاعات توسط هوش مصنوعی تجزیه و تحلیل میشه؛ اما خیالت از بابت حریم خصوصی راحت باشه! <strong>خط قرمز من نقض حریم خصوصیه 😂❤️</strong>»
-            </p>
-            <label style="display:flex; align-items:center; gap:8px; margin-top:10px; cursor:pointer; font-weight:800; color:var(--accent);">
-                <input type="checkbox" id="obTermsAccept" style="width:20px; height:20px;">
-                <span>حله رفیق! قوانین رو خوندم و قبول دارم ✅</span>
+            <div style="font-weight:900; color:var(--primary); margin-bottom:4px;">🛡️ تعهدنامه حریم خصوصی:</div>
+            <p style="color:var(--text-main);">«عزیز من این اطلاعات لازمه تا بتونیم کمکت کنیم و توسط هوش مصنوعی تحلیل میشه؛ اما خیالت راحت باشه! <strong>خط قرمز من نقض حریم خصوصیه 😂❤️</strong>»</p>
+            <label style="display:flex; align-items:center; gap:8px; margin-top:8px; cursor:pointer; font-weight:800; color:var(--accent);">
+                <input type="checkbox" id="obTermsAccept" style="width:18px; height:18px;">
+                <span>حله رفیق! قوانین رو قبول دارم ✅</span>
             </label>
         </div>
 
-        <button class="btn-primary" id="submitOnboardingBtn" style="width:100%; padding:12px; font-size:14px;">
-            🚀 ثبت نهایی اطلاعات در کلودفلر و ورود
-        </button>
+        <button class="btn-primary" id="submitOnboardingBtn" style="width:100%; padding:12px;">🚀 ثبت اطلاعات در کلودفلر و شروع</button>
     </div>
 </div>
 
-<!-- مودال افزودن خوراکی سفارشی -->
+<!-- مودال خوراکی سفارشی -->
 <div class="modal-backdrop" id="customFoodModal">
     <div class="modal-box">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-            <h3 style="font-size:15px; font-weight:800;">🥗 افزودن خوراکی سفارشی</h3>
-            <button class="icon-btn" onclick="document.getElementById('customFoodModal').classList.remove('open')">✕</button>
+            <h3 style="font-size:15px; font-weight:800;">🥗 خوراکی سفارشی</h3>
+            <button class="icon-btn" onclick="closeModalById('customFoodModal')">✕</button>
         </div>
         <div class="form-grid">
-            <div class="form-group full">
-                <label class="form-label">نام خوراکی *</label>
-                <input type="text" id="cfName" class="form-control" placeholder="مثلاً: کوفته تبریزی">
-            </div>
-            <div class="form-group">
-                <label class="form-label">واحد اصلی</label>
-                <select id="cfUnitName" class="form-control">
-                    <option value="بشقاب">بشقاب (۲۵۰ گرم)</option>
-                    <option value="کاسه">کاسه (۳۰۰ گرم)</option>
-                    <option value="پرس">پرس (۳۵۰ گرم)</option>
-                    <option value="لیوان (۲۰۰ میلی‌لیتر)">لیوان (۲۰۰ میلی‌لیتر)</option>
-                    <option value="عدد">عدد متوسط (۱۰۰ گرم)</option>
-                    <option value="قاشق غذاخوری">قاشق غذاخوری (۲۰ گرم)</option>
-                    <option value="۱۰۰ گرم">۱۰۰ گرم</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">کالری در این واحد *</label>
-                <input type="number" id="cfCal" class="form-control" placeholder="مثلاً 450">
-            </div>
-            <div class="form-group">
-                <label class="form-label">پروتئین (g)</label>
-                <input type="number" id="cfProt" class="form-control" value="15">
-            </div>
-            <div class="form-group">
-                <label class="form-label">کربوهیدرات (g)</label>
-                <input type="number" id="cfCarb" class="form-control" value="40">
-            </div>
-            <div class="form-group full">
-                <label class="form-label">چربی (g)</label>
-                <input type="number" id="cfFat" class="form-control" value="18">
-            </div>
+            <div class="form-group full"><label class="form-label">نام خوراکی *</label><input type="text" id="cfName" class="form-control" placeholder="مثلاً: کوفته تبریزی"></div>
+            <div class="form-group"><label class="form-label">واحد</label><select id="cfUnitName" class="form-control"><option value="بشقاب">بشقاب</option><option value="کاسه">کاسه</option><option value="پرس">پرس</option><option value="عدد">عدد</option></select></div>
+            <div class="form-group"><label class="form-label">کالری *</label><input type="tel" inputmode="numeric" id="cfCal" class="form-control" placeholder="450"></div>
+            <div class="form-group"><label class="form-label">پروتئین (g)</label><input type="tel" inputmode="numeric" id="cfProt" class="form-control" value="15"></div>
+            <div class="form-group"><label class="form-label">کربوهیدرات (g)</label><input type="tel" inputmode="numeric" id="cfCarb" class="form-control" value="40"></div>
+            <div class="form-group full"><label class="form-label">چربی (g)</label><input type="tel" inputmode="numeric" id="cfFat" class="form-control" value="18"></div>
         </div>
-        <button class="btn-primary" id="saveCustomFoodBtn" style="width:100%;">ذخیره در دیتابیس</button>
+        <button class="btn-primary" id="saveCustomFoodBtn" style="width:100%;">ذخیره در بانک غذا</button>
     </div>
 </div>
 
 <script>
+    /* ==========================================================================
+       👑 مشخصات رسمی مدیرعامل (متین محمدی - CEO Edition)
+       ========================================================================== */
+    const CEO_GMAIL = "diaperloveradultbaby5@gmail.com";
+    const CEO_PHONE = "09058586834";
+
     const WORKER_BASE_URL = "https://matin-creator-developer.workers.dev";
     const GOOGLE_CLIENT_ID = "308314086801-gb47cnlqkrpf9v42j1ptt82cg8gqr10a.apps.googleusercontent.com";
 
     const toFa = (n) => (n === null || n === undefined) ? '۰' : String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
     const getLocalISODate = (d = new Date()) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
-    const parseISO = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d, 12, 0, 0); };
+    const parseISO = (s) => {
+        if (!s || !s.includes('-')) return new Date();
+        const [y, m, d] = s.split('-').map(Number);
+        return new Date(y, m - 1, d, 12, 0, 0);
+    };
+    const todayISO = getLocalISODate(new Date());
 
     const getShamsiFull = (iso) => {
         try { return new Intl.DateTimeFormat('fa-IR-u-ca-persian', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(parseISO(iso)); }
@@ -1011,16 +1187,177 @@
     const getRelLabel = (iso) => {
         const diff = getDaysDiff(iso);
         if (diff === 0) return 'امروز';
-        if (diff === -1) return 'دیروز (۱ روز قبل)';
+        if (diff === -1) return 'دیروز';
         if (diff === 1) return 'فردا';
         return diff < -1 ? `${toFa(Math.abs(diff))} روز قبل` : `${toFa(diff)} روز بعد`;
     };
 
-    const parseJwt = (token) => {
+    window.openModalById = (id) => {
+        document.getElementById(id).classList.add('open');
+        document.body.classList.add('modal-open');
+    };
+    window.closeModalById = (id) => {
+        document.getElementById(id).classList.remove('open');
+        if (!document.querySelector('.modal-backdrop.open')) {
+            document.body.classList.remove('modal-open');
+        }
+    };
+
+    document.querySelectorAll('.modal-box input, .modal-box select').forEach(inp => {
+        inp.addEventListener('focus', () => {
+            setTimeout(() => {
+                inp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 280);
+        });
+    });
+
+    let toastTimer = null;
+    window.showToast = (msg) => {
+        const el = document.getElementById('cyberToast');
+        el.textContent = msg;
+        el.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => el.classList.remove('show'), 3800);
+    };
+
+    /* تضمین حداقل ۲.۵ ثانیه نمایش لودینگ حرکت شنا */
+    let loaderShownAt = 0;
+    let loaderHideTimeout = null;
+    const MIN_LOADER_DURATION_MS = 2500;
+
+    window.showPushupLoader = (text = "درحال تمرین... (لودینگ)") => {
+        clearTimeout(loaderHideTimeout);
+        loaderShownAt = Date.now();
+        document.getElementById('pushupLoaderText').textContent = text;
+        document.getElementById('pushupLoader').classList.add('active');
+    };
+
+    window.hidePushupLoader = (onHiddenCallback) => {
+        const elapsed = Date.now() - loaderShownAt;
+        const remaining = Math.max(0, MIN_LOADER_DURATION_MS - elapsed);
+        clearTimeout(loaderHideTimeout);
+        loaderHideTimeout = setTimeout(() => {
+            document.getElementById('pushupLoader').classList.remove('active');
+            if (typeof onHiddenCallback === 'function') onHiddenCallback();
+        }, remaining);
+    };
+
+    // --- دیتابیس خوراکی‌های ایرانی ---
+    const createFood = (id, name, cat, cal100, prot100, carb100, fat100, unitsObj) => ({
+        id, name, cat, cal100, prot100, carb100, fat100, units: unitsObj
+    });
+
+    const U_RICE = { 'بشقاب': 250, 'کفگیر': 85, 'پرس': 320, '۱۰۰ گرم': 100 };
+    const U_STEW = { 'کاسه': 250, 'بشقاب': 200, 'ملاقه': 90, 'پرس': 280 };
+    const U_SOUP = { 'کاسه': 320, 'ملاقه': 100, 'پرس': 380 };
+    const U_KEBAB = { 'پرس': 240, 'سیخ': 110, '۱۰۰ گرم': 100 };
+    const U_SYRUP = { 'قاشق غذاخوری': 20, 'پیاله': 60, '۱۰۰ گرم': 100 };
+    const U_BREAD = { 'کف دست': 30, 'برش': 45, 'نان کامل': 250 };
+    const U_JUICE = { 'لیوان (۲۰۰cc)': 200, 'بطری (۳۰۰cc)': 300 };
+    const U_DESSERT = { 'کاسه': 220, 'پیاله': 130, 'قاشق': 20 };
+
+    const DEFAULT_FOODS = [
+        createFood('s_grape_syrup', 'شیره انگور / خرما / توت', 'syrup', 300, 1.2, 74.0, 0.1, U_SYRUP),
+        createFood('s_ardeh', 'ارده کنجد', 'syrup', 595, 17.0, 21.0, 53.0, U_SYRUP),
+        createFood('s_honey', 'عسل طبیعی', 'syrup', 304, 0.3, 82.0, 0.0, U_SYRUP),
+        createFood('s_cheese', 'پنیر سفید ایرانی', 'syrup', 250, 15.0, 3.3, 20.0, { 'قوطی کبریت': 30, '۱۰۰ گرم': 100 }),
+        createFood('s_egg', 'تخم‌مرغ (آبپز / نیمرو)', 'syrup', 155, 12.6, 1.1, 10.6, { 'عدد': 55, 'بشقاب (۲ عدد)': 110 }),
+        createFood('s_omelette', 'املت گوجه‌فرنگی', 'syrup', 145, 8.5, 4.5, 10.5, { 'بشقاب': 220, 'پرس': 260 }),
+        createFood('p_rice', 'برنج سفید پخته (چلو/کته)', 'persian', 130, 2.7, 28.0, 0.3, U_RICE),
+        createFood('p_zereshk', 'زرشک‌پلو با مرغ', 'persian', 155, 11.5, 18.0, 4.2, { 'پرس': 400, 'بشقاب': 300 }),
+        createFood('p_ghormeh', 'خورشت قورمه‌سبزی', 'persian', 155, 9.5, 7.0, 10.0, U_STEW),
+        createFood('p_gheymeh', 'خورشت قیمه', 'persian', 165, 8.8, 12.0, 9.0, U_STEW),
+        createFood('p_fesenjan', 'خورشت فسنجان', 'persian', 245, 11.0, 14.0, 17.0, U_STEW),
+        createFood('p_abgoosht', 'آبگوشت سنتی (دیزی)', 'persian', 142, 9.2, 11.0, 6.8, U_SOUP),
+        createFood('p_ash', 'آش رشته / حلیم', 'persian', 135, 6.8, 19.0, 4.0, U_SOUP),
+        createFood('k_koobideh_meal', 'چلوکباب کوبیده کامل', 'protein', 195, 10.5, 19.5, 8.2, { 'پرس': 480, 'بشقاب': 350 }),
+        createFood('k_koobideh', 'کباب کوبیده', 'protein', 275, 19.0, 2.0, 21.0, U_KEBAB),
+        createFood('k_joojeh', 'جوجه کباب / سینه مرغ', 'protein', 165, 28.0, 0.5, 5.0, U_KEBAB),
+        createFood('k_kotlet', 'کتلت / شامی / کوکو', 'protein', 235, 12.0, 14.0, 14.5, { 'عدد': 65, 'پرس': 220 }),
+        createFood('fr_apple', 'سیب / گلابی / پرتقال', 'fruit', 52, 0.5, 13.5, 0.2, { 'عدد متوسط': 160, 'بشقاب': 220 }),
+        createFood('fr_banana', 'موز', 'fruit', 89, 1.1, 23.0, 0.3, { 'عدد متوسط': 120, '۱۰۰ گرم': 100 }),
+        createFood('fr_melon', 'هندوانه / خربزه / طالبی', 'fruit', 32, 0.7, 8.0, 0.2, { 'برش (قاچ)': 200, 'بشقاب': 250 }),
+        createFood('fr_date', 'خرما', 'fruit', 277, 1.8, 75.0, 0.2, { 'عدد': 10, 'مشت': 45 }),
+        createFood('j_carrot', 'آب هویج / آب پرتقال طبیعی', 'juice', 43, 0.8, 10.0, 0.2, U_JUICE),
+        createFood('j_banana_milk', 'شیرموز / معجون', 'juice', 115, 4.0, 19.5, 3.0, U_JUICE),
+        createFood('d_doogh', 'دوغ سنتی', 'drink', 26, 1.4, 2.2, 1.2, U_JUICE),
+        createFood('d_tea', 'چای / قهوه تلخ', 'drink', 2, 0.1, 0.2, 0.0, U_JUICE),
+        createFood('ds_sholeh_zard', 'شله‌زرد / فرنی / شیربرنج', 'dessert', 150, 3.2, 29.0, 2.4, U_DESSERT),
+        createFood('ds_icecream', 'بستنی سنتی / فالوده', 'dessert', 210, 3.8, 26.0, 10.5, U_DESSERT),
+        createFood('ps_cake', 'کیک / شیرینی تر و خشک', 'pastry', 400, 5.5, 52.0, 19.0, { 'عدد / تکه': 65, '۱۰۰ گرم': 100 }),
+        createFood('sn_nuts', 'آجیل (پسته، بادام، گردو، تخمه)', 'snack', 585, 19.5, 21.0, 51.0, { 'مشت': 30, 'پیاله': 80 }),
+        createFood('b_sangak', 'نان سنگک / بربری / لواش', 'bread', 265, 8.5, 54.0, 1.4, U_BREAD)
+    ];
+
+    const STORAGE_KEY = 'bodymod_web_official_v5';
+    const getInitialTheme = () => {
         try {
-            const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-            return JSON.parse(decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')));
-        } catch { return null; }
+            const saved = localStorage.getItem('bodymod_user_theme');
+            if (saved) return saved;
+        } catch (e) {}
+        return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    };
+
+    let state = {
+        theme: getInitialTheme(),
+        selectedDate: todayISO,
+        selectedMeal: 'breakfast',
+        selectedCat: 'none',
+        bodyCoins: 30,
+        vipExpiresAt: 0,
+        streakCount: 0,
+        lastWorkoutDate: '',
+        streakHistory: [],
+        authUser: { email: '', phone: '', loggedIn: false },
+        userProfile: {
+            profileCompleted: false,
+            nickname: '',
+            birthDate: '',
+            age: 21,
+            gender: 'male',
+            city: '',
+            height: 178,
+            weight: 75,
+            activity: 1.55,
+            goalMode: 'maintain',
+            termsAccepted: false
+        },
+        goals: { cal: 2000, prot: 140, carb: 220, fat: 65, waterGlasses: 10, waterAuto: true },
+        customFoods: [],
+        daysLog: {}
+    };
+
+    const computeAutoWaterGlasses = (cal, weightKg, goalMode) => {
+        const baseMl = Math.round((cal * 0.6) + (weightKg * 18));
+        const bonusMl = (goalMode === 'muscle' || goalMode === 'gain_weight') ? 300 : 0;
+        return Math.max(6, Math.min(22, Math.round((baseMl + bonusMl) / 200)));
+    };
+
+    const getActiveUserKey = () => (state.authUser.email || state.authUser.phone || "").toLowerCase().trim();
+    const isCeoUser = () => {
+        const k = getActiveUserKey();
+        return k && (k === CEO_GMAIL.toLowerCase().trim() || k === CEO_PHONE.trim() || k === "matin_ceo_edition");
+    };
+
+    const loadState = () => {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                state = {
+                    ...state,
+                    ...parsed,
+                    theme: getInitialTheme(),
+                    selectedDate: todayISO,
+                    userProfile: { ...state.userProfile, ...(parsed.userProfile || {}) },
+                    goals: { ...state.goals, ...(parsed.goals || {}) }
+                };
+            }
+        } catch (e) {}
+    };
+
+    const saveState = () => {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
     };
 
     window.openDrawer = () => {
@@ -1034,261 +1371,80 @@
     window.switchTab = (tabId) => {
         document.querySelectorAll('.drawer-item').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
-        const activeBtn = document.querySelector(`.drawer-item[data-tab="${tabId}"]`);
-        if (activeBtn) activeBtn.classList.add('active');
+        const btn = document.querySelector(`.drawer-item[data-tab="${tabId}"]`);
+        if (btn) btn.classList.add('active');
         const sec = document.getElementById(tabId);
         if (sec) sec.classList.add('active');
         closeDrawer();
         renderAll();
     };
+    window.toggleTheme = () => {
+        state.theme = state.theme === 'dark' ? 'light' : 'dark';
+        try { localStorage.setItem('bodymod_user_theme', state.theme); } catch (e) {}
+        renderAll();
+    };
 
-    window.openCyber403Modal = (featureName) => {
-        document.getElementById('cyber403ReasonText').innerHTML =
-            `رفیق! قابلیت <strong>«${featureName}»</strong> به دلایل امنیتی روی مرورگر وب قفل شده و فقط داخل اپلیکیشن رسمی اندروید فعاله! همین الان از کافه‌بازار یا مایکت نصبش کن تا همه‌چیز برات باز بشه 🔥`;
-        document.getElementById('cyber403Modal').classList.add('open');
+    const syncToCloudflare = async (showLoader = false) => {
+        const userKey = getActiveUserKey();
+        const badge = document.getElementById('cloudSyncStatus');
+        if (!userKey) {
+            badge.textContent = '💾 ذخیره در مرورگر';
+            return;
+        }
+        if (showLoader) showPushupLoader('درحال تمرین... (سینک با کلودفلر)');
+        badge.textContent = '⏳ سینک کلودفلر...';
+        try {
+            const res = await fetch(`${WORKER_BASE_URL}/api/user/sync`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-App-Client': 'BodyMod-Web' },
+                body: JSON.stringify({
+                    userKey,
+                    userProfile: state.userProfile,
+                    goals: state.goals,
+                    daysLog: state.daysLog,
+                    customFoods: state.customFoods,
+                    streakHistory: state.streakHistory
+                })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.user) {
+                    state.bodyCoins = data.user.bodyCoins ?? state.bodyCoins;
+                    state.vipExpiresAt = data.user.vipExpiresAt ?? state.vipExpiresAt;
+                }
+                badge.textContent = '☁️ سینک ابری فعال';
+            }
+        } catch {
+            badge.textContent = '💾 ذخیره در مرورگر';
+        } finally {
+            if (showLoader) hidePushupLoader();
+        }
     };
 
     const fetchLiveBetaStatus = async () => {
         const textEl = document.getElementById('liveBetaCapacityText');
         try {
             const res = await fetch(`${WORKER_BASE_URL}/api/beta/status`);
-            if (!res.ok) throw new Error('Not ready');
+            if (!res.ok) throw new Error();
             const data = await res.json();
-            const total = data.totalCapacity || 1000;
-            const sold = data.soldCount || 0;
-            const remaining = Math.max(0, total - sold);
-            textEl.textContent = `${toFa(remaining)} از ${toFa(total)} نفر باقی مانده`;
+            textEl.textContent = `${toFa(data.remaining)} از ${toFa(data.totalCapacity)} نفر باقی‌مانده`;
         } catch {
-            textEl.textContent = `${toFa(1000)} از ${toFa(1000)} نفر باقی مانده`;
+            textEl.textContent = `۱۰۰۰ از ۱۰۰۰ نفر باقی‌مانده`;
         }
     };
 
-    // --- دیتابیس ۱۶۰+ خوراکی ایرانی ---
-    const createFood = (id, name, cat, cal100, prot100, carb100, fat100, unitsObj) => ({
-        id, name, cat, cal100, prot100, carb100, fat100, units: unitsObj
-    });
-
-    const U_RICE = { 'بشقاب': 250, 'کفگیر': 85, 'پرس': 320, '۱۰۰ گرم': 100, 'گرم': 1 };
-    const U_STEW = { 'کاسه': 250, 'بشقاب خورشت‌خوری': 200, 'ملاقه': 90, 'پرس': 280, '۱۰۰ گرم': 100, 'گرم': 1 };
-    const U_SOUP = { 'کاسه': 320, 'بشقاب گود': 280, 'ملاقه': 100, 'پرس': 380, '۱۰۰ گرم': 100, 'گرم': 1 };
-    const U_KEBAB = { 'پرس': 240, 'سیخ': 110, 'بشقاب': 200, '۱۰۰ گرم': 100, 'گرم': 1 };
-    const U_SYRUP = { 'قاشق غذاخوری': 20, 'قاشق مرباخوری': 10, 'پیاله کوچک': 60, '۱۰۰ گرم': 100, 'گرم': 1 };
-    const U_BREAD = { 'کف دست': 30, 'برش متوسط': 45, 'نان کامل': 250, '۱۰۰ گرم': 100, 'گرم': 1 };
-    const U_JUICE = { 'لیوان (۲۰۰ میلی‌لیتر)': 200, 'نیم‌لیوان (۱۰۰ میلی‌لیتر)': 100, 'بطری کوچک (۳۰۰cc)': 300, 'میلی‌لیتر': 1 };
-    const U_HOT_DRINK = { 'لیوان (۲۰۰ میلی‌لیتر)': 200, 'فنجان (۱۵۰ میلی‌لیتر)': 150, 'شات اسپرسو (۴۰cc)': 40, 'میلی‌لیتر': 1 };
-    const U_DESSERT = { 'کاسه': 220, 'پیاله': 130, 'لیوان (۲۰۰ میلی‌لیتر)': 200, 'قاشق غذاخوری': 20, '۱۰۰ گرم': 100, 'گرم': 1 };
-    const U_ICECREAM = { 'اسکوپ': 65, 'لیوان (۲۰۰ میلی‌لیتر)': 200, 'کاسه': 180, 'عدد چوبی/قیفی': 85, '۱۰۰ گرم': 100, 'گرم': 1 };
-    const uPastry = (pieceGram, label = 'عدد') => ({ [label]: pieceGram, 'برش متوسط': 80, '۱۰۰ گرم': 100, 'گرم': 1 });
-    const uNut = (pieceGram, label = 'عدد') => ({ 'مشت': 30, [label]: pieceGram, 'پیاله': 80, 'قاشق غذاخوری': 15, '۱۰۰ گرم': 100, 'گرم': 1 });
-    const uFruit = (medGram) => ({ 'عدد متوسط': medGram, 'پیمانه خردشده': 150, 'بشقاب میوه‌خوری': 220, '۱۰۰ گرم': 100, 'گرم': 1 });
-    const uSmallFruit = (pieceGram, label = 'عدد') => ({ [label]: pieceGram, 'مشت': 45, 'پیاله': 120, '۱۰۰ گرم': 100, 'گرم': 1 });
-    const uMelon = () => ({ 'برش (قاچ متوسط)': 200, 'بشقاب': 250, 'پیمانه': 160, '۱۰۰ گرم': 100, 'گرم': 1 });
-
-    const DEFAULT_FOODS = [
-        createFood('s_grape_syrup', 'شیره انگور', 'syrup', 300, 1.0, 75.0, 0.0, U_SYRUP),
-        createFood('s_date_syrup', 'شیره خرما', 'syrup', 295, 1.4, 73.0, 0.1, U_SYRUP),
-        createFood('s_mulberry_syrup', 'شیره توت', 'syrup', 290, 1.2, 72.0, 0.0, U_SYRUP),
-        createFood('s_three_syrup', 'سه شیره (انگور، خرما، توت)', 'syrup', 295, 1.2, 73.5, 0.1, U_SYRUP),
-        createFood('s_ardeh', 'ارده کنجد', 'syrup', 595, 17.0, 21.0, 53.0, U_SYRUP),
-        createFood('s_honey', 'عسل طبیعی', 'syrup', 304, 0.3, 82.0, 0.0, U_SYRUP),
-        createFood('s_cheese', 'پنیر سفید ایرانی', 'syrup', 250, 15.0, 3.3, 20.0, { 'قوطی کبریت': 30, 'قاشق غذاخوری': 20, '۱۰۰ گرم': 100, 'گرم': 1 }),
-        createFood('s_yogurt', 'ماست معمولی / کم‌چرب', 'syrup', 61, 3.5, 4.7, 3.3, { 'کاسه': 200, 'پیاله': 120, '۱۰۰ گرم': 100 }),
-        createFood('s_milk', 'شیر کم‌چرب / معمولی', 'syrup', 50, 3.4, 4.8, 2.0, U_JUICE),
-        createFood('s_egg', 'تخم‌مرغ (آبپز / نیمرو)', 'syrup', 155, 12.6, 1.1, 10.6, { 'عدد': 55, 'بشقاب (۲ عدد)': 110, '۱۰۰ گرم': 100, 'گرم': 1 }),
-        createFood('s_omelette', 'املت گوجه‌فرنگی', 'syrup', 145, 8.5, 4.5, 10.5, { 'بشقاب': 220, 'پرس': 260, '۱۰۰ گرم': 100 }),
-
-        createFood('p_rice', 'برنج سفید پخته (چلو/کته)', 'persian', 130, 2.7, 28.0, 0.3, U_RICE),
-        createFood('p_zereshk_polo', 'زرشک‌پلو با مرغ (کامل)', 'persian', 155, 11.5, 18.0, 4.2, { 'پرس': 400, 'بشقاب': 300, 'کفگیر': 95, '۱۰۰ گرم': 100 }),
-        createFood('p_baghali_polo', 'باقالی‌پلو با گوشت', 'persian', 168, 10.8, 17.5, 6.0, { 'پرس': 420, 'بشقاب': 300, '۱۰۰ گرم': 100 }),
-        createFood('p_adas_polo', 'عدس‌پلو / لوبیاپلو', 'persian', 152, 5.8, 25.0, 3.4, U_RICE),
-        createFood('p_macaroni', 'ماکارونی ایرانی با مایه گوشتی', 'persian', 175, 7.5, 25.0, 5.2, U_RICE),
-        createFood('p_ghormeh', 'خورشت قورمه‌سبزی', 'persian', 155, 9.5, 7.0, 10.0, U_STEW),
-        createFood('p_gheymeh', 'خورشت قیمه (با سیب‌زمینی)', 'persian', 165, 8.8, 12.0, 9.0, U_STEW),
-        createFood('p_fesenjan', 'خورشت فسنجان', 'persian', 245, 11.0, 14.0, 17.0, U_STEW),
-        createFood('p_abgoosht', 'آبگوشت سنتی (دیزی کامل)', 'persian', 142, 9.2, 11.0, 6.8, U_SOUP),
-        createFood('p_ash_reshteh', 'آش رشته', 'persian', 115, 4.8, 16.0, 3.5, U_SOUP),
-        createFood('p_halim', 'حلیم گندم و گوشت', 'persian', 165, 9.5, 22.0, 4.5, U_SOUP),
-        createFood('p_adasi', 'عدسی / خوراک لوبیا', 'persian', 118, 7.8, 17.0, 2.2, U_SOUP),
-        createFood('p_kalleh', 'کله‌پاچه (مخلوط و آب)', 'persian', 235, 18.0, 1.5, 17.5, { 'پرس': 350, 'کاسه': 280, '۱۰۰ گرم': 100 }),
-
-        createFood('k_koobideh_meal', 'چلوکباب کوبیده (کامل با برنج)', 'protein', 195, 10.5, 19.5, 8.2, { 'پرس': 480, 'بشقاب': 350, '۱۰۰ گرم': 100 }),
-        createFood('k_koobideh', 'کباب کوبیده (خالص)', 'protein', 275, 19.0, 2.0, 21.0, U_KEBAB),
-        createFood('k_joojeh', 'جوجه کباب', 'protein', 165, 25.0, 1.0, 6.5, U_KEBAB),
-        createFood('k_chicken_breast', 'سینه مرغ پخته / گریل', 'protein', 165, 31.0, 0.0, 3.6, { 'بشقاب': 200, 'تکه متوسط': 120, '۱۰۰ گرم': 100 }),
-        createFood('k_fish', 'ماهی پخته / کبابی', 'protein', 150, 24.0, 0.0, 5.5, { 'پرس': 220, 'بشقاب': 180, '۱۰۰ گرم': 100 }),
-        createFood('k_kotlet', 'کتلت / شامی / کوکو', 'protein', 235, 12.0, 14.0, 14.5, { 'عدد': 65, 'بشقاب (۳ عدد)': 195, 'پرس': 240 }),
-        createFood('k_pizza', 'پیتزا / همبرگر', 'protein', 260, 12.0, 27.0, 11.8, { 'برش (اسلایس)': 100, 'کامل': 350, '۱۰۰ گرم': 100 }),
-
-        createFood('fr_pear', 'گلابی', 'fruit', 57, 0.4, 15.0, 0.1, uFruit(180)),
-        createFood('fr_apple', 'سیب', 'fruit', 52, 0.3, 14.0, 0.2, uFruit(160)),
-        createFood('fr_banana', 'موز', 'fruit', 89, 1.1, 23.0, 0.3, uFruit(120)),
-        createFood('fr_orange', 'پرتقال', 'fruit', 47, 0.9, 12.0, 0.1, uFruit(150)),
-        createFood('fr_tangerine', 'نارنگی', 'fruit', 53, 0.8, 13.3, 0.3, uFruit(100)),
-        createFood('fr_sweet_lemon', 'لیموشیرین / لیموترش', 'fruit', 40, 0.8, 10.0, 0.2, uFruit(130)),
-        createFood('fr_kiwi', 'کیوی', 'fruit', 61, 1.1, 14.7, 0.5, uFruit(85)),
-        createFood('fr_pomegranate', 'انار', 'fruit', 83, 1.7, 18.7, 1.2, { 'عدد متوسط': 200, 'کاسه دانه انار': 160, '۱۰۰ گرم': 100 }),
-        createFood('fr_grape', 'انگور', 'fruit', 69, 0.7, 18.1, 0.2, { 'حبه': 5, 'خوشه متوسط': 180, 'بشقاب': 200, '۱۰۰ گرم': 100 }),
-        createFood('fr_watermelon', 'هندوانه', 'fruit', 30, 0.6, 7.6, 0.2, uMelon()),
-        createFood('fr_kharbozeh', 'خربزه / طالبی / گرمک', 'fruit', 35, 0.8, 8.5, 0.2, uMelon()),
-        createFood('fr_peach', 'هلو / شلیل', 'fruit', 42, 1.0, 10.0, 0.3, uFruit(145)),
-        createFood('fr_apricot', 'زردآلو / آلو / گوجه سبز', 'fruit', 46, 1.1, 11.0, 0.3, uSmallFruit(35)),
-        createFood('fr_cherry', 'گیلاس / آلبالو', 'fruit', 58, 1.0, 14.0, 0.2, uSmallFruit(8, 'دانه')),
-        createFood('fr_strawberry', 'توت‌فرنگی / توت سفید / شاه‌توت', 'fruit', 42, 1.0, 10.0, 0.3, uSmallFruit(12)),
-        createFood('fr_fig', 'انجیر / خرمالو / به / ازگیل', 'fruit', 68, 0.6, 17.5, 0.2, uFruit(120)),
-        createFood('fr_date', 'خرما', 'fruit', 277, 1.8, 75.0, 0.2, uSmallFruit(10, 'عدد')),
-        createFood('fr_mango', 'انبه / آناناس', 'fruit', 55, 0.7, 14.0, 0.3, uFruit(160)),
-
-        createFood('j_orange', 'آب پرتقال طبیعی', 'juice', 45, 0.7, 10.4, 0.2, U_JUICE),
-        createFood('j_carrot', 'آب هویج طبیعی', 'juice', 40, 0.9, 9.3, 0.2, U_JUICE),
-        createFood('j_pomegranate', 'آب انار طبیعی', 'juice', 54, 0.2, 13.1, 0.3, U_JUICE),
-        createFood('j_apple', 'آب سیب / آب کرفس', 'juice', 35, 0.4, 8.0, 0.1, U_JUICE),
-        createFood('j_watermelon', 'آب هندوانه / آب طالبی', 'juice', 33, 0.7, 8.0, 0.1, U_JUICE),
-        createFood('j_barberry', 'آب زرشک / آب آلبالو', 'juice', 47, 0.4, 11.0, 0.1, U_JUICE),
-        createFood('j_banana_milk', 'شیرموز / شیرخرما', 'juice', 95, 3.2, 17.5, 1.8, U_JUICE),
-        createFood('j_majoon', 'معجون ویتامینه', 'juice', 165, 5.2, 24.0, 5.8, U_JUICE),
-
-        createFood('d_doogh', 'دوغ سنتی / پاستوریزه', 'drink', 26, 1.4, 2.2, 1.2, U_JUICE),
-        createFood('d_khakshir', 'شربت خاکشیر / تخم‌شربتی / آبلیمو', 'drink', 48, 0.5, 11.2, 0.3, U_JUICE),
-        createFood('d_soda', 'نوشابه / دلستر', 'drink', 40, 0.2, 10.0, 0.0, U_JUICE),
-        createFood('d_tea', 'چای / دمنوش / قهوه تلخ (بدون قند)', 'drink', 1, 0.1, 0.2, 0.0, U_HOT_DRINK),
-        createFood('d_latte', 'لاته / کاپوچینو / نسکافه / هات چاکلت', 'drink', 68, 2.8, 9.5, 2.2, U_HOT_DRINK),
-
-        createFood('ds_sholeh_zard', 'شله‌زرد / فرنی / شیربرنج / سمنو', 'dessert', 150, 3.2, 29.0, 2.4, U_DESSERT),
-        createFood('ds_halva', 'حلوا زعفرانی / کاچی', 'dessert', 360, 4.2, 46.0, 17.5, { 'قاشق غذاخوری': 25, 'پیاله': 100, '۱۰۰ گرم': 100 }),
-        createFood('ds_icecream_trad', 'بستنی سنتی / وانیلی / فالوده / آب‌هویج بستنی', 'dessert', 210, 3.8, 26.0, 10.5, U_ICECREAM),
-        createFood('ds_jelly', 'ژله / کرم کارامل / تیرامیسو', 'dessert', 120, 2.8, 20.0, 3.5, U_DESSERT),
-
-        createFood('ps_tar', 'شیرینی تر / دانمارکی / زبان / ناپلئونی', 'pastry', 405, 5.5, 49.0, 21.0, uPastry(70)),
-        createFood('ps_nokhodchi', 'شیرینی نخودچی / کشمشی / باقلوا / گز / سوهان', 'pastry', 450, 6.8, 59.0, 20.5, uPastry(25)),
-        createFood('ps_zoolbia', 'زولبیا و بامیه', 'pastry', 415, 3.2, 68.0, 14.5, uPastry(30)),
-        createFood('ps_cake', 'کیک یزدی / کیک شکلاتی / چیزکیک / کلوچه / پیراشکی', 'pastry', 385, 5.8, 51.0, 17.5, uPastry(80)),
-
-        createFood('sn_nuts', 'پسته / بادام / فندق / گردو / تخمه (مغز)', 'snack', 585, 19.5, 21.0, 51.0, uNut(1.2, 'دانه')),
-        createFood('sn_dried', 'نخودچی کشمش / توت خشک / لواشک', 'snack', 295, 5.5, 63.0, 1.5, { 'مشت': 35, 'عدد': 10, '۱۰۰ گرم': 100 }),
-        createFood('sn_zorat', 'ذرت مکزیکی / باقالی پخته / لبو پخته', 'snack', 125, 5.2, 18.0, 4.0, { 'لیوان (۲۰۰ میلی‌لیتر)': 200, 'کاسه': 240 }),
-        createFood('sn_falafel', 'فلافل / سمبوسه / الویه / سیب‌زمینی سرخ‌کرده', 'snack', 285, 8.5, 31.0, 14.5, { 'پرس / بشقاب': 220, 'عدد': 60 }),
-        createFood('sn_chips', 'چیپس / پفک / پاپ‌کورن / بیسکویت ساقه‌طلایی / شکلات', 'snack', 485, 7.2, 59.0, 24.5, { 'بسته متوسط': 55, 'عدد / تکه': 12 }),
-
-        createFood('b_sangak', 'نان سنگک', 'bread', 260, 8.6, 53.0, 1.3, U_BREAD),
-        createFood('b_barbari', 'نان بربری', 'bread', 273, 8.3, 56.0, 1.6, U_BREAD),
-        createFood('b_lavash', 'نان لواش / تافتون / تست', 'bread', 275, 8.6, 56.0, 1.5, { 'ورق': 30, 'کف دست': 20, '۱۰۰ گرم': 100 })
-    ];
-
-    const STORAGE_KEY = 'bodymod_web_clean_v6';
-    const todayISO = getLocalISODate(new Date());
-
-    const getInitialTheme = () => {
-        const saved = localStorage.getItem('bodymod_user_theme');
-        if (saved) return saved;
-        return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
-    };
-
-    let state = {
-        theme: getInitialTheme(),
-        startDate: todayISO,
-        selectedDate: todayISO,
-        selectedMeal: 'breakfast',
-        selectedCat: 'none',
-        authUser: { email: '', phone: '', loggedIn: false },
-        userProfile: {
-            profileCompleted: false,
-            nickname: '',
-            birthDate: '',
-            age: 21,
-            gender: 'male',
-            city: '',
-            height: 178,
-            weight: 75,
-            activity: 1.55,
-            goalMode: 'maintain',
-            termsAccepted: false,
-            termsAcceptedAt: null
-        },
-        goals: { cal: 2000, prot: 140, carb: 220, fat: 65, waterGlasses: 10, waterAuto: true },
-        customFoods: [],
-        daysLog: {}
-    };
-
-    if (window.matchMedia) {
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-            if (!localStorage.getItem('bodymod_user_theme')) {
-                state.theme = e.matches ? 'dark' : 'light';
-                renderAll();
-            }
-        });
-    }
-
-    window.toggleTheme = () => {
-        state.theme = state.theme === 'dark' ? 'light' : 'dark';
-        localStorage.setItem('bodymod_user_theme', state.theme);
+    document.getElementById('checkInWorkoutBtn').addEventListener('click', () => {
+        const today = getLocalISODate(new Date());
+        if (state.lastWorkoutDate === today) {
+            showToast('رفیق امروز تمرینت رو ثبت کردی و آتیشت روشنه! 🔥');
+            return;
+        }
+        state.streakCount = (state.streakCount || 0) + 1;
+        state.lastWorkoutDate = today;
         renderAll();
-    };
-
-    const computeAutoWaterGlasses = (cal, weightKg, goalMode) => {
-        const baseMl = Math.round((cal * 0.6) + (weightKg * 18));
-        const bonusMl = (goalMode === 'muscle' || goalMode === 'gain_weight') ? 300 : 0;
-        return Math.max(6, Math.min(22, Math.round((baseMl + bonusMl) / 200)));
-    };
-
-    const loadState = () => {
-        try {
-            const raw = localStorage.getItem(STORAGE_KEY);
-            if (raw) {
-                const parsed = JSON.parse(raw);
-                state = {
-                    ...state,
-                    ...parsed,
-                    theme: getInitialTheme(),
-                    userProfile: { ...state.userProfile, ...(parsed.userProfile || {}) },
-                    goals: { ...state.goals, ...(parsed.goals || {}) }
-                };
-            }
-            state.selectedDate = getLocalISODate(new Date());
-        } catch (e) { console.error(e); }
-    };
-
-    const saveState = () => {
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { console.error(e); }
-    };
-
-    const syncToCloudflare = async () => {
-        const userKey = state.authUser.email || state.authUser.phone;
-        const badge = document.getElementById('cloudSyncStatus');
-        if (!userKey) { badge.textContent = '💾 حافظه مرورگر'; return; }
-        badge.textContent = '⏳ سینک کلودفلر...';
-        try {
-            const res = await fetch(`${WORKER_BASE_URL}/api/user/sync`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userKey,
-                    userProfile: state.userProfile,
-                    goals: state.goals,
-                    daysLog: state.daysLog,
-                    customFoods: state.customFoods
-                })
-            });
-            if (res.ok) badge.textContent = '☁️ سینک ابری فعال';
-        } catch {
-            badge.textContent = '💾 ذخیره محلی';
-        }
-    };
-
-    const fetchProfileFromCloudflare = async (userKey) => {
-        try {
-            const res = await fetch(`${WORKER_BASE_URL}/api/user/profile?userKey=${encodeURIComponent(userKey)}`);
-            if (!res.ok) return false;
-            const data = await res.json();
-            if (data.found && data.user && data.user.userProfile && data.user.userProfile.profileCompleted) {
-                state.userProfile = { ...state.userProfile, ...data.user.userProfile };
-                if (data.user.goals) state.goals = { ...state.goals, ...data.user.goals };
-                if (data.user.daysLog) state.daysLog = { ...state.daysLog, ...data.user.daysLog };
-                saveState();
-                return true;
-            }
-        } catch (e) { console.log(e); }
-        return false;
-    };
+        syncToCloudflare(false);
+        showToast(`ایول قهرمان! تمرین امروز ثبت شد — آتیش: ${toFa(state.streakCount)} روز 🔥💪`);
+    });
 
     window.openOnboardingModal = (allowClose = false) => {
         document.getElementById('closeOnboardingBtn').style.display = allowClose ? 'inline-flex' : 'none';
@@ -1307,7 +1463,7 @@
         document.getElementById('obActivity').value = p.activity || 1.55;
         document.getElementById('obGoalMode').value = p.profileCompleted ? (p.goalMode || 'maintain') : '';
         document.getElementById('obTermsAccept').checked = !!p.termsAccepted;
-        document.getElementById('onboardingModal').classList.add('open');
+        openModalById('onboardingModal');
     };
 
     document.getElementById('submitOnboardingBtn').addEventListener('click', async () => {
@@ -1324,21 +1480,17 @@
         const termsAccepted = document.getElementById('obTermsAccept').checked;
 
         if (!nickname || !city || !bDay || !bMonth || !bYear || !gender || !height || !weight || !goalMode) {
-            alert('رفیق! تمام فیلدها (اسم، تاریخ تولد، جنسیت، شهر، قد، وزن و هدف) اجباری هستن تا بتونیم دقیق کمکت کنیم! ❤️');
+            showToast('رفیق! تمام فیلدها (اسم، تولد، جنسیت، شهر، قد، وزن و هدف) اجباری هستن ❤️');
             return;
         }
-
         if (!termsAccepted) {
-            alert('لطفاً تیک تایید قوانین و حریم خصوصی رو بزن رفیق! 🛡️');
+            showToast('لطفاً تیک تایید قوانین حریم خصوصی رو بزن رفیق! 🛡️');
             return;
         }
 
         const age = Math.max(10, Math.min(95, 1405 - bYear));
         const birthDate = `${bYear}/${String(bMonth).padStart(2, '0')}/${String(bDay).padStart(2, '0')}`;
-
-        const bmr = gender === 'male'
-            ? (10 * weight) + (6.25 * height) - (5 * age) + 5
-            : (10 * weight) + (6.25 * height) - (5 * age) - 161;
+        const bmr = gender === 'male' ? (10 * weight) + (6.25 * height) - (5 * age) + 5 : (10 * weight) + (6.25 * height) - (5 * age) - 161;
         const tdee = Math.round(bmr * activity);
 
         let targetCal = tdee, protRatio = 0.28, carbRatio = 0.44, fatRatio = 0.28;
@@ -1346,21 +1498,7 @@
         else if (goalMode === 'gain_weight') { targetCal = tdee + 500; protRatio = 0.18; carbRatio = 0.52; fatRatio = 0.30; }
         else if (goalMode === 'muscle') { targetCal = tdee + 300; protRatio = 0.30; carbRatio = 0.45; fatRatio = 0.25; }
 
-        state.userProfile = {
-            profileCompleted: true,
-            nickname,
-            birthDate,
-            age,
-            gender,
-            city,
-            height,
-            weight,
-            activity,
-            goalMode,
-            termsAccepted: true,
-            termsAcceptedAt: Date.now()
-        };
-
+        state.userProfile = { profileCompleted: true, nickname, birthDate, age, gender, city, height, weight, activity, goalMode, termsAccepted: true };
         state.goals = {
             cal: targetCal,
             prot: Math.round((targetCal * protRatio) / 4),
@@ -1371,53 +1509,110 @@
         };
 
         ensureDay(state.selectedDate).targetCal = targetCal;
-        document.getElementById('onboardingModal').classList.remove('open');
+        closeModalById('onboardingModal');
         renderAll();
-        await syncToCloudflare();
-        alert(`دمت گرم ${nickname} عزیز از ${city}! 🎉\nپرونده‌ات در دیتابیس کلودفلر ثبت شد.\n⚡ هدف روزانه: ${toFa(targetCal)} کالری | 💧 آب: ${toFa(state.goals.waterGlasses)} لیوان`);
+        await syncToCloudflare(true);
+        showToast(`ایول ${nickname} عزیز! هدف روزانه‌ات شد ${toFa(targetCal)} کالری 🔥`);
     });
 
-    window.handleGoogleCredentialResponse = async (response) => {
-        const payload = parseJwt(response.credential);
-        if (!payload) return;
-        state.authUser = { email: payload.email.toLowerCase().trim(), phone: '', loggedIn: true };
-        if (!state.userProfile.nickname && payload.given_name) state.userProfile.nickname = payload.given_name;
-        document.getElementById('authModal').classList.remove('open');
-
-        const alreadyCompleted = await fetchProfileFromCloudflare(state.authUser.email);
-        if (!alreadyCompleted && !state.userProfile.profileCompleted) {
-            openOnboardingModal(false);
-        } else {
-            await syncToCloudflare();
-            renderAll();
-        }
-    };
-
-    const initGoogleAuthButton = () => {
+    window.openAuthModal = () => {
         if (window.google && GOOGLE_CLIENT_ID) {
             try {
                 google.accounts.id.initialize({
                     client_id: GOOGLE_CLIENT_ID,
-                    callback: handleGoogleCredentialResponse
+                    callback: async (response) => {
+                        const base64 = response.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+                        const payload = JSON.parse(decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')));
+                        state.authUser = { email: payload.email.toLowerCase().trim(), phone: '', loggedIn: true };
+                        if (!state.userProfile.nickname && payload.given_name) state.userProfile.nickname = payload.given_name;
+                        closeModalById('authModal');
+                        if (!state.userProfile.profileCompleted) openOnboardingModal(false);
+                        else { await syncToCloudflare(true); renderAll(); }
+                    }
                 });
-                google.accounts.id.renderButton(
-                    document.getElementById('googleButtonContainer'),
-                    { theme: 'outline', size: 'large', text: 'signin_with', locale: 'fa', width: 280 }
-                );
-            } catch (e) { console.log(e); }
+                google.accounts.id.renderButton(document.getElementById('googleButtonContainer'), { theme: 'outline', size: 'large', text: 'signin_with', locale: 'fa', width: 260 });
+            } catch (e) {}
         }
+        openModalById('authModal');
     };
 
-    window.openAuthModal = () => {
-        initGoogleAuthButton();
-        document.getElementById('authModal').classList.add('open');
-    };
+    document.getElementById('sendBaleOtpBtn').addEventListener('click', async () => {
+        const phone = document.getElementById('balePhoneInput').value.trim();
+        if (!phone || !/^09\d{9}$/.test(phone)) {
+            showToast('شماره موبایل ۱۱ رقمی معتبر وارد کن رفیق! 📱');
+            return;
+        }
+
+        showPushupLoader('درحال تمرین... (ارسال کد تایید به بله)');
+        try {
+            const res = await fetch(`${WORKER_BASE_URL}/api/auth/bale/send-otp`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone })
+            });
+            const data = await res.json();
+            hidePushupLoader(() => {
+                if (!res.ok || !data.ok) {
+                    showToast(data.error || 'خطا در ارسال کد بله!');
+                    return;
+                }
+                document.getElementById('baleOtpGroup').style.display = 'flex';
+                document.getElementById('sendBaleOtpBtn').style.display = 'none';
+                document.getElementById('verifyBaleOtpBtn').style.display = 'inline-block';
+                showToast('کد تایید ۶ رقمی به پیام‌رسان «بله» ارسال شد! 📲');
+            });
+        } catch {
+            hidePushupLoader(() => showToast('خطا در ارتباط با سرور کلودفلر!'));
+        }
+    });
+
+    document.getElementById('verifyBaleOtpBtn').addEventListener('click', async () => {
+        const phone = document.getElementById('balePhoneInput').value.trim();
+        const code = document.getElementById('baleOtpInput').value.trim();
+        if (!phone || !code) { showToast('کد ۶ رقمی رو وارد کن رفیق!'); return; }
+
+        showPushupLoader('درحال تمرین... (بررسی کد تایید)');
+        try {
+            const res = await fetch(`${WORKER_BASE_URL}/api/auth/bale/verify-otp`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone, code })
+            });
+            const data = await res.json();
+            hidePushupLoader(async () => {
+                if (!data.ok) {
+                    showToast(data.error || 'کد اشتباهه رفیق!');
+                    return;
+                }
+                if (data.user) {
+                    state.bodyCoins = data.user.bodyCoins ?? state.bodyCoins;
+                    state.vipExpiresAt = data.user.vipExpiresAt ?? state.vipExpiresAt;
+                    if (data.user.userProfile) state.userProfile = { ...state.userProfile, ...data.user.userProfile };
+                }
+                state.authUser = { email: '', phone, loggedIn: true };
+                closeModalById('authModal');
+                if (!state.userProfile.profileCompleted) openOnboardingModal(false);
+                else { await syncToCloudflare(false); renderAll(); }
+            });
+        } catch {
+            hidePushupLoader(() => showToast('خطا در ارتباط با سرور!'));
+        }
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        state.authUser = { email: '', phone: '', loggedIn: false };
+        closeModalById('authModal');
+        renderAll();
+        showToast('از حساب خارج شدی رفیق 👋');
+    });
 
     const ensureDay = (iso) => {
         if (!state.daysLog[iso]) {
             state.daysLog[iso] = {
-                targetCal: state.goals.cal, targetWaterGlasses: state.goals.waterGlasses,
-                waterGlasses: 0, meals: { breakfast: [], lunch: [], dinner: [], snack: [] }
+                targetCal: state.goals.cal,
+                targetWaterGlasses: state.goals.waterGlasses,
+                waterGlasses: 0,
+                meals: { breakfast: [], lunch: [], dinner: [], snack: [] }
             };
         }
         return state.daysLog[iso];
@@ -1455,8 +1650,8 @@
     const getDiffBadge = (cal, target) => {
         const diff = cal - target;
         if (diff === 0) return { text: 'دقیقاً روی هدف زدی ایول! 🎯', cls: 'diff-exact' };
-        if (diff < 0) return { text: `${toFa(Math.abs(diff))} کیلوکالری کمتر از هدف`, cls: 'diff-under' };
-        return { text: `${toFa(diff)} کیلوکالری بیشتر از هدف`, cls: 'diff-over' };
+        if (diff < 0) return { text: `${toFa(Math.abs(diff))} کالری کمتر از هدف`, cls: 'diff-under' };
+        return { text: `${toFa(diff)} کالری بیشتر از هدف`, cls: 'diff-over' };
     };
 
     const goalLabels = {
@@ -1472,38 +1667,39 @@
 
         const p = state.userProfile;
         const nick = (p.nickname || '').trim();
-        const userKey = state.authUser.email || state.authUser.phone;
+        const userKey = getActiveUserKey();
+        const isVip = isCeoUser() || (state.vipExpiresAt && state.vipExpiresAt > Date.now());
+
+        document.getElementById('headerCoinsCount').textContent = toFa(isCeoUser() ? 9999 : (state.bodyCoins || 0));
+        document.getElementById('streakFireCount').textContent = `${toFa(state.streakCount || 0)} روز`;
 
         document.getElementById('userGreetingText').textContent = nick
             ? `سلام ${nick} عزیز (${p.city || 'ایران'}) 🔥`
             : `بدن و متابولیسم خودت رو هک کن!`;
         document.getElementById('dashboardPersonalizedTitle').textContent = nick
-            ? `⚡ وضعیت کالری و ماکروهای امروز ${nick}`
+            ? `⚡ وضعیت کالری امروز ${nick}`
             : `⚡ وضعیت کالری و ماکروهای امروزت`;
 
-        document.getElementById('headerAuthText').textContent = state.authUser.loggedIn && userKey ? (nick || userKey) : '🔐 ورود / ثبت‌نام';
+        document.getElementById('headerAuthText').textContent = state.authUser.loggedIn && userKey ? (nick || 'حساب من') : '🔐 ورود / ثبت‌نام';
         document.getElementById('drawerUserName').textContent = nick ? `${nick} (${p.city || ''})` : 'کاربر مهمان 👋';
-        document.getElementById('drawerUserSub').textContent = userKey ? `حساب: ${userKey}` : 'برای سینک ابری وارد حساب شو';
+        document.getElementById('drawerUserSub').textContent = userKey ? `حساب: ${userKey}` : 'برای سینک ابری وارد شو';
+        document.getElementById('drawerVipStatus').textContent = isCeoUser()
+            ? '👑 حساب مدیرعامل (آنلاک دائمی)'
+            : (isVip ? '💎 اشتراک VIP بتا: فعال' : '🌐 نسخه وب‌سایت');
         document.getElementById('logoutBtn').style.display = state.authUser.loggedIn ? 'inline-block' : 'none';
 
         if (p.profileCompleted) {
             document.getElementById('profileSummaryBox').innerHTML = `
                 <div>👤 <strong>نام:</strong> ${p.nickname} | 🏙️ <strong>شهر:</strong> ${p.city}</div>
-                <div>🎂 <strong>تاریخ تولد:</strong> ${toFa(p.birthDate)} (${toFa(p.age)} ساله) | 🚻 <strong>جنسیت:</strong> ${p.gender === 'male' ? 'مرد' : 'زن'}</div>
-                <div>📏 <strong>قد:</strong> ${toFa(p.height)} سانتی‌متر | ⚖️ <strong>وزن:</strong> ${toFa(p.weight)} کیلوگرم</div>
+                <div>🎂 <strong>تولد:</strong> ${toFa(p.birthDate)} (${toFa(p.age)} ساله) | 🚻 <strong>جنسیت:</strong> ${p.gender === 'male' ? 'مرد' : 'زن'}</div>
+                <div>📏 <strong>قد:</strong> ${toFa(p.height)} cm | ⚖️ <strong>وزن:</strong> ${toFa(p.weight)} kg</div>
                 <div>🎯 <strong>هدف:</strong> <span style="color:var(--primary); font-weight:800;">${goalLabels[p.goalMode] || p.goalMode}</span></div>
             `;
         }
 
         document.getElementById('shamsiDateDisplay').textContent = getShamsiFull(state.selectedDate);
         document.getElementById('relativeDayDisplay').textContent = getRelLabel(state.selectedDate);
-        document.getElementById('gregorianDatePicker').value = state.selectedDate;
         document.getElementById('jumpTodayBtn').style.display = state.selectedDate === getLocalISODate(new Date()) ? 'none' : 'inline-block';
-
-        const recorded = Object.keys(state.daysLog).filter(k => calcDayTotals(k).count > 0 || (state.daysLog[k].waterGlasses > 0)).sort();
-        const firstDay = recorded.length > 0 && recorded[0] < state.startDate ? recorded[0] : state.startDate;
-        const dayNum = Math.max(1, Math.round((parseISO(state.selectedDate) - parseISO(firstDay)) / 86400000) + 1);
-        document.getElementById('programDayCounter').textContent = `روز ${toFa(dayNum)}`;
 
         const t = calcDayTotals(state.selectedDate);
         const targetCal = t.targetCal || state.goals.cal;
@@ -1554,7 +1750,7 @@
         const items = dayObj.meals[state.selectedMeal] || [];
         const mealContainer = document.getElementById('loggedItemsContainer');
         if (items.length === 0) {
-            mealContainer.innerHTML = `<div style="text-align:center; padding:14px; color:var(--text-muted); font-size:12px;">هنوز چیزی ثبت نکردی رفیق! از کادر جستجوی پایین اضافه کن.</div>`;
+            mealContainer.innerHTML = `<div style="text-align:center; padding:12px; color:var(--text-muted); font-size:11px;">هنوز چیزی توی این وعده ثبت نکردی رفیق! از کادر جستجوی پایین اضافه کن.</div>`;
         } else {
             mealContainer.innerHTML = items.map((item, idx) => {
                 const food = getAllFoods().find(f => f.id === item.id) || item;
@@ -1564,9 +1760,9 @@
                 return `
                     <div class="logged-item">
                         <div>
-                            <div style="font-size:13px; font-weight:800;">${food.name} <span style="font-size:11px; color:var(--text-muted);">(${toFa(m.grams)}g/ml)</span></div>
+                            <div style="font-size:12px; font-weight:800;">${food.name} <span style="font-size:11px; color:var(--text-muted);">(${toFa(m.grams)}g)</span></div>
                             <div style="font-size:11px; color:var(--text-muted);">
-                                <strong style="color:var(--primary);">⚡ ${toFa(m.cal)} کالری</strong> | پ: ${toFa(m.prot)}g | ک: ${toFa(m.carb)}g | چ: ${toFa(m.fat)}g
+                                <strong style="color:var(--primary);">⚡ ${toFa(m.cal)} کالری</strong> | پ:${toFa(m.prot)} | ک:${toFa(m.carb)} | چ:${toFa(m.fat)}
                             </div>
                         </div>
                         <div class="logged-controls">
@@ -1584,8 +1780,8 @@
 
         if (!q && state.selectedCat === 'none') {
             foodBankEl.innerHTML = `
-                <div style="text-align:center; padding:14px; color:var(--text-muted); font-size:12px; border:1px dashed var(--border-color); border-radius:12px;">
-                    🔎 اسم خوراکی رو توی کادر بالا تایپ کن تا با واحد دلخواهت (بشقاب، کاسه، پرس، لیوان و...) نمایش داده بشه.
+                <div style="text-align:center; padding:12px; color:var(--text-muted); font-size:11px; border:1px dashed var(--border-color); border-radius:12px;">
+                    🔎 اسم خوراکی رو بالا تایپ کن (یا روی دسته‌بندی‌ها بزن) تا با واحد دلخواهت بیاد!
                 </div>
             `;
         } else {
@@ -1593,25 +1789,22 @@
                 (state.selectedCat === 'none' || f.cat === state.selectedCat) &&
                 (!q || f.name.toLowerCase().includes(q))
             );
-
             if (filteredFoods.length === 0) {
-                foodBankEl.innerHTML = `<div style="text-align:center; padding:14px; color:var(--text-muted); font-size:12px;">موردی پیدا نشد! می‌تونی با دکمه «+ خوراکی سفارشی» خودت اضافش کنی.</div>`;
+                foodBankEl.innerHTML = `<div style="text-align:center; padding:12px; color:var(--text-muted); font-size:11px;">پیدا نشد! با دکمه «+ خوراکی سفارشی» اضافش کن.</div>`;
             } else {
                 foodBankEl.innerHTML = filteredFoods.map(f => {
                     const unitKeys = Object.keys(f.units);
                     const firstUnit = unitKeys[0];
                     const defaultCal = Math.round(f.cal100 * (f.units[firstUnit] / 100));
-                    const unitOptions = unitKeys.map(u => `<option value="${u}">${u} (${toFa(f.units[u])})</option>`).join('');
+                    const unitOptions = unitKeys.map(u => `<option value="${u}">${u} (${toFa(f.units[u])}g)</option>`).join('');
                     return `
                         <div class="food-bank-item">
                             <div>
-                                <div style="font-size:13px; font-weight:800;">${f.name}</div>
-                                <div style="font-size:11px; color:var(--text-muted);">
-                                    هر ${firstUnit}: <strong style="color:var(--primary);">${toFa(defaultCal)} کالری</strong>
-                                </div>
+                                <div style="font-size:12px; font-weight:800;">${f.name}</div>
+                                <div style="font-size:11px; color:var(--text-muted);">هر ${firstUnit}: <strong style="color:var(--primary);">${toFa(defaultCal)} کالری</strong></div>
                             </div>
                             <div class="bank-add-controls">
-                                <input type="number" id="qty_${f.id}" class="qty-input" value="1" min="0.25" step="any" style="width:52px;">
+                                <input type="number" id="qty_${f.id}" class="qty-input" value="1" min="0.25" step="any" style="width:48px;">
                                 <select id="unit_${f.id}" class="unit-select">${unitOptions}</select>
                                 <button class="add-food-btn" onclick="addFoodFromBank('${f.id}')">+ ثبت</button>
                             </div>
@@ -1628,18 +1821,18 @@
         monthSel.innerHTML = `<option value="all">همه ماه‌ها (${toFa(dates.length)} روز)</option>` + months.map(m => `<option value="${m}" ${m === curM ? 'selected' : ''}>${m}</option>`).join('');
         const filteredDates = monthSel.value === 'all' ? dates : dates.filter(d => getShamsiMonth(d) === monthSel.value);
         document.getElementById('historyDaysList').innerHTML = filteredDates.length === 0
-            ? `<div style="text-align:center; padding:20px; color:var(--text-muted); font-size:12px;">هنوز روزی ثبت نشده رفیق!</div>`
+            ? `<div style="text-align:center; padding:16px; color:var(--text-muted); font-size:11px;">هنوز روزی ثبت نشده رفیق!</div>`
             : filteredDates.map(d => {
                 const dt = calcDayTotals(d);
                 const diff = getDiffBadge(dt.cal, dt.targetCal);
                 return `
                     <div class="logged-item" style="flex-direction:column; align-items:stretch;">
                         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
-                            <div><strong>📅 ${getShamsiFull(d)}</strong> <span class="relative-day-pill">${getRelLabel(d)}</span></div>
+                            <div><strong>📅 ${getShamsiFull(d)}</strong></div>
                             <span class="calorie-diff-banner ${diff.cls}" style="margin:0;">${diff.text}</span>
                         </div>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; font-size:11px; color:var(--text-muted);">
-                            <span>🔥 کالری: ${toFa(dt.cal)} از ${toFa(dt.targetCal)} | 💧 آب: ${toFa(dt.waterGlasses)} لیوان</span>
+                            <span>🔥 کالری: ${toFa(dt.cal)} | 💧 آب: ${toFa(dt.waterGlasses)} لیوان</span>
                             <button class="nav-arrow-btn" onclick="jumpToDate('${d}')">مشاهده ◀</button>
                         </div>
                     </div>
@@ -1650,16 +1843,16 @@
     };
 
     window.setWaterGlasses = (g) => { const d = ensureDay(state.selectedDate); d.waterGlasses = (d.waterGlasses === g) ? g - 1 : g; renderAll(); };
-    document.getElementById('addWaterBtn').addEventListener('click', () => { ensureDay(state.selectedDate).waterGlasses++; renderAll(); });
+    document.getElementById('addWaterBtn').addEventListener('click', () => { ensureDay(state.selectedDate).waterGlasses++; renderAll(); showToast('نوش جان! +۱ لیوان آب ثبت شد 💧'); });
     document.getElementById('removeWaterBtn').addEventListener('click', () => { const d = ensureDay(state.selectedDate); d.waterGlasses = Math.max(0, d.waterGlasses - 1); renderAll(); });
     document.getElementById('saveManualWaterBtn').addEventListener('click', () => {
         state.goals.waterGlasses = Math.max(1, parseInt(document.getElementById('manualWaterGlassesInput').value) || 10);
-        state.goals.waterAuto = false; renderAll(); syncToCloudflare();
+        state.goals.waterAuto = false; renderAll(); showToast('هدف آب ذخیره شد 💧');
     });
     document.getElementById('resetAutoWaterBtn').addEventListener('click', () => {
         state.goals.waterAuto = true;
         state.goals.waterGlasses = computeAutoWaterGlasses(state.goals.cal, state.userProfile.weight, state.userProfile.goalMode);
-        renderAll(); syncToCloudflare();
+        renderAll(); showToast('محاسبه خودکار آب فعال شد ⚡');
     });
 
     window.addFoodFromBank = (foodId) => {
@@ -1671,25 +1864,23 @@
         const existing = list.find(i => i.id === foodId && i.unitName === unitName);
         if (existing) existing.qty = +(existing.qty + qty).toFixed(2);
         else list.push({ id: food.id, name: food.name, cal100: food.cal100, prot100: food.prot100, carb100: food.carb100, fat100: food.fat100, units: food.units, unitName, unitGram: food.units[unitName], qty });
-        renderAll(); syncToCloudflare();
+        renderAll();
+        syncToCloudflare(false);
+        showToast(`«${food.name}» به وعده‌ات اضافه شد! 🍲`);
     };
 
-    window.updateLoggedItemQty = (idx, val) => { const q = parseFloat(val); if (q > 0) { ensureDay(state.selectedDate).meals[state.selectedMeal][idx].qty = q; renderAll(); syncToCloudflare(); } };
+    window.updateLoggedItemQty = (idx, val) => { const q = parseFloat(val); if (q > 0) { ensureDay(state.selectedDate).meals[state.selectedMeal][idx].qty = q; renderAll(); } };
     window.updateLoggedItemUnit = (idx, newUnit) => {
         const item = ensureDay(state.selectedDate).meals[state.selectedMeal][idx];
         const food = getAllFoods().find(f => f.id === item.id) || item;
-        item.unitName = newUnit; item.unitGram = food.units[newUnit] || 100; renderAll(); syncToCloudflare();
+        item.unitName = newUnit; item.unitGram = food.units[newUnit] || 100; renderAll();
     };
-    window.deleteLoggedItem = (idx) => { ensureDay(state.selectedDate).meals[state.selectedMeal].splice(idx, 1); renderAll(); syncToCloudflare(); };
-    window.jumpToDate = (iso) => {
-        state.selectedDate = iso;
-        switchTab('trackerTab');
-    };
+    window.deleteLoggedItem = (idx) => { ensureDay(state.selectedDate).meals[state.selectedMeal].splice(idx, 1); renderAll(); };
+    window.jumpToDate = (iso) => { state.selectedDate = iso; switchTab('trackerTab'); };
 
     document.getElementById('prevDayBtn').addEventListener('click', () => { const d = parseISO(state.selectedDate); d.setDate(d.getDate() - 1); state.selectedDate = getLocalISODate(d); renderAll(); });
     document.getElementById('nextDayBtn').addEventListener('click', () => { const d = parseISO(state.selectedDate); d.setDate(d.getDate() + 1); state.selectedDate = getLocalISODate(d); renderAll(); });
     document.getElementById('jumpTodayBtn').addEventListener('click', () => { state.selectedDate = getLocalISODate(new Date()); renderAll(); });
-    document.getElementById('gregorianDatePicker').addEventListener('change', (e) => { if (e.target.value) { state.selectedDate = e.target.value; renderAll(); } });
 
     document.querySelectorAll('.meal-tab').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -1708,98 +1899,33 @@
     document.getElementById('foodSearchInput').addEventListener('input', renderAll);
     document.getElementById('historyMonthFilter').addEventListener('change', renderAll);
 
-    document.getElementById('sendBaleOtpBtn').addEventListener('click', async () => {
-        const phone = document.getElementById('balePhoneInput').value.trim();
-        if (!phone || !/^09\d{9}$/.test(phone)) {
-            alert('رفیق لطفاً شماره موبایل معتبر ۱۱ رقمی (مثلاً 0914xxxxxxx) وارد کن!');
-            return;
-        }
-        try {
-            await fetch(`${WORKER_BASE_URL}/api/auth/bale/send-otp`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone })
-            });
-        } catch (e) { console.log(e); }
-        document.getElementById('baleOtpGroup').style.display = 'flex';
-        document.getElementById('sendBaleOtpBtn').style.display = 'none';
-        document.getElementById('verifyBaleOtpBtn').style.display = 'inline-block';
-        alert('کد تایید به شماره موبایلت در پیام‌رسان «بله» فرستاده شد! 📲');
-    });
-
-    document.getElementById('verifyBaleOtpBtn').addEventListener('click', async () => {
-        const phone = document.getElementById('balePhoneInput').value.trim();
-        const code = document.getElementById('baleOtpInput').value.trim();
-        if (!phone || !code) { alert('کد تایید ۶ رقمی رو وارد کن رفیق!'); return; }
-
-        try {
-            const res = await fetch(`${WORKER_BASE_URL}/api/auth/bale/verify-otp`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone, code })
-            });
-            const data = await res.json();
-            if (!data.ok) {
-                alert(data.error || 'کد تایید اشتباهه یا منقضی شده رفیق!');
-                return;
-            }
-            if (data.user && data.user.userProfile) {
-                state.userProfile = { ...state.userProfile, ...data.user.userProfile };
-            }
-        } catch (e) { console.log(e); }
-
-        state.authUser = { email: '', phone, loggedIn: true };
-        document.getElementById('authModal').classList.remove('open');
-
-        if (!state.userProfile.profileCompleted) {
-            openOnboardingModal(false);
-        } else {
-            await syncToCloudflare();
-            renderAll();
-        }
-    });
-
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-        state.authUser = { email: '', phone: '', loggedIn: false };
-        document.getElementById('authModal').classList.remove('open');
-        renderAll();
-    });
-
-    document.getElementById('saveManualGoalsBtn').addEventListener('click', async () => {
+    document.getElementById('saveManualGoalsBtn').addEventListener('click', () => {
         state.goals.cal = parseInt(document.getElementById('manualCalInput').value) || 2000;
         state.goals.prot = parseInt(document.getElementById('manualProtInput').value) || 140;
         state.goals.carb = parseInt(document.getElementById('manualCarbInput').value) || 220;
         state.goals.fat = parseInt(document.getElementById('manualFatInput').value) || 65;
         ensureDay(state.selectedDate).targetCal = state.goals.cal;
-        renderAll(); await syncToCloudflare();
+        renderAll();
+        showToast('اهداف روزانه با موفقیت ذخیره شد! 🎯');
     });
 
     document.getElementById('seedDemoHistoryBtn').addEventListener('click', () => {
         const base = parseISO(getLocalISODate(new Date()));
         const target = state.goals.cal || 2000;
         const offsetIso = (n) => { const d = new Date(base); d.setDate(d.getDate() + n); return getLocalISODate(d); };
-        state.daysLog[offsetIso(-5)] = {
-            targetCal: target, targetWaterGlasses: 10, waterGlasses: 9,
-            meals: {
-                breakfast: [{ id: 's_date_syrup', name: 'شیره خرما و سنگک', cal100: 250, prot100: 8, carb100: 50, fat100: 2, unitName: 'پرس', unitGram: 200, qty: 1 }],
-                lunch: [{ id: 'p_abgoosht', name: 'آبگوشت سنتی', cal100: 250, prot100: 15, carb100: 25, fat100: 10, unitName: 'کاسه', unitGram: 300, qty: 1 }],
-                dinner: [{ id: 'fr_pear', name: 'شام سبک و گلابی', cal100: 100, prot100: 10, carb100: 15, fat100: 2, unitName: 'پرس', unitGram: Math.max(50, target - 1450), qty: 1 }],
-                snack: []
-            }
-        };
         state.daysLog[offsetIso(-2)] = {
-            targetCal: target, targetWaterGlasses: 10, waterGlasses: 11,
+            targetCal: target, targetWaterGlasses: 10, waterGlasses: 10,
             meals: {
-                breakfast: [{ id: 's_grape_syrup', name: 'شیره انگور و بربری', cal100: 250, prot100: 9, carb100: 48, fat100: 4, unitName: 'پرس', unitGram: 240, qty: 1 }],
-                lunch: [{ id: 'k_koobideh_meal', name: 'چلوکباب کوبیده', cal100: 250, prot100: 16, carb100: 25, fat100: 11, unitName: 'پرس', unitGram: 400, qty: 1 }],
-                dinner: [{ id: 'ds_sholeh_zard', name: 'آش رشته و شله‌زرد', cal100: 100, prot100: 6, carb100: 16, fat100: 3, unitName: 'کاسه', unitGram: Math.max(50, target - 1550), qty: 1 }],
-                snack: []
+                breakfast: [{ id: 's_grape_syrup', name: 'شیره انگور و سنگک', cal100: 250, prot100: 9, carb100: 48, fat100: 4, unitName: 'پرس', unitGram: 240, qty: 1 }],
+                lunch: [{ id: 'k_koobideh_meal', name: 'چلوکباب کوبیده کامل', cal100: 195, prot100: 10.5, carb100: 19.5, fat100: 8.2, unitName: 'پرس', unitGram: 480, qty: 1 }],
+                dinner: [], snack: []
             }
         };
         renderAll();
+        showToast('داده نمونه در تاریخچه ثبت شد! 📊');
     });
 
-    document.getElementById('openCustomFoodModalBtn').addEventListener('click', () => document.getElementById('customFoodModal').classList.add('open'));
+    document.getElementById('openCustomFoodModalBtn').addEventListener('click', () => openModalById('customFoodModal'));
     document.getElementById('saveCustomFoodBtn').addEventListener('click', () => {
         const name = document.getElementById('cfName').value.trim();
         const unitName = document.getElementById('cfUnitName').value;
@@ -1807,19 +1933,23 @@
         const prot = parseFloat(document.getElementById('cfProt').value) || 0;
         const carb = parseFloat(document.getElementById('cfCarb').value) || 0;
         const fat = parseFloat(document.getElementById('cfFat').value) || 0;
-        if (!name || isNaN(cal)) return;
-        const unitGramsMap = { 'بشقاب': 250, 'کاسه': 300, 'پرس': 350, 'لیوان (۲۰۰ میلی‌لیتر)': 200, 'عدد': 100, 'قاشق غذاخوری': 20, '۱۰۰ گرم': 100 };
+        if (!name || isNaN(cal)) { showToast('نام و کالری خوراکی رو وارد کن رفیق!'); return; }
+        const unitGramsMap = { 'بشقاب': 250, 'کاسه': 300, 'پرس': 350, 'عدد': 100 };
         const baseGram = unitGramsMap[unitName] || 100;
         const scale = 100 / baseGram;
-        state.customFoods.unshift(createFood('custom_' + Date.now(), name, 'custom', Math.round(cal * scale), +(prot * scale).toFixed(1), +(carb * scale).toFixed(1), +(fat * scale).toFixed(1), { [unitName]: baseGram, '۱۰۰ گرم': 100, 'گرم': 1 }));
-        document.getElementById('customFoodModal').classList.remove('open');
+        state.customFoods.unshift(createFood('custom_' + Date.now(), name, 'custom', Math.round(cal * scale), +(prot * scale).toFixed(1), +(carb * scale).toFixed(1), +(fat * scale).toFixed(1), { [unitName]: baseGram, '۱۰۰ گرم': 100 }));
+        closeModalById('customFoodModal');
         state.selectedCat = 'custom';
-        renderAll(); syncToCloudflare();
+        renderAll();
+        showToast(`«${name}» به بانک غذای تو اضافه شد! 🥗`);
     });
+
+    // نمایش تضمینی ۲.۵ ثانیه‌ای لودینگ حرکت شنا در ابتدای باز شدن سایت
+    showPushupLoader('درحال تمرین... (لودینگ)');
+    hidePushupLoader();
 
     loadState();
     fetchLiveBetaStatus();
-    window.addEventListener('load', initGoogleAuthButton);
     renderAll();
 </script>
 </body>
