@@ -19,13 +19,12 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: 🤖 راه‌اندازی Android SDK رسمی گوگل
-        uses: android-actions/setup-android@v3
-
-      - name: 🛠️ نصب ابزارهای Build-Tools و پلتفرم اندروید ۳۴
+      - name: 🛠️ آماده‌سازی Android SDK داخلی گیت‌هاب (پلتفرم ۳۴)
         run: |
-          yes | sdkmanager --licenses || true
-          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+          export ANDROID_SDK_ROOT=$ANDROID_HOME
+          export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
       - name: 🟢 نصب Node.js و Apache Cordova
         uses: actions/setup-node@v4
@@ -34,6 +33,7 @@ jobs:
 
       - name: 📦 ساخت پروژه نیتیو اندروید BodyMod
         run: |
+          export ANDROID_SDK_ROOT=$ANDROID_HOME
           npm install -g cordova
           cordova create bodymod_native ir.matinmohammadi.bodymod "BodyMod"
           cd bodymod_native
@@ -51,7 +51,7 @@ jobs:
 
           cat << 'EOF' > config.xml
           <?xml version='1.0' encoding='utf-8'?>
-          <widget id="ir.matinmohammadi.bodymod" version="1.0.2" android-versionCode="3" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android">
+          <widget id="ir.matinmohammadi.bodymod" version="1.0.3" android-versionCode="4" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android">
               <name>BodyMod</name>
               <description>سوپراپلیکیشن کالری‌شمار و تناسب اندام هوشمند بادی‌مود</description>
               <author email="diaperloveradultbaby5@gmail.com" href="https://bodymod.matin-mohammadi.ir">Matin Mohammadi</author>
@@ -82,8 +82,8 @@ jobs:
           
           keytool -genkey -v -keystore bodymod-release.keystore -alias bodymod_key -keyalg RSA -keysize 2048 -validity 10000 -storepass MatinBodyMod2026 -keypass MatinBodyMod2026 -dname "CN=Matin Mohammadi, OU=BodyMod, O=MatinCreator, L=Urmia, S=WestAzerbaijan, C=IR"
           
-          $ANDROID_HOME/build-tools/34.0.0/zipalign -v -p 4 app-release-unsigned.apk BodyMod-v1.0.2-Aligned.apk
-          $ANDROID_HOME/build-tools/34.0.0/apksigner sign --ks bodymod-release.keystore --ks-key-alias bodymod_key --ks-pass pass:MatinBodyMod2026 --key-pass pass:MatinBodyMod2026 --out BodyMod-Official-Market.apk BodyMod-v1.0.2-Aligned.apk
+          $ANDROID_HOME/build-tools/34.0.0/zipalign -v -p 4 app-release-unsigned.apk BodyMod-v1.0.3-Aligned.apk
+          $ANDROID_HOME/build-tools/34.0.0/apksigner sign --ks bodymod-release.keystore --ks-key-alias bodymod_key --ks-pass pass:MatinBodyMod2026 --key-pass pass:MatinBodyMod2026 --out BodyMod-Official-Market.apk BodyMod-v1.0.3-Aligned.apk
 
       - name: 🎁 خروجی گرفتن فایل APK آماده نصب
         uses: actions/upload-artifact@v4
