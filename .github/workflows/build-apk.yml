@@ -31,7 +31,7 @@ jobs:
         with:
           node-version: '20'
 
-      - name: 📦 ساخت پروژه نیتیو اندروید BodyMod
+      - name: 📦 ساخت پروژه نیتیو اندروید BodyMod با آیکون اختصاصی
         run: |
           export ANDROID_SDK_ROOT=$ANDROID_HOME
           npm install -g cordova
@@ -45,13 +45,18 @@ jobs:
             cp ../index.html www/index.html
           fi
 
+          # کپی کردن آیکون اختصاصی برنامه از پوشه اصلی پروژه
           if [ -f "../icon.png" ]; then
             cp ../icon.png ./icon.png
+            cp ../icon.png www/icon.png
+            ICON_TAG='<icon src="icon.png" />'
+          else
+            ICON_TAG=''
           fi
 
-          cat << 'EOF' > config.xml
+          cat << EOF > config.xml
           <?xml version='1.0' encoding='utf-8'?>
-          <widget id="ir.matinmohammadi.bodymod" version="1.0.3" android-versionCode="4" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android">
+          <widget id="ir.matinmohammadi.bodymod" version="1.0.4" android-versionCode="5" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android">
               <name>BodyMod</name>
               <description>سوپراپلیکیشن کالری‌شمار و تناسب اندام هوشمند بادی‌مود</description>
               <author email="diaperloveradultbaby5@gmail.com" href="https://bodymod.matin-mohammadi.ir">Matin Mohammadi</author>
@@ -65,6 +70,7 @@ jobs:
               <preference name="MixedContentMode" value="0" />
               <preference name="DisallowOverscroll" value="true" />
               <preference name="AndroidPersistentFileLocation" value="Compatibility" />
+              \$ICON_TAG
               <platform name="android">
                   <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
                       <application android:usesCleartextTraffic="true" />
@@ -82,8 +88,8 @@ jobs:
           
           keytool -genkey -v -keystore bodymod-release.keystore -alias bodymod_key -keyalg RSA -keysize 2048 -validity 10000 -storepass MatinBodyMod2026 -keypass MatinBodyMod2026 -dname "CN=Matin Mohammadi, OU=BodyMod, O=MatinCreator, L=Urmia, S=WestAzerbaijan, C=IR"
           
-          $ANDROID_HOME/build-tools/34.0.0/zipalign -v -p 4 app-release-unsigned.apk BodyMod-v1.0.3-Aligned.apk
-          $ANDROID_HOME/build-tools/34.0.0/apksigner sign --ks bodymod-release.keystore --ks-key-alias bodymod_key --ks-pass pass:MatinBodyMod2026 --key-pass pass:MatinBodyMod2026 --out BodyMod-Official-Market.apk BodyMod-v1.0.3-Aligned.apk
+          $ANDROID_HOME/build-tools/34.0.0/zipalign -v -p 4 app-release-unsigned.apk BodyMod-v1.0.4-Aligned.apk
+          $ANDROID_HOME/build-tools/34.0.0/apksigner sign --ks bodymod-release.keystore --ks-key-alias bodymod_key --ks-pass pass:MatinBodyMod2026 --key-pass pass:MatinBodyMod2026 --out BodyMod-Official-Market.apk BodyMod-v1.0.4-Aligned.apk
 
       - name: 🎁 خروجی گرفتن فایل APK آماده نصب
         uses: actions/upload-artifact@v4
@@ -92,4 +98,3 @@ jobs:
           path: |
             bodymod_native/platforms/android/app/build/outputs/apk/release/BodyMod-Official-Market.apk
             bodymod_native/platforms/android/app/build/outputs/apk/release/bodymod-release.keystore
-

@@ -170,7 +170,7 @@
         }
 
         /* ==========================================================================
-           ۲. مودال سایبرپانکی قطعی اینترنت یا اختلال کلودفلر
+           ۲. مودال سایبرپانکی قطعی اینترنت یا اختلال سرور
            ========================================================================== */
         .offline-cyber-modal {
             position: fixed;
@@ -371,7 +371,7 @@
         .wifi-warn-dot { display: none; }
         .wifi-status-badge.cf-blocked .wifi-warn-dot { display: block; }
 
-        /* بنر هشدار زرد زیر هدر وقتی اینترنت وصله ولی کلودفلر فیلتر/مختله */
+        /* بنر هشدار زنده زیر هدر */
         .net-live-alert-bar {
             display: none;
             padding: 8px 12px;
@@ -768,7 +768,7 @@
 </div>
 
 <!-- ==========================================================================
-     ۲. مودال سایبرپانکی قطعی اینترنت یا فیلتر بودن کلودفلر
+     ۲. مودال سایبرپانکی قطعی اینترنت یا اختلال سرور
      ========================================================================== -->
 <div class="offline-cyber-modal" id="offlineModal">
     <div class="offline-cyber-box">
@@ -884,7 +884,7 @@
         </div>
         <div class="header-left">
             <!-- نشانگر زنده رادار وای‌فای -->
-            <div class="wifi-status-badge online" id="wifiStatusBadge" onclick="showWifiStatusToast()" title="وضعیت لحظه‌ای اینترنت و کلودفلر">
+            <div class="wifi-status-badge online" id="wifiStatusBadge" onclick="showWifiStatusToast()" title="وضعیت لحظه‌ای اینترنت و سرور">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
                     <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
@@ -892,7 +892,7 @@
                     <line x1="12" y1="20" x2="12.01" y2="20"></line>
                     <!-- خط قرمز روی وای‌فای هنگام آفلاین بودن کامل -->
                     <line class="wifi-slash-line" x1="2" y1="2" x2="22" y2="22" stroke="#ef4444" stroke-width="3"></line>
-                    <!-- علامت تعجب زرد هنگام فیلتر/اختلال کلودفلر -->
+                    <!-- علامت تعجب زرد هنگام اختلال سرور -->
                     <circle class="wifi-warn-dot" cx="19" cy="5" r="3.5" fill="#f59e0b" stroke="#0f1626" stroke-width="1.5"></circle>
                 </svg>
             </div>
@@ -906,7 +906,7 @@
         </div>
     </header>
 
-    <!-- نوار هشدار زنده وضعیت شبکه (وقتی اینترنت هست ولی کلودفلر مشکل داره یا وقتی کامل قطعه) -->
+    <!-- نوار هشدار زنده وضعیت شبکه -->
     <div class="net-live-alert-bar" id="netLiveAlertBar">
         <span id="netLiveAlertText">در حال بررسی وضعیت شبکه...</span>
         <button class="nav-arrow-btn" onclick="runRealtimeNetworkProbe(true)" style="padding:3px 8px; font-size:10px;">🔄 تست پینگ</button>
@@ -1403,12 +1403,12 @@
 
 <script>
     /* ==========================================================================
-       👑 مشخصات رسمی مدیرعامل (متین محمدی - CEO Edition)
+       👑 مشخصات رسمی مدیرعامل (متین محمدی - CEO Edition) + کاستوم دامین سرور
        ========================================================================== */
     const CEO_GMAIL = "diaperloveradultbaby5@gmail.com";
     const CEO_PHONE = "09058586834";
 
-    const WORKER_BASE_URL = "https://matin-creator-developer.workers.dev";
+    const WORKER_BASE_URL = "https://server.matin-mohammadi.ir";
     const GOOGLE_CLIENT_ID = "308314086801-gb47cnlqkrpf9v42j1ptt82cg8gqr10a.apps.googleusercontent.com";
 
     const toFa = (n) => (n === null || n === undefined) ? '۰' : String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
@@ -1439,17 +1439,15 @@
     };
 
     /* ==========================================================================
-       ۴. فیلتر هوشمند کادر شماره موبایل: حذف خودکار صفر اول و شروع اجباری از 9
+       فیلتر هوشمند کادر شماره موبایل: حذف خودکار صفر اول و شروع اجباری از 9
        ========================================================================== */
     const balePhoneInputEl = document.getElementById('balePhoneInput');
     balePhoneInputEl.addEventListener('input', (e) => {
         let val = toEnDigits(e.target.value).replace(/\D/g, '');
-        // اگر کاربر ابتدای شماره 0 یا 98 وارد کرد، خودکار حذفش کن تا از 9 شروع شود
         if (val.startsWith('98')) val = val.slice(2);
         while (val.startsWith('0')) {
             val = val.slice(1);
         }
-        // اگر اولین رقم 9 نبود و کاربر عدد دیگری زد، نگذار اشتباه تایپ کند
         if (val.length > 0 && !val.startsWith('9')) {
             val = '';
         }
@@ -1461,7 +1459,6 @@
         return raw10.length === 10 && raw10.startsWith('9') ? ('0' + raw10) : '';
     };
 
-    // مدیریت باز و بسته شدن مودال‌ها و اسکرول خودکار بالای کیبورد گوشی
     window.openModalById = (id) => {
         document.getElementById(id).classList.add('open');
         document.body.classList.add('modal-open');
@@ -1491,11 +1488,7 @@
     };
 
     /* ==========================================================================
-       📡 رادار پینگ ۲۴ ساعته همزمان به کلودفلر، مایکت و گوگل
-       وضعیت‌ها:
-       - 'online'     (سبز 🟢): اینترنت وصل + کلودفلر وصل
-       - 'cf-blocked' (زرد 🟡): اینترنت وصل (مایکت/گوگل باز) ولی کلودفلر فیلتر/مختل
-       - 'offline'    (قرمز 🔴): اینترنت گوشی به طور کامل قطع است
+       📡 رادار پینگ ۲۴ ساعته همزمان به سرور (server.matin-mohammadi.ir)، مایکت و گوگل
        ========================================================================== */
     let netRadarState = {
         status: 'online', // 'online' | 'cf-blocked' | 'offline'
@@ -1559,7 +1552,7 @@
             badge.classList.add('cf-blocked');
             alertBar.style.display = 'flex';
             alertBar.classList.add('warn');
-            alertText.textContent = '⚠️ اینترنت وصله، اما سرور کلودفلر اختلال/فیلتر داره! (فیلترشکن رو بررسی کن)';
+            alertText.textContent = '⚠️ اینترنت وصله، اما سرور کلودفلر اختلال داره! (وضعیت اتصال رو بررسی کن)';
         } else {
             badge.classList.add('offline');
             alertBar.style.display = 'flex';
@@ -1572,7 +1565,6 @@
         if (netRadarState.checking) return netRadarState;
         netRadarState.checking = true;
 
-        // پینگ همزمان به کلودفلر، مایکت (داخلی) و گوگل (جهانی)
         const [cfResult, myketOk, googleOk] = await Promise.all([
             pingCloudflareCors(3000),
             pingUrlNoCors('https://myket.ir/favicon.ico', 2600),
@@ -1600,9 +1592,9 @@
 
         if (manualClick || prevStatus !== netRadarState.status) {
             if (netRadarState.status === 'online' && prevStatus !== 'online') {
-                showToast('اتصال به کلودفلر و اینترنت برقرار شد! 🟢⚡');
+                showToast('اتصال به سرور بادی‌مود برقرار شد! 🟢⚡');
             } else if (netRadarState.status === 'cf-blocked') {
-                showToast('اینترنت هست ولی کلودفلر مسدود/مختله! 🟡');
+                showToast('اینترنت هست ولی سرور جواب نداد! 🟡');
             } else if (netRadarState.status === 'offline') {
                 showToast('اینترنت قطع شد! 🔴');
             }
@@ -1610,16 +1602,16 @@
         return netRadarState;
     };
 
-    // اجرای خودکار پینگ هر ۴ ثانیه در پس‌زمینه برای رصد ۲۴ ساعته وضعیت اینترنت
+    // اجرای خودکار پینگ هر ۴ ثانیه در پس‌زمینه
     setInterval(() => {
         runRealtimeNetworkProbe(false);
     }, 4000);
 
     window.showWifiStatusToast = async () => {
-        showToast('⏳ در حال پینگ همزمان کلودفلر، مایکت و گوگل...');
+        showToast('⏳ در حال پینگ همزمان سرور بادی‌مود، مایکت و گوگل...');
         const r = await runRealtimeNetworkProbe(true);
-        if (r.status === 'online') showToast('🟢 اینترنت و کلودفلر هر دو کاملاً وصل هستن!');
-        else if (r.status === 'cf-blocked') showToast('🟡 اینترنت وصله، ولی کلودفلر فیلتره یا اختلال داره!');
+        if (r.status === 'online') showToast('🟢 اینترنت و سرور بادی‌مود کاملاً وصل هستن!');
+        else if (r.status === 'cf-blocked') showToast('🟡 اینترنت وصله، ولی سرور کلودفلر اختلال داره!');
         else showToast('🔴 اینترنت گوشی کاملاً قطعه رفیق!');
     };
 
@@ -1647,23 +1639,22 @@
         }, remaining);
     };
 
-    // کنترل مودال قطعی اینترنت یا فیلتر بودن کلودفلر
+    // کنترل مودال قطعی اینترنت
     let lastRetryCallback = null;
     window.showOfflineModal = async (reasonText, retryFn = null) => {
         clearTimeout(loaderHideTimeout);
         document.getElementById('pushupLoader').classList.remove('active');
         lastRetryCallback = retryFn;
 
-        // استعلام لحظه‌ای برای تشخیص اینکه اینترنت قطعه یا فقط کلودفلر فیلتره
         const probe = await runRealtimeNetworkProbe(false);
         const mainTitle = document.getElementById('offlineModalMainTitle');
         const subHeadline = document.getElementById('offlineModalSubHeadline');
         const reasonEl = document.getElementById('offlineReasonSubText');
 
         if (probe.status === 'cf-blocked') {
-            mainTitle.textContent = '⚠️ اینترنت وصله، اما کلودفلر مسدوده!';
-            subHeadline.textContent = 'رفیق اینترنتت روشنه، ولی کلودفلر فیلتره یا اختلال داره! 🟡🔥';
-            reasonEl.textContent = 'روی اینترنت خطت دامنه کلودفلر باز نمیشه؛ فیلترشکنت رو روشن/عوض کن و دوباره تلاش کن.';
+            mainTitle.textContent = '⚠️ اینترنت وصله، اما سرور در دسترس نیست!';
+            subHeadline.textContent = 'رفیق اینترنتت روشنه، ولی ارتباط با کلودفلر اختلال داره! 🟡🔥';
+            reasonEl.textContent = 'وضعیت فیلترشکن یا اینترنت خطت رو بررسی کن و دوباره تلاش کن.';
         } else {
             mainTitle.textContent = '⚡ ارتباط با سرور برقرار نیست!';
             subHeadline.textContent = 'عزیز من اینجا باید اینترنتت رو روشن کنی 😂🔥';
@@ -1678,14 +1669,14 @@
     };
 
     document.getElementById('retryOnlineActionBtn').addEventListener('click', async () => {
-        showToast('⏳ در حال تست مجدد اتصال به کلودفلر...');
+        showToast('⏳ در حال تست مجدد اتصال به سرور...');
         const probe = await runRealtimeNetworkProbe(true);
         if (probe.status === 'offline') {
             showToast('رفیق هنوز اینترنت گوشیت خاموشه ها! 😂🔥');
             return;
         }
         if (probe.status === 'cf-blocked') {
-            showToast('اینترنت وصله ولی کلودفلر هنوز باز نمیشه (فیلترشکن می‌خواد)! 🟡');
+            showToast('اینترنت وصله ولی سرور هنوز جواب نمیده! 🟡');
             return;
         }
         closeOfflineModal();
@@ -1739,7 +1730,7 @@
         createFood('b_sangak', 'نان سنگک / بربری / لواش', 'bread', 265, 8.5, 54.0, 1.4, U_BREAD)
     ];
 
-    const STORAGE_KEY = 'bodymod_app_fixed_v6';
+    const STORAGE_KEY = 'bodymod_app_fixed_v7';
     const getInitialTheme = () => {
         try {
             const saved = localStorage.getItem('bodymod_user_theme');
@@ -1843,8 +1834,8 @@
             badge.textContent = '💾 حافظه آفلاین گوشی';
             return;
         }
-        if (showLoader) showPushupLoader('درحال تمرین... (سینک با کلودفلر)');
-        badge.textContent = '⏳ سینک کلودفلر...';
+        if (showLoader) showPushupLoader('درحال تمرین... (سینک با سرور)');
+        badge.textContent = '⏳ سینک ابری...';
         try {
             const res = await fetch(`${WORKER_BASE_URL}/api/user/sync`, {
                 method: 'POST',
@@ -1921,7 +1912,7 @@
                 showToast(`دمت گرم! «${title}» با موفقیت فعال شد 🎉🔥`);
             });
         } catch {
-            showOfflineModal(`برای فعال‌سازی «${title}» ارتباط با کلودفلر برقرار نشد!`, () => purchaseMarketSku(sku, title));
+            showOfflineModal(`برای فعال‌سازی «${title}» ارتباط با سرور برقرار نشد!`, () => purchaseMarketSku(sku, title));
         }
     };
 
@@ -2014,7 +2005,7 @@
                 }
             });
         } catch {
-            showOfflineModal('در زمان طراحی برنامه ارتباط با کلودفلر قطع شد!', generateWorkoutPlanAction);
+            showOfflineModal('در زمان طراحی برنامه ارتباط با سرور قطع شد!', generateWorkoutPlanAction);
         }
     };
     document.getElementById('generateWorkoutPlanBtn').addEventListener('click', generateWorkoutPlanAction);
@@ -2075,7 +2066,7 @@
                         }
                     });
                 } catch {
-                    showOfflineModal('خطا در ارسال عکس به سرور کلودفلر!');
+                    showOfflineModal('خطا در ارسال عکس به سرور!');
                 }
             };
             img.src = ev.target.result;
@@ -2200,7 +2191,7 @@
                 showToast('کد تایید ۶ رقمی به پیام‌رسان «بله» ارسال شد! 📲');
             });
         } catch {
-            showOfflineModal('خطا در ارتباط با سرور کلودفلر برای ارسال کد بله!', () => document.getElementById('sendBaleOtpBtn').click());
+            showOfflineModal('خطا در ارتباط با سرور برای ارسال کد بله!', () => document.getElementById('sendBaleOtpBtn').click());
         }
     });
 
@@ -2233,7 +2224,7 @@
                 else { await syncToCloudflare(false); renderAll(); }
             });
         } catch {
-            showOfflineModal('خطا در تایید کد! ارتباط با کلودفلر برقرار نشد.', () => document.getElementById('verifyBaleOtpBtn').click());
+            showOfflineModal('خطا در تایید کد! ارتباط با سرور برقرار نشد.', () => document.getElementById('verifyBaleOtpBtn').click());
         }
     });
 
