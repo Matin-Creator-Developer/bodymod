@@ -31,7 +31,7 @@ jobs:
         with:
           node-version: '20'
 
-      - name: 📦 ساخت پروژه نیتیو اندروید BodyMod با آیکون اختصاصی
+      - name: 📦 ساخت پروژه نیتیو اندروید BodyMod با آیکون و ویدیوی کره زمین
         run: |
           export ANDROID_SDK_ROOT=$ANDROID_HOME
           npm install -g cordova
@@ -45,7 +45,12 @@ jobs:
             cp ../index.html www/index.html
           fi
 
-          # کپی کردن آیکون اختصاصی برنامه از پوشه اصلی پروژه
+          # کپی کردن ویدیوی کره زمین در حال سوختن به داخل پکیج اندروید
+          if [ -f "../earth_burn.mp4" ]; then
+            cp ../earth_burn.mp4 www/earth_burn.mp4
+          fi
+
+          # کپی کردن آیکون اختصاصی برنامه
           if [ -f "../icon.png" ]; then
             cp ../icon.png ./icon.png
             cp ../icon.png www/icon.png
@@ -56,7 +61,7 @@ jobs:
 
           cat << EOF > config.xml
           <?xml version='1.0' encoding='utf-8'?>
-          <widget id="ir.matinmohammadi.bodymod" version="1.0.4" android-versionCode="5" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android">
+          <widget id="ir.matinmohammadi.bodymod" version="1.0.5" android-versionCode="6" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android">
               <name>BodyMod</name>
               <description>سوپراپلیکیشن کالری‌شمار و تناسب اندام هوشمند بادی‌مود</description>
               <author email="diaperloveradultbaby5@gmail.com" href="https://bodymod.matin-mohammadi.ir">Matin Mohammadi</author>
@@ -68,6 +73,7 @@ jobs:
               <preference name="Scheme" value="https" />
               <preference name="Hostname" value="localhost" />
               <preference name="MixedContentMode" value="0" />
+              <preference name="MediaPlaybackRequiresUserAction" value="false" />
               <preference name="DisallowOverscroll" value="true" />
               <preference name="AndroidPersistentFileLocation" value="Compatibility" />
               \$ICON_TAG
@@ -88,8 +94,8 @@ jobs:
           
           keytool -genkey -v -keystore bodymod-release.keystore -alias bodymod_key -keyalg RSA -keysize 2048 -validity 10000 -storepass MatinBodyMod2026 -keypass MatinBodyMod2026 -dname "CN=Matin Mohammadi, OU=BodyMod, O=MatinCreator, L=Urmia, S=WestAzerbaijan, C=IR"
           
-          $ANDROID_HOME/build-tools/34.0.0/zipalign -v -p 4 app-release-unsigned.apk BodyMod-v1.0.4-Aligned.apk
-          $ANDROID_HOME/build-tools/34.0.0/apksigner sign --ks bodymod-release.keystore --ks-key-alias bodymod_key --ks-pass pass:MatinBodyMod2026 --key-pass pass:MatinBodyMod2026 --out BodyMod-Official-Market.apk BodyMod-v1.0.4-Aligned.apk
+          $ANDROID_HOME/build-tools/34.0.0/zipalign -v -p 4 app-release-unsigned.apk BodyMod-v1.0.5-Aligned.apk
+          $ANDROID_HOME/build-tools/34.0.0/apksigner sign --ks bodymod-release.keystore --ks-key-alias bodymod_key --ks-pass pass:MatinBodyMod2026 --key-pass pass:MatinBodyMod2026 --out BodyMod-Official-Market.apk BodyMod-v1.0.5-Aligned.apk
 
       - name: 🎁 خروجی گرفتن فایل APK آماده نصب
         uses: actions/upload-artifact@v4

@@ -98,9 +98,7 @@
             overflow-x: hidden;
         }
 
-        /* ==========================================================================
-           ۱. انیمیشن لودینگ انسان در حال حرکت شنا (حداقل ۲.۵ ثانیه نمایش)
-           ========================================================================== */
+        /* ۱. انیمیشن لودینگ حرکت شنا */
         .pushup-loader-overlay {
             position: fixed;
             inset: 0;
@@ -169,14 +167,12 @@
             50% { opacity: 0.55; }
         }
 
-        /* ==========================================================================
-           ۲. مودال سایبرپانکی قطعی اینترنت یا اختلال سرور
-           ========================================================================== */
+        /* ۲. مودال پاپ‌آپ آفلاین با ویدیوی کره زمین (earth_burn.mp4) بدون حاشیه سیاه */
         .offline-cyber-modal {
             position: fixed;
             inset: 0;
-            background: rgba(5, 7, 14, 0.92);
-            backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.94);
+            backdrop-filter: blur(10px);
             z-index: 4500;
             display: none;
             align-items: center;
@@ -186,34 +182,36 @@
         .offline-cyber-modal.open { display: flex; }
 
         .offline-cyber-box {
-            background: radial-gradient(circle at top, #1a1423 0%, #0f1626 100%);
+            background: #000000;
             color: #f8fafc;
             width: 100%;
-            max-width: 390px;
+            max-width: 400px;
             border-radius: 24px;
-            padding: 26px 18px;
-            border: 2px solid var(--fire-orange);
-            box-shadow: 0 0 40px var(--fire-glow);
+            padding: 20px 16px;
+            border: 2px solid #ff5400;
+            box-shadow: 0 0 45px rgba(255, 84, 0, 0.5);
             text-align: center;
+            overflow: hidden;
         }
 
-        .offline-icon-ring {
-            width: 96px;
-            height: 96px;
-            margin: 0 auto 16px auto;
-            border-radius: 50%;
-            background: rgba(255, 84, 0, 0.12);
-            border: 2px dashed var(--fire-orange);
+        .earth-video-container {
+            width: 100%;
+            height: 210px;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #000000;
+            margin-bottom: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 0 25px rgba(255, 84, 0, 0.35);
-            animation: pulseRing 1.6s infinite ease-in-out;
+            border: 1px solid rgba(255, 84, 0, 0.4);
         }
 
-        @keyframes pulseRing {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 84, 0, 0.35); }
-            50% { transform: scale(1.08); box-shadow: 0 0 35px rgba(255, 84, 0, 0.65); }
+        .earth-video-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: #000000;
         }
 
         /* نوتیفیکیشن داخلی */
@@ -238,7 +236,6 @@
         }
         .cyber-toast.show { transform: translateX(-50%) translateY(0); }
 
-        /* نوار کانال بله بالای اپلیکیشن */
         .bale-channel-bar {
             background: linear-gradient(135deg, rgba(0, 180, 216, 0.14), rgba(114, 9, 183, 0.14));
             border: 1px solid var(--primary);
@@ -265,7 +262,6 @@
             direction: ltr;
         }
 
-        /* هدر اپلیکیشن به همراه رادار زنده وای‌فای (سبز / زرد / قرمز) */
         .app-header {
             display: flex;
             align-items: center;
@@ -329,7 +325,6 @@
             flex-shrink: 0;
         }
 
-        /* نشانگر ۳ حالته رادار وای‌فای: سبز (online) | زرد (cf-blocked) | قرمز (offline) */
         .wifi-status-badge {
             width: 36px;
             height: 36px;
@@ -352,7 +347,6 @@
             border-color: var(--warning);
             color: var(--warning);
             background: rgba(245, 158, 11, 0.15);
-            animation: warnPulse 1.5s infinite;
         }
         .wifi-status-badge.offline {
             border-color: var(--danger);
@@ -360,18 +354,11 @@
             background: rgba(239, 68, 68, 0.12);
         }
 
-        @keyframes warnPulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
-            50% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
-        }
-
         .wifi-slash-line { display: none; }
         .wifi-status-badge.offline .wifi-slash-line { display: block; }
-
         .wifi-warn-dot { display: none; }
         .wifi-status-badge.cf-blocked .wifi-warn-dot { display: block; }
 
-        /* بنر هشدار زنده زیر هدر */
         .net-live-alert-bar {
             display: none;
             padding: 8px 12px;
@@ -420,7 +407,6 @@
             white-space: nowrap;
         }
 
-        /* کادر استاندارد شماره موبایل با پیش‌وند ثابت 0 */
         .phone-input-wrapper {
             display: flex;
             align-items: center;
@@ -455,7 +441,6 @@
             letter-spacing: 1px;
         }
 
-        /* منوی همبرگری کشویی */
         .drawer-backdrop {
             position: fixed; inset: 0; background: rgba(7, 10, 18, 0.75);
             backdrop-filter: blur(4px); z-index: 1500; display: none;
@@ -659,6 +644,25 @@
             font-size: 11px; font-weight: 800; cursor: pointer; text-align: center;
         }
 
+        .profile-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+        @media (min-width: 480px) {
+            .profile-stats-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        .profile-stat-box {
+            background: var(--bg-muted);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 10px;
+            text-align: center;
+        }
+        .profile-stat-label { font-size: 10px; color: var(--text-muted); font-weight: 700; }
+        .profile-stat-val { font-size: 13px; font-weight: 900; color: var(--primary); margin-top: 3px; }
+
         .form-grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -745,9 +749,7 @@
 </head>
 <body>
 
-<!-- ==========================================================================
-     ۱. صفحه لودینگ انسان در حال حرکت شنا (حداقل ۲.۵ ثانیه نمایش)
-     ========================================================================== -->
+<!-- ۱. صفحه لودینگ انسان در حال حرکت شنا -->
 <div class="pushup-loader-overlay" id="pushupLoader">
     <div class="pushup-stage">
         <div class="pushup-floor"></div>
@@ -767,28 +769,20 @@
     <div style="font-size:11px; color:#94a3b8; margin-top:4px;">موتور سایبرنتیک BodyMod</div>
 </div>
 
-<!-- ==========================================================================
-     ۲. مودال سایبرپانکی قطعی اینترنت یا اختلال سرور
-     ========================================================================== -->
+<!-- ۲. مودال پاپ‌آپ آفلاین با ویدیوی خفن کره زمین (earth_burn.mp4) بدون حاشیه سیاه -->
 <div class="offline-cyber-modal" id="offlineModal">
     <div class="offline-cyber-box">
-        <div class="offline-icon-ring">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ff5400" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
-                <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
-                <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
-                <line x1="12" y1="20" x2="12.01" y2="20"></line>
-                <line x1="2" y1="2" x2="22" y2="22" stroke="#ffbe0b" stroke-width="2.8"></line>
-            </svg>
+        <div class="earth-video-container">
+            <video id="earthBurnVideo" autoplay loop muted playsinline src="earth_burn.mp4"></video>
         </div>
 
-        <h3 style="font-size:16px; font-weight:900; color:#ff9e00; margin-bottom:6px;" id="offlineModalMainTitle">
+        <h3 style="font-size:15px; font-weight:900; color:#ff9e00; margin-bottom:6px;" id="offlineModalMainTitle">
             ⚡ ارتباط با سرور برقرار نیست!
         </h3>
-        <p style="font-size:13px; font-weight:800; color:#f8fafc; margin-bottom:6px;" id="offlineModalSubHeadline">
+        <p style="font-size:12px; font-weight:800; color:#f8fafc; margin-bottom:6px;" id="offlineModalSubHeadline">
             عزیز من اینجا باید اینترنتت رو روشن کنی 😂🔥
         </p>
-        <p style="font-size:11px; color:#94a3b8; margin-bottom:18px;" id="offlineReasonSubText">
+        <p style="font-size:11px; color:#94a3b8; margin-bottom:16px;" id="offlineReasonSubText">
             کالری‌شمار و آب کاملاً آفلاینه، اما این بخش به اینترنت نیاز داره!
         </p>
 
@@ -803,7 +797,7 @@
     </div>
 </div>
 
-<!-- نوتیفیکیشن داخلی اپلیکیشن -->
+<!-- نوتیفیکیشن داخلی -->
 <div class="cyber-toast" id="cyberToast"></div>
 
 <!-- منوی همبرگری کشویی -->
@@ -822,15 +816,24 @@
             <div style="font-size:13px; font-weight:900; color:var(--primary);" id="drawerUserName">کاربر مهمان 👋</div>
             <div style="font-size:11px; color:var(--text-muted); margin-top:2px;" id="drawerUserSub">برای ذخیره ابری وارد حساب شو</div>
             <div style="font-size:11px; font-weight:800; color:var(--carbs); margin-top:4px;" id="drawerVipStatus">وضعیت: نسخه پایه (آفلاین)</div>
-            <button class="btn-primary" style="width:100%; margin-top:8px; padding:8px; font-size:12px;" onclick="closeDrawer(); openAuthModal();">
-                🔐 ورود / تغییر حساب
-            </button>
+            <div style="display:flex; gap:6px; margin-top:8px;">
+                <button class="btn-primary" style="flex:1; padding:8px; font-size:11px;" onclick="closeDrawer(); openAuthModal();">
+                    🔐 حساب کاربری
+                </button>
+                <button class="nav-arrow-btn" style="flex:1; padding:8px; font-size:11px; border-color:var(--primary); color:var(--primary);" onclick="switchTab('settingsTab')">
+                    👤 پروفایل من
+                </button>
+            </div>
         </div>
 
         <nav class="drawer-nav-list">
             <button class="drawer-item active" data-tab="trackerTab" onclick="switchTab('trackerTab')">
                 <span>🍽️ داشبورد کالری و آب (آفلاین)</span>
                 <span>◀</span>
+            </button>
+            <button class="drawer-item" data-tab="settingsTab" onclick="switchTab('settingsTab')">
+                <span>👤 پروفایل و پرونده سلامتی من</span>
+                <span style="background:var(--primary-glow); color:var(--primary); font-size:10px; padding:1px 7px; border-radius:99px;">ویرایش</span>
             </button>
             <button class="drawer-item" data-tab="workoutTab" onclick="switchTab('workoutTab')">
                 <span>💪 برنامه‌ساز تمرین و آتیش</span>
@@ -846,10 +849,6 @@
             </button>
             <button class="drawer-item" data-tab="historyTab" onclick="switchTab('historyTab')">
                 <span>📊 تاریخچه روزها و ماه‌ها</span>
-                <span>◀</span>
-            </button>
-            <button class="drawer-item" data-tab="settingsTab" onclick="switchTab('settingsTab')">
-                <span>⚙️ پرونده بدنی و مشخصات</span>
                 <span>◀</span>
             </button>
         </nav>
@@ -873,7 +872,7 @@
         </a>
     </div>
 
-    <!-- هدر اصلی اپلیکیشن به همراه رادار زنده وای‌فای (سبز / زرد / قرمز) -->
+    <!-- هدر اصلی اپلیکیشن -->
     <header class="app-header">
         <div class="header-right">
             <button class="hamburger-btn" onclick="openDrawer()" title="منوی برنامه">☰</button>
@@ -883,16 +882,13 @@
             </div>
         </div>
         <div class="header-left">
-            <!-- نشانگر زنده رادار وای‌فای -->
             <div class="wifi-status-badge online" id="wifiStatusBadge" onclick="showWifiStatusToast()" title="وضعیت لحظه‌ای اینترنت و سرور">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
                     <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
                     <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
                     <line x1="12" y1="20" x2="12.01" y2="20"></line>
-                    <!-- خط قرمز روی وای‌فای هنگام آفلاین بودن کامل -->
                     <line class="wifi-slash-line" x1="2" y1="2" x2="22" y2="22" stroke="#ef4444" stroke-width="3"></line>
-                    <!-- علامت تعجب زرد هنگام اختلال سرور -->
                     <circle class="wifi-warn-dot" cx="19" cy="5" r="3.5" fill="#f59e0b" stroke="#0f1626" stroke-width="1.5"></circle>
                 </svg>
             </div>
@@ -900,19 +896,17 @@
             <div class="coin-pill" onclick="switchTab('marketVipTab')" title="موجودی بادی‌کوین">
                 🪙 <span id="headerCoinsCount">۳۰</span>
             </div>
-            <button class="auth-pill-btn" id="openAuthModalBtn" onclick="openAuthModal()">
+            <button class="auth-pill-btn" id="openAuthModalBtn" onclick="handleHeaderAuthClick()">
                 <span id="headerAuthText">🔐 ورود</span>
             </button>
         </div>
     </header>
 
-    <!-- نوار هشدار زنده وضعیت شبکه -->
     <div class="net-live-alert-bar" id="netLiveAlertBar">
         <span id="netLiveAlertText">در حال بررسی وضعیت شبکه...</span>
         <button class="nav-arrow-btn" onclick="runRealtimeNetworkProbe(true)" style="padding:3px 8px; font-size:10px;">🔄 تست پینگ</button>
     </div>
 
-    <!-- نوار وضعیت ظرفیت بتا و سهمیه روزانه -->
     <div class="compact-beta-bar">
         <div>
             <strong style="color:var(--accent);">🎟️ ظرفیت بتا:</strong>
@@ -925,7 +919,7 @@
         </button>
     </div>
 
-    <!-- نوار تقویم شمسی و استریک آتیش -->
+    <!-- تقویم شمسی -->
     <section class="date-navigator">
         <div class="date-nav-top">
             <button class="nav-arrow-btn" id="prevDayBtn">▶ روز قبل</button>
@@ -947,12 +941,15 @@
         </div>
     </section>
 
-    <!-- TAB 1: DAILY TRACKER (۱۰۰٪ آفلاین) -->
+    <!-- TAB 1: DAILY TRACKER -->
     <div id="trackerTab" class="tab-section active">
         <div class="card">
             <div class="card-header">
                 <div class="card-title" id="dashboardPersonalizedTitle">⚡ وضعیت کالری و ماکروهای امروزت</div>
-                <span id="goalBadgeText" style="font-size:11px; color:var(--text-muted); font-weight:800;">هدف: ۲۰۰۰ کالری</span>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span id="goalBadgeText" style="font-size:11px; color:var(--text-muted); font-weight:800;">هدف: ۲۰۰۰ کالری</span>
+                    <button class="nav-arrow-btn" onclick="switchTab('settingsTab')" style="padding:4px 8px; font-size:10px; color:var(--primary); border-color:var(--primary);">👤 پروفایل</button>
+                </div>
             </div>
             <div class="dashboard-grid">
                 <div class="ring-wrapper">
@@ -993,7 +990,7 @@
             </div>
         </div>
 
-        <!-- بخش مستقل آب -->
+        <!-- پایش آب -->
         <div class="card water-card">
             <div class="card-header">
                 <div class="card-title" style="color:var(--water);">💧 پایش آب روزانه (هر لیوان ۲۰۰cc)</div>
@@ -1031,7 +1028,7 @@
             </div>
         </div>
 
-        <!-- وعده‌های غذایی + اسکنر عکس غذا با هوش مصنوعی -->
+        <!-- وعده‌های غذایی -->
         <div class="card">
             <div class="card-header">
                 <div class="card-title">🍲 وعده‌های ثبت شده امروز</div>
@@ -1055,7 +1052,7 @@
             <div id="loggedItemsContainer"></div>
         </div>
 
-        <!-- جستجوی هوشمند بانک غذا -->
+        <!-- جستجو در بانک غذا -->
         <div class="card">
             <div class="card-header">
                 <div class="card-title">🔍 جستجوی خوراکی (آفلاین)</div>
@@ -1210,20 +1207,93 @@
         </div>
     </div>
 
-    <!-- TAB 6: PROFILE -->
+    <!-- TAB 6: PROFILE & HEALTH RECORD (پروفایل و ویرایش پرونده سلامتی) -->
     <div id="settingsTab" class="tab-section">
-        <div class="card">
+        <div class="card" style="border: 1.5px solid var(--primary);">
             <div class="card-header">
-                <div class="card-title">👤 پرونده بدنی ثبت‌شده تو</div>
-                <button class="btn-primary" onclick="openOnboardingModal(true)" style="font-size:11px; padding:6px 10px;">✏️ ویرایش مشخصات و هدف</button>
+                <div class="card-title">👤 کارت پرونده سلامتی و بدنی تو</div>
+                <button class="nav-arrow-btn" onclick="openAuthModal()" style="color:var(--primary); border-color:var(--primary);">
+                    🔐 مدیریت حساب
+                </button>
             </div>
             <div id="profileSummaryBox" style="font-size:12px; color:var(--text-muted); line-height:1.9;">
-                هنوز پرونده بدنی‌ت رو کامل نکردی رفیق! روی دکمه «ویرایش مشخصات و هدف» یا «ورود» بزن.
+                هنوز پرونده بدنی‌ت رو کامل نکردی رفیق! از فرم زیر مشخصاتت رو وارد و ذخیره کن.
             </div>
+            <div class="profile-stats-grid" id="profileStatsGrid" style="display:none;"></div>
         </div>
 
         <div class="card">
-            <div class="card-header"><div class="card-title">✍️ ویرایش دستی کالری و ماکروها (آفلاین)</div></div>
+            <div class="card-header">
+                <div class="card-title">✏️ ویرایش مستقیم مشخصات و هدف بدنی</div>
+                <span style="font-size:10px; color:var(--primary); font-weight:800;">محاسبه خودکار کالری و آب</span>
+            </div>
+            <p style="font-size:11px; color:var(--text-muted); margin-bottom:12px;">
+                هر زمان که وزنت تغییر کرد یا خواستی هدفت رو عوض کنی، اطلاعات زیر رو تغییر بده تا کالری، ماکروها و آب روزانه‌ات خودکار آپدیت و با سرور سینک بشه:
+            </p>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">اسم کوچیکت *</label>
+                    <input type="text" id="profEditName" class="form-control" placeholder="مثلاً: متین">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">شهر سکونت *</label>
+                    <input type="text" id="profEditCity" class="form-control" placeholder="مثلاً: ارومیه">
+                </div>
+
+                <div class="form-group full">
+                    <label class="form-label">تاریخ تولد (شمسی) *</label>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1.2fr; gap:6px;">
+                        <input type="tel" inputmode="numeric" id="profEditBirthDay" class="form-control" placeholder="روز (۱۳)">
+                        <input type="tel" inputmode="numeric" id="profEditBirthMonth" class="form-control" placeholder="ماه (۱۰)">
+                        <input type="tel" inputmode="numeric" id="profEditBirthYear" class="form-control" placeholder="سال (۱۳۸۳)">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">جنسیت *</label>
+                    <select id="profEditGender" class="form-control">
+                        <option value="male">مرد</option>
+                        <option value="female">زن</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">میزان تحرک روزانه *</label>
+                    <select id="profEditActivity" class="form-control">
+                        <option value="1.2">کم‌تحرک (کار پشت میز)</option>
+                        <option value="1.375">سبک (۱ تا ۳ روز ورزش)</option>
+                        <option value="1.55" selected>متوسط (۳ تا ۵ روز ورزش)</option>
+                        <option value="1.725">سنگین (۶ تا ۷ روز ورزش)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">قد (سانتی‌متر) *</label>
+                    <input type="tel" inputmode="numeric" id="profEditHeight" class="form-control" placeholder="178">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">وزن فعلی (کیلوگرم) *</label>
+                    <input type="tel" inputmode="numeric" id="profEditWeight" class="form-control" placeholder="75">
+                </div>
+
+                <div class="form-group full">
+                    <label class="form-label">هدف اصلی بدنی *</label>
+                    <select id="profEditGoalMode" class="form-control">
+                        <option value="lose">۱. کات و کاهش وزن (چربی‌سوزی)</option>
+                        <option value="maintain">۲. تثبیت وزن و تناسب اندام</option>
+                        <option value="gain_weight">۳. افزایش وزن عمومی</option>
+                        <option value="muscle">۴. عضله‌سازی ورزشی (حجم خشک)</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="btn-primary" id="saveDirectProfileBtn" style="width:100%; padding:12px;">
+                💾 ذخیره تغییرات پروفایل و بروزرسانی هوشمند کالری
+            </button>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><div class="card-title">🎯 تنظیم دستی کالری و ماکروها (دلخواه)</div></div>
             <div class="form-grid">
                 <div class="form-group full">
                     <label class="form-label">هدف کالری روزانه</label>
@@ -1242,11 +1312,12 @@
                     <input type="tel" inputmode="numeric" id="manualFatInput" class="form-control" value="65">
                 </div>
             </div>
-            <button class="btn-primary" id="saveManualGoalsBtn" style="width:100%;">ذخیره دستی</button>
+            <button class="btn-primary" id="saveManualGoalsBtn" style="width:100%; background:var(--bg-muted); color:var(--text-main); border:1px solid var(--primary);">
+                ✍️ ثبت دستی مقادیر بالا
+            </button>
         </div>
     </div>
 
-    <!-- فوتر تمیز اپلیکیشن -->
     <footer class="app-footer">
         <div style="font-size:13px; font-weight:900; color:var(--primary); margin-bottom:4px;">
             ⚡ BodyMod | بادی‌مود: بدن مود شده
@@ -1258,7 +1329,7 @@
 
 </div>
 
-<!-- مودال ورود (با پیش‌وند ثابت 0 برای شماره موبایل و ایگنور خودکار 0 اضافی) -->
+<!-- مودال ورود -->
 <div class="modal-backdrop" id="authModal">
     <div class="modal-box">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
@@ -1270,7 +1341,6 @@
             با شماره موبایل اکانت «بله» یا حساب گوگل وارد شو؛ بلافاصله بعدش مشخصات بدنت رو می‌گیریم!
         </p>
 
-        <!-- بخش ورود با شماره موبایل بله (با پیش‌وند ثابت 0) -->
         <div style="margin-bottom:14px;">
             <div style="font-size:12px; font-weight:800; color:var(--primary); margin-bottom:8px;">
                 💬 ورود سریع با شماره موبایل (از طریق ربات «بله»):
@@ -1291,11 +1361,10 @@
             <div style="display:flex; gap:8px;">
                 <button class="btn-primary" id="sendBaleOtpBtn" style="flex:1;">📲 ارسال کد تایید</button>
                 <button class="btn-primary" id="verifyBaleOtpBtn" style="flex:1; display:none; background:var(--success);">✅ تایید و ادامه</button>
-                <button class="nav-arrow-btn" id="logoutBtn" style="display:none; color:var(--danger);">خروج</button>
+                <button class="nav-arrow-btn" id="logoutBtn" style="display:none; color:var(--danger);">خروج از حساب</button>
             </div>
         </div>
 
-        <!-- بخش ورود با گوگل -->
         <div style="border-top:1px dashed var(--border-color); padding-top:12px; text-align:center;">
             <div style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">یا ورود با حساب گوگل:</div>
             <div id="googleButtonContainer" style="display:flex; justify-content:center; margin:6px 0;"></div>
@@ -1303,7 +1372,7 @@
     </div>
 </div>
 
-<!-- مودال تکمیل مشخصات بدنی (Onboarding) -->
+<!-- مودال تکمیل مشخصات بدنی اولیه -->
 <div class="modal-backdrop" id="onboardingModal">
     <div class="modal-box">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
@@ -1324,7 +1393,7 @@
             <div class="form-group full">
                 <label class="form-label">تاریخ تولد (شمسی) *</label>
                 <div style="display:grid; grid-template-columns: 1fr 1fr 1.2fr; gap:6px;">
-                    <input type="tel" inputmode="numeric" id="obBirthDay" class="form-control" placeholder="روز (۱۴)">
+                    <input type="tel" inputmode="numeric" id="obBirthDay" class="form-control" placeholder="روز (۱۳)">
                     <input type="tel" inputmode="numeric" id="obBirthMonth" class="form-control" placeholder="ماه (۱۰)">
                     <input type="tel" inputmode="numeric" id="obBirthYear" class="form-control" placeholder="سال (۱۳۸۳)">
                 </div>
@@ -1402,9 +1471,6 @@
 </div>
 
 <script>
-    /* ==========================================================================
-       👑 مشخصات رسمی مدیرعامل (متین محمدی - CEO Edition) + کاستوم دامین سرور
-       ========================================================================== */
     const CEO_GMAIL = "diaperloveradultbaby5@gmail.com";
     const CEO_PHONE = "09058586834";
 
@@ -1438,9 +1504,6 @@
         return diff < -1 ? `${toFa(Math.abs(diff))} روز قبل` : `${toFa(diff)} روز بعد`;
     };
 
-    /* ==========================================================================
-       فیلتر هوشمند کادر شماره موبایل: حذف خودکار صفر اول و شروع اجباری از 9
-       ========================================================================== */
     const balePhoneInputEl = document.getElementById('balePhoneInput');
     balePhoneInputEl.addEventListener('input', (e) => {
         let val = toEnDigits(e.target.value).replace(/\D/g, '');
@@ -1487,32 +1550,15 @@
         toastTimer = setTimeout(() => el.classList.remove('show'), 3800);
     };
 
-    /* ==========================================================================
-       📡 رادار پینگ ۲۴ ساعته همزمان به سرور (server.matin-mohammadi.ir)، مایکت و گوگل
-       ========================================================================== */
-    let netRadarState = {
-        status: 'online', // 'online' | 'cf-blocked' | 'offline'
-        cfOk: false,
-        domesticOk: false,
-        checking: false
-    };
+    let netRadarState = { status: 'online', cfOk: false, domesticOk: false, checking: false };
 
     const pingUrlNoCors = (url, timeoutMs = 2800) => {
         return new Promise((resolve) => {
             const ctrl = new AbortController();
             const t = setTimeout(() => { ctrl.abort(); resolve(false); }, timeoutMs);
             fetch(url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now(), {
-                method: 'GET',
-                mode: 'no-cors',
-                cache: 'no-store',
-                signal: ctrl.signal
-            }).then(() => {
-                clearTimeout(t);
-                resolve(true);
-            }).catch(() => {
-                clearTimeout(t);
-                resolve(false);
-            });
+                method: 'GET', mode: 'no-cors', cache: 'no-store', signal: ctrl.signal
+            }).then(() => { clearTimeout(t); resolve(true); }).catch(() => { clearTimeout(t); resolve(false); });
         });
     };
 
@@ -1521,18 +1567,13 @@
             const ctrl = new AbortController();
             const t = setTimeout(() => { ctrl.abort(); resolve({ ok: false }); }, timeoutMs);
             fetch(`${WORKER_BASE_URL}/api/beta/status?_t=${Date.now()}`, {
-                method: 'GET',
-                cache: 'no-store',
-                signal: ctrl.signal
+                method: 'GET', cache: 'no-store', signal: ctrl.signal
             }).then(async (res) => {
                 clearTimeout(t);
                 if (!res.ok) return resolve({ ok: false });
                 const data = await res.json().catch(() => ({}));
                 resolve({ ok: true, data });
-            }).catch(() => {
-                clearTimeout(t);
-                resolve({ ok: false });
-            });
+            }).catch(() => { clearTimeout(t); resolve({ ok: false }); });
         });
     };
 
@@ -1552,12 +1593,12 @@
             badge.classList.add('cf-blocked');
             alertBar.style.display = 'flex';
             alertBar.classList.add('warn');
-            alertText.textContent = '⚠️ اینترنت وصله، اما سرور کلودفلر اختلال داره! (وضعیت اتصال رو بررسی کن)';
+            alertText.textContent = '⚠️ اینترنت وصله، اما سرور کلودفلر اختلال داره!';
         } else {
             badge.classList.add('offline');
             alertBar.style.display = 'flex';
             alertBar.classList.add('err');
-            alertText.textContent = '🚫 اینترنت گوشی کاملاً قطعه! (حالت آفلاین کالری‌شمار فعاله)';
+            alertText.textContent = '🚫 اینترنت گوشی کاملاً قطعه! (حالت آفلاین فعاله)';
         }
     };
 
@@ -1602,10 +1643,7 @@
         return netRadarState;
     };
 
-    // اجرای خودکار پینگ هر ۴ ثانیه در پس‌زمینه
-    setInterval(() => {
-        runRealtimeNetworkProbe(false);
-    }, 4000);
+    setInterval(() => { runRealtimeNetworkProbe(false); }, 4000);
 
     window.showWifiStatusToast = async () => {
         showToast('⏳ در حال پینگ همزمان سرور بادی‌مود، مایکت و گوگل...');
@@ -1615,9 +1653,6 @@
         else showToast('🔴 اینترنت گوشی کاملاً قطعه رفیق!');
     };
 
-    /* ==========================================================================
-       تضمین حداقل ۲.۵ ثانیه نمایش انیمیشن حرکت شنا (Push-Up)
-       ========================================================================== */
     let loaderShownAt = 0;
     let loaderHideTimeout = null;
     const MIN_LOADER_DURATION_MS = 2500;
@@ -1639,7 +1674,6 @@
         }, remaining);
     };
 
-    // کنترل مودال قطعی اینترنت
     let lastRetryCallback = null;
     window.showOfflineModal = async (reasonText, retryFn = null) => {
         clearTimeout(loaderHideTimeout);
@@ -1653,13 +1687,16 @@
 
         if (probe.status === 'cf-blocked') {
             mainTitle.textContent = '⚠️ اینترنت وصله، اما سرور در دسترس نیست!';
-            subHeadline.textContent = 'رفیق اینترنتت روشنه، ولی ارتباط با کلودفلر اختلال داره! 🟡🔥';
+            subHeadline.textContent = 'رفیق اینترنتت روشنه، ولی ارتباط با سرور اختلال داره! 🟡🔥';
             reasonEl.textContent = 'وضعیت فیلترشکن یا اینترنت خطت رو بررسی کن و دوباره تلاش کن.';
         } else {
             mainTitle.textContent = '⚡ ارتباط با سرور برقرار نیست!';
             subHeadline.textContent = 'عزیز من اینجا باید اینترنتت رو روشن کنی 😂🔥';
             reasonEl.textContent = reasonText || 'کالری‌شمار و آب کاملاً آفلاینه، اما این بخش به اینترنت نیاز داره!';
         }
+
+        const vid = document.getElementById('earthBurnVideo');
+        if (vid) { vid.currentTime = 0; vid.play().catch(() => {}); }
 
         document.getElementById('offlineModal').classList.add('open');
     };
@@ -1683,7 +1720,6 @@
         if (typeof lastRetryCallback === 'function') lastRetryCallback();
     });
 
-    // --- دیتابیس کامل خوراکی‌های ایرانی (آفلاین) ---
     const createFood = (id, name, cat, cal100, prot100, carb100, fat100, unitsObj) => ({
         id, name, cat, cal100, prot100, carb100, fat100, units: unitsObj
     });
@@ -1730,7 +1766,7 @@
         createFood('b_sangak', 'نان سنگک / بربری / لواش', 'bread', 265, 8.5, 54.0, 1.4, U_BREAD)
     ];
 
-    const STORAGE_KEY = 'bodymod_app_fixed_v7';
+    const STORAGE_KEY = 'bodymod_app_fixed_v9';
     const getInitialTheme = () => {
         try {
             const saved = localStorage.getItem('bodymod_user_theme');
@@ -1776,6 +1812,49 @@
         return Math.max(6, Math.min(22, Math.round((baseMl + bonusMl) / 200)));
     };
 
+    const calculateSmartGoalsFromProfile = (p) => {
+        const bmr = p.gender === 'male'
+            ? (10 * p.weight) + (6.25 * p.height) - (5 * p.age) + 5
+            : (10 * p.weight) + (6.25 * p.height) - (5 * p.age) - 161;
+        const tdee = Math.round(bmr * (p.activity || 1.55));
+
+        let targetCal = tdee, protRatio = 0.28, carbRatio = 0.44, fatRatio = 0.28;
+        if (p.goalMode === 'lose') { targetCal = Math.max(1200, tdee - 500); protRatio = 0.32; carbRatio = 0.40; fatRatio = 0.28; }
+        else if (p.goalMode === 'gain_weight') { targetCal = tdee + 500; protRatio = 0.18; carbRatio = 0.52; fatRatio = 0.30; }
+        else if (p.goalMode === 'muscle') { targetCal = tdee + 300; protRatio = 0.30; carbRatio = 0.45; fatRatio = 0.25; }
+
+        return {
+            cal: targetCal,
+            prot: Math.round((targetCal * protRatio) / 4),
+            carb: Math.round((targetCal * carbRatio) / 4),
+            fat: Math.round((targetCal * fatRatio) / 9),
+            waterGlasses: computeAutoWaterGlasses(targetCal, p.weight, p.goalMode),
+            waterAuto: true
+        };
+    };
+
+    const populateDirectProfileForm = () => {
+        const p = state.userProfile;
+        document.getElementById('profEditName').value = p.nickname || '';
+        document.getElementById('profEditCity').value = p.city || '';
+        if (p.birthDate && p.birthDate.includes('/')) {
+            const [y, m, d] = p.birthDate.split('/');
+            document.getElementById('profEditBirthYear').value = y || '';
+            document.getElementById('profEditBirthMonth').value = m || '';
+            document.getElementById('profEditBirthDay').value = d || '';
+        }
+        document.getElementById('profEditGender').value = p.gender || 'male';
+        document.getElementById('profEditActivity').value = String(p.activity || 1.55);
+        document.getElementById('profEditHeight').value = p.height || 178;
+        document.getElementById('profEditWeight').value = p.weight || 75;
+        document.getElementById('profEditGoalMode').value = p.goalMode || 'maintain';
+
+        document.getElementById('manualCalInput').value = state.goals.cal || 2000;
+        document.getElementById('manualProtInput').value = state.goals.prot || 140;
+        document.getElementById('manualCarbInput').value = state.goals.carb || 220;
+        document.getElementById('manualFatInput').value = state.goals.fat || 65;
+    };
+
     const getActiveUserKey = () => (state.authUser.email || state.authUser.phone || "").toLowerCase().trim();
     const isCeoUser = () => {
         const k = getActiveUserKey();
@@ -1818,6 +1897,9 @@
         if (btn) btn.classList.add('active');
         const sec = document.getElementById(tabId);
         if (sec) sec.classList.add('active');
+        if (tabId === 'settingsTab') {
+            populateDirectProfileForm();
+        }
         closeDrawer();
         renderAll();
     };
@@ -1825,6 +1907,14 @@
         state.theme = state.theme === 'dark' ? 'light' : 'dark';
         try { localStorage.setItem('bodymod_user_theme', state.theme); } catch (e) {}
         renderAll();
+    };
+
+    window.handleHeaderAuthClick = () => {
+        if (state.authUser.loggedIn && state.userProfile.profileCompleted) {
+            switchTab('settingsTab');
+        } else {
+            openAuthModal();
+        }
     };
 
     const syncToCloudflare = async (showLoader = false) => {
@@ -2118,29 +2208,58 @@
 
         const age = Math.max(10, Math.min(95, 1405 - bYear));
         const birthDate = `${bYear}/${String(bMonth).padStart(2, '0')}/${String(bDay).padStart(2, '0')}`;
-        const bmr = gender === 'male' ? (10 * weight) + (6.25 * height) - (5 * age) + 5 : (10 * weight) + (6.25 * height) - (5 * age) - 161;
-        const tdee = Math.round(bmr * activity);
-
-        let targetCal = tdee, protRatio = 0.28, carbRatio = 0.44, fatRatio = 0.28;
-        if (goalMode === 'lose') { targetCal = Math.max(1200, tdee - 500); protRatio = 0.32; carbRatio = 0.40; fatRatio = 0.28; }
-        else if (goalMode === 'gain_weight') { targetCal = tdee + 500; protRatio = 0.18; carbRatio = 0.52; fatRatio = 0.30; }
-        else if (goalMode === 'muscle') { targetCal = tdee + 300; protRatio = 0.30; carbRatio = 0.45; fatRatio = 0.25; }
 
         state.userProfile = { profileCompleted: true, nickname, birthDate, age, gender, city, height, weight, activity, goalMode, termsAccepted: true };
-        state.goals = {
-            cal: targetCal,
-            prot: Math.round((targetCal * protRatio) / 4),
-            carb: Math.round((targetCal * carbRatio) / 4),
-            fat: Math.round((targetCal * fatRatio) / 9),
-            waterGlasses: computeAutoWaterGlasses(targetCal, weight, goalMode),
-            waterAuto: true
-        };
+        state.goals = calculateSmartGoalsFromProfile(state.userProfile);
 
-        ensureDay(state.selectedDate).targetCal = targetCal;
+        ensureDay(state.selectedDate).targetCal = state.goals.cal;
         closeModalById('onboardingModal');
+        populateDirectProfileForm();
         renderAll();
         await syncToCloudflare(true);
-        showToast(`ایول ${nickname} عزیز! هدف روزانه‌ات شد ${toFa(targetCal)} کالری 🔥`);
+        showToast(`ایول ${nickname} عزیز! پرونده سلامتیت ساخته شد (هدف: ${toFa(state.goals.cal)} کالری) 🔥`);
+    });
+
+    document.getElementById('saveDirectProfileBtn').addEventListener('click', async () => {
+        const nickname = document.getElementById('profEditName').value.trim();
+        const city = document.getElementById('profEditCity').value.trim();
+        const bDay = parseInt(toEnDigits(document.getElementById('profEditBirthDay').value));
+        const bMonth = parseInt(toEnDigits(document.getElementById('profEditBirthMonth').value));
+        const bYear = parseInt(toEnDigits(document.getElementById('profEditBirthYear').value));
+        const gender = document.getElementById('profEditGender').value;
+        const height = parseFloat(toEnDigits(document.getElementById('profEditHeight').value));
+        const weight = parseFloat(toEnDigits(document.getElementById('profEditWeight').value));
+        const activity = parseFloat(document.getElementById('profEditActivity').value) || 1.55;
+        const goalMode = document.getElementById('profEditGoalMode').value;
+
+        if (!nickname || !city || !bDay || !bMonth || !bYear || !gender || !height || !weight || !goalMode) {
+            showToast('رفیق لطفاً همه فیلدهای پرونده بدنی رو کامل پر کن! ✍️');
+            return;
+        }
+
+        const age = Math.max(10, Math.min(95, 1405 - bYear));
+        const birthDate = `${bYear}/${String(bMonth).padStart(2, '0')}/${String(bDay).padStart(2, '0')}`;
+
+        state.userProfile = {
+            profileCompleted: true,
+            nickname,
+            birthDate,
+            age,
+            gender,
+            city,
+            height,
+            weight,
+            activity,
+            goalMode,
+            termsAccepted: true
+        };
+        state.goals = calculateSmartGoalsFromProfile(state.userProfile);
+        ensureDay(state.selectedDate).targetCal = state.goals.cal;
+
+        populateDirectProfileForm();
+        renderAll();
+        await syncToCloudflare(true);
+        showToast(`پروفایل تو آپدیت شد ${nickname} جان! هدف جدید: ${toFa(state.goals.cal)} کالری ✅🔥`);
     });
 
     window.openAuthModal = () => {
@@ -2156,7 +2275,7 @@
                         if (!state.userProfile.nickname && payload.given_name) state.userProfile.nickname = payload.given_name;
                         closeModalById('authModal');
                         if (!state.userProfile.profileCompleted) openOnboardingModal(false);
-                        else { await syncToCloudflare(true); renderAll(); }
+                        else { populateDirectProfileForm(); await syncToCloudflare(true); renderAll(); }
                     }
                 });
                 google.accounts.id.renderButton(document.getElementById('googleButtonContainer'), { theme: 'outline', size: 'large', text: 'signin_with', locale: 'fa', width: 260 });
@@ -2221,7 +2340,7 @@
                 state.authUser = { email: '', phone: fullPhone, loggedIn: true };
                 closeModalById('authModal');
                 if (!state.userProfile.profileCompleted) openOnboardingModal(false);
-                else { await syncToCloudflare(false); renderAll(); }
+                else { populateDirectProfileForm(); await syncToCloudflare(false); renderAll(); }
             });
         } catch {
             showOfflineModal('خطا در تایید کد! ارتباط با سرور برقرار نشد.', () => document.getElementById('verifyBaleOtpBtn').click());
@@ -2315,7 +2434,7 @@
             ? `⚡ وضعیت کالری امروز ${nick}`
             : `⚡ وضعیت کالری و ماکروهای امروزت`;
 
-        document.getElementById('headerAuthText').textContent = state.authUser.loggedIn && userKey ? (nick || 'حساب من') : '🔐 ورود';
+        document.getElementById('headerAuthText').textContent = (state.authUser.loggedIn || p.profileCompleted) ? `👤 ${nick || 'پروفایل'}` : '🔐 ورود';
         document.getElementById('drawerUserName').textContent = nick ? `${nick} (${p.city || ''})` : 'کاربر مهمان 👋';
         document.getElementById('drawerUserSub').textContent = userKey ? `حساب: ${userKey}` : 'حالت آفلاین فعال است';
         document.getElementById('drawerVipStatus').textContent = isCeoUser()
@@ -2327,13 +2446,42 @@
             document.getElementById('savedWorkoutPlanBox').textContent = state.savedWorkoutPlan;
         }
 
+        const statsGridEl = document.getElementById('profileStatsGrid');
         if (p.profileCompleted) {
+            const hMeter = (p.height || 175) / 100;
+            const bmi = +((p.weight || 75) / (hMeter * hMeter)).toFixed(1);
             document.getElementById('profileSummaryBox').innerHTML = `
-                <div>👤 <strong>نام:</strong> ${p.nickname} | 🏙️ <strong>شهر:</strong> ${p.city}</div>
-                <div>🎂 <strong>تولد:</strong> ${toFa(p.birthDate)} (${toFa(p.age)} ساله) | 🚻 <strong>جنسیت:</strong> ${p.gender === 'male' ? 'مرد' : 'زن'}</div>
-                <div>📏 <strong>قد:</strong> ${toFa(p.height)} cm | ⚖️ <strong>وزن:</strong> ${toFa(p.weight)} kg</div>
-                <div>🎯 <strong>هدف:</strong> <span style="color:var(--primary); font-weight:800;">${goalLabels[p.goalMode] || p.goalMode}</span></div>
+                <div style="font-weight:800; color:var(--text-main);">✅ پرونده سلامتی تو ثبت شده و فعال است (${userKey ? 'متصل به سرور ☁️' : 'ذخیره در حافظه گوشی 💾'})</div>
             `;
+            statsGridEl.style.display = 'grid';
+            statsGridEl.innerHTML = `
+                <div class="profile-stat-box">
+                    <div class="profile-stat-label">👤 نام و شهر</div>
+                    <div class="profile-stat-val">${p.nickname} (${p.city})</div>
+                </div>
+                <div class="profile-stat-box">
+                    <div class="profile-stat-label">🎂 سن و تولد</div>
+                    <div class="profile-stat-val">${toFa(p.age)} سال (${toFa(p.birthDate)})</div>
+                </div>
+                <div class="profile-stat-box">
+                    <div class="profile-stat-label">📏 قد و وزن</div>
+                    <div class="profile-stat-val">${toFa(p.height)}cm | ${toFa(p.weight)}kg</div>
+                </div>
+                <div class="profile-stat-box">
+                    <div class="profile-stat-label">📊 شاخص توده بدنی (BMI)</div>
+                    <div class="profile-stat-val">${toFa(bmi)}</div>
+                </div>
+                <div class="profile-stat-box">
+                    <div class="profile-stat-label">🎯 هدف بدنی</div>
+                    <div class="profile-stat-val">${goalLabels[p.goalMode] || p.goalMode}</div>
+                </div>
+                <div class="profile-stat-box">
+                    <div class="profile-stat-label">🔥 سهمیه کالری و آب</div>
+                    <div class="profile-stat-val">${toFa(state.goals.cal)} کالری | ${toFa(state.goals.waterGlasses)} لیوان</div>
+                </div>
+            `;
+        } else {
+            statsGridEl.style.display = 'none';
         }
 
         document.getElementById('shamsiDateDisplay').textContent = getShamsiFull(state.selectedDate);
@@ -2485,7 +2633,7 @@
     document.getElementById('addWaterBtn').addEventListener('click', () => { ensureDay(state.selectedDate).waterGlasses++; renderAll(); showToast('نوش جان! +۱ لیوان آب ثبت شد 💧'); });
     document.getElementById('removeWaterBtn').addEventListener('click', () => { const d = ensureDay(state.selectedDate); d.waterGlasses = Math.max(0, d.waterGlasses - 1); renderAll(); });
     document.getElementById('saveManualWaterBtn').addEventListener('click', () => {
-        state.goals.waterGlasses = Math.max(1, parseInt(document.getElementById('manualWaterGlassesInput').value) || 10);
+        state.goals.waterGlasses = Math.max(1, parseInt(toEnDigits(document.getElementById('manualWaterGlassesInput').value)) || 10);
         state.goals.waterAuto = false; renderAll(); showToast('هدف آب ذخیره شد 💧');
     });
     document.getElementById('resetAutoWaterBtn').addEventListener('click', () => {
@@ -2539,10 +2687,10 @@
     document.getElementById('historyMonthFilter').addEventListener('change', renderAll);
 
     document.getElementById('saveManualGoalsBtn').addEventListener('click', () => {
-        state.goals.cal = parseInt(document.getElementById('manualCalInput').value) || 2000;
-        state.goals.prot = parseInt(document.getElementById('manualProtInput').value) || 140;
-        state.goals.carb = parseInt(document.getElementById('manualCarbInput').value) || 220;
-        state.goals.fat = parseInt(document.getElementById('manualFatInput').value) || 65;
+        state.goals.cal = parseInt(toEnDigits(document.getElementById('manualCalInput').value)) || 2000;
+        state.goals.prot = parseInt(toEnDigits(document.getElementById('manualProtInput').value)) || 140;
+        state.goals.carb = parseInt(toEnDigits(document.getElementById('manualCarbInput').value)) || 220;
+        state.goals.fat = parseInt(toEnDigits(document.getElementById('manualFatInput').value)) || 65;
         ensureDay(state.selectedDate).targetCal = state.goals.cal;
         renderAll();
         showToast('اهداف روزانه با موفقیت ذخیره شد! 🎯');
@@ -2568,10 +2716,10 @@
     document.getElementById('saveCustomFoodBtn').addEventListener('click', () => {
         const name = document.getElementById('cfName').value.trim();
         const unitName = document.getElementById('cfUnitName').value;
-        const cal = parseFloat(document.getElementById('cfCal').value);
-        const prot = parseFloat(document.getElementById('cfProt').value) || 0;
-        const carb = parseFloat(document.getElementById('cfCarb').value) || 0;
-        const fat = parseFloat(document.getElementById('cfFat').value) || 0;
+        const cal = parseFloat(toEnDigits(document.getElementById('cfCal').value));
+        const prot = parseFloat(toEnDigits(document.getElementById('cfProt').value)) || 0;
+        const carb = parseFloat(toEnDigits(document.getElementById('cfCarb').value)) || 0;
+        const fat = parseFloat(toEnDigits(document.getElementById('cfFat').value)) || 0;
         if (!name || isNaN(cal)) { showToast('نام و کالری خوراکی رو وارد کن رفیق!'); return; }
         const unitGramsMap = { 'بشقاب': 250, 'کاسه': 300, 'پرس': 350, 'عدد': 100 };
         const baseGram = unitGramsMap[unitName] || 100;
@@ -2583,11 +2731,11 @@
         showToast(`«${name}» به بانک غذای تو اضافه شد! 🥗`);
     });
 
-    // نمایش تضمینی ۲.۵ ثانیه‌ای لودینگ حرکت شنا + اجرای فوری رادار پینگ
     showPushupLoader('درحال تمرین... (لودینگ)');
     hidePushupLoader();
 
     loadState();
+    populateDirectProfileForm();
     runRealtimeNetworkProbe(false);
     renderAll();
 </script>

@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BodyMod | وب‌اپلیکیشن رسمی بادی‌مود: بدن مود شده</title>
-    <!-- اسکریپت رسمی ورود با گوگل -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <!-- تشخیص فوری تم سیستم کاربر (دارک/لایت) -->
     <script>
@@ -84,7 +82,6 @@
             transition: background-color 0.25s, color 0.25s;
         }
 
-        /* قفل اسکرول صفحه پشتی هنگام باز بودن پاپ‌آپ */
         body.modal-open {
             overflow: hidden !important;
         }
@@ -97,9 +94,7 @@
             overflow-x: hidden;
         }
 
-        /* ==========================================================================
-           ۱. انیمیشن لودینگ انسان در حال حرکت شنا (حداقل ۲.۵ ثانیه نمایش)
-           ========================================================================== */
+        /* ۱. انیمیشن لودینگ انسان در حال حرکت شنا */
         .pushup-loader-overlay {
             position: fixed;
             inset: 0;
@@ -168,6 +163,66 @@
             50% { opacity: 0.55; }
         }
 
+        /* ۲. پاپ‌آپ سایبرپانکی دعوت به نصب سوپراپلیکیشن اندروید (برای تمام بخش‌های قفل) */
+        .app-lock-cyber-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 8, 17, 0.92);
+            backdrop-filter: blur(8px);
+            z-index: 4500;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            overflow-y: auto;
+        }
+        .app-lock-cyber-modal.open { display: flex; }
+
+        .app-lock-cyber-box {
+            background: radial-gradient(circle at top, #162038 0%, #0b1120 100%);
+            color: #f8fafc;
+            width: 100%;
+            max-width: 430px;
+            border-radius: 24px;
+            padding: 24px 18px;
+            border: 2px solid #00f5d4;
+            box-shadow: 0 0 40px rgba(0, 245, 212, 0.28);
+            text-align: center;
+            margin: auto 0;
+        }
+
+        .cyber-lock-ring {
+            width: 84px;
+            height: 84px;
+            margin: 0 auto 14px auto;
+            border-radius: 50%;
+            background: rgba(0, 245, 212, 0.12);
+            border: 2px dashed #00f5d4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            box-shadow: 0 0 25px rgba(0, 245, 212, 0.3);
+            animation: pulseCyberLock 1.8s infinite ease-in-out;
+        }
+
+        @keyframes pulseCyberLock {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 18px rgba(0, 245, 212, 0.3); }
+            50% { transform: scale(1.07); box-shadow: 0 0 32px rgba(247, 37, 133, 0.55); border-color: #f72585; }
+        }
+
+        .play-protect-guide {
+            background: rgba(245, 158, 11, 0.12);
+            border: 1px dashed #f59e0b;
+            border-radius: 14px;
+            padding: 10px 12px;
+            margin: 14px 0 18px 0;
+            text-align: right;
+            font-size: 11px;
+            line-height: 1.75;
+            color: #fde68a;
+        }
+
         /* نوتیفیکیشن داخلی */
         .cyber-toast {
             position: fixed;
@@ -190,7 +245,6 @@
         }
         .cyber-toast.show { transform: translateX(-50%) translateY(0); }
 
-        /* نوار کانال بله بالای وب‌سایت */
         .bale-channel-bar {
             background: linear-gradient(135deg, rgba(0, 180, 216, 0.14), rgba(114, 9, 183, 0.14));
             border: 1px solid var(--primary);
@@ -217,7 +271,6 @@
             direction: ltr;
         }
 
-        /* هدر وب‌سایت (بدون آیکون وای‌فای) */
         .app-header {
             display: flex;
             align-items: center;
@@ -305,42 +358,6 @@
             white-space: nowrap;
         }
 
-        /* کادر استاندارد شماره موبایل با پیش‌وند ثابت 0 */
-        .phone-input-wrapper {
-            display: flex;
-            align-items: center;
-            direction: ltr;
-            background: var(--bg-muted);
-            border: 1.5px solid var(--border-color);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        .phone-input-wrapper:focus-within {
-            border-color: var(--primary);
-        }
-        .phone-zero-prefix {
-            background: var(--bg-card);
-            color: var(--primary);
-            font-weight: 900;
-            font-size: 14px;
-            padding: 9px 12px;
-            border-right: 1px solid var(--border-color);
-            user-select: none;
-        }
-        .phone-input-field {
-            border: none !important;
-            background: transparent !important;
-            flex: 1;
-            padding: 9px 10px;
-            font-size: 14px;
-            font-weight: 800;
-            color: var(--text-main);
-            outline: none;
-            text-align: left;
-            letter-spacing: 1px;
-        }
-
-        /* منوی همبرگری کشویی */
         .drawer-backdrop {
             position: fixed; inset: 0; background: rgba(7, 10, 18, 0.75);
             backdrop-filter: blur(4px); z-index: 1500; display: none;
@@ -580,7 +597,6 @@
             display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 15px; flex-shrink: 0;
         }
 
-        /* سیستم ضد قفل کیبورد برای تمام پاپ‌آپ‌ها */
         .modal-backdrop {
             position: fixed;
             inset: 0;
@@ -608,12 +624,6 @@
             overflow-x: hidden;
         }
 
-        .privacy-terms-box {
-            background: var(--bg-muted); border: 1px dashed var(--primary);
-            border-radius: 14px; padding: 10px; margin: 10px 0; font-size: 11px; line-height: 1.7;
-        }
-
-        /* فوتر رسمی وب‌سایت همراه با اینماد و بج GitHub Pages */
         .site-footer {
             margin-top: 22px; padding: 18px 14px; background: var(--bg-card);
             border: 1px solid var(--border-color); border-top: 2px solid var(--primary);
@@ -658,9 +668,7 @@
 </head>
 <body>
 
-<!-- ==========================================================================
-     ۱. صفحه لودینگ انسان در حال حرکت شنا (حداقل ۲.۵ ثانیه نمایش)
-     ========================================================================== -->
+<!-- ۱. صفحه لودینگ انسان در حال حرکت شنا -->
 <div class="pushup-loader-overlay" id="pushupLoader">
     <div class="pushup-stage">
         <div class="pushup-floor"></div>
@@ -680,6 +688,37 @@
     <div style="font-size:11px; color:#94a3b8; margin-top:4px;">وب‌اپلیکیشن رسمی BodyMod</div>
 </div>
 
+<!-- ۲. پاپ‌آپ سایبرپانکی دعوت به نصب سوپراپلیکیشن بادی‌مود (برای تمام بخش‌های قفل) -->
+<div class="app-lock-cyber-modal" id="appInstallModal">
+    <div class="app-lock-cyber-box">
+        <div class="cyber-lock-ring">🔐</div>
+
+        <div style="font-size:12px; font-weight:900; color:#00f5d4; margin-bottom:4px;">
+            ⚡ قفلِ هسته مرکزی فعال است!
+        </div>
+        <h3 style="font-size:15px; font-weight:900; color:#ffffff; margin-bottom:10px; line-height:1.6;">
+            «عزیز من، برای دسترسی به همه ویژگی‌ها، باید سوپراپلیکیشن بادی‌مود رو نصب کنی! 😎🔥»
+        </h3>
+        <p style="font-size:12px; color:#cbd5e1; line-height:1.75;" id="lockedFeatureReasonText">
+            توی نسخه وب فقط کالری‌شمار و پایش آب فعاله؛ اما <strong>مربی هوش مصنوعی، اسکنر عکس غذا، برنامه‌ساز ورزشی و پرونده سلامتی</strong> انحصاراً داخل اپلیکیشن اندروید باز هستن!
+        </p>
+
+        <!-- باکس راهنمای رد کردن اخطار Play Protect موقع نصب -->
+        <div class="play-protect-guide">
+            🛡️ <strong>نکته مهم موقع نصب:</strong> چون برنامه مستقیم و مستقل منتشر شده، اگه موقع نصب پیامِ سپر ایمنی گوگل (Play Protect) رو دیدی، خیلی راحت روی <strong>«جزئیات بیشتر (More details)»</strong> و بعدش <strong>«در هر صورت نصب شود (Install anyway)»</strong> بزن تا نصب بشه! ✅
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:8px;">
+            <a href="https://ble.ir/bodymod_channel" target="_blank" rel="noopener" class="btn-primary" style="text-decoration:none; padding:12px; font-size:13px; background:linear-gradient(135deg, #00f5d4, #00bbf9); color:#070a12;">
+                📥 دانلود اپلیکیشن از کانال بله (@bodymod_channel)
+            </a>
+            <button class="nav-arrow-btn" onclick="closeAppInstallModal()" style="width:100%; padding:10px; background:#1e293b; color:#f8fafc; border-color:#475569;">
+                فعلاً تو همین سایت می‌مونم 🚪
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- نوتیفیکیشن داخلی -->
 <div class="cyber-toast" id="cyberToast"></div>
 
@@ -696,11 +735,10 @@
         </div>
 
         <div class="drawer-user-card">
-            <div style="font-size:13px; font-weight:900; color:var(--primary);" id="drawerUserName">کاربر مهمان 👋</div>
-            <div style="font-size:11px; color:var(--text-muted); margin-top:2px;" id="drawerUserSub">برای ذخیره ابری وارد حساب شو</div>
-            <div style="font-size:11px; font-weight:800; color:var(--carbs); margin-top:4px;" id="drawerVipStatus">وضعیت: نسخه وب‌سایت</div>
-            <button class="btn-primary" style="width:100%; margin-top:8px; padding:8px; font-size:12px;" onclick="closeDrawer(); openAuthModal();">
-                🔐 ورود / ثبت‌نام در سایت
+            <div style="font-size:13px; font-weight:900; color:var(--primary);">نسخه نمایشی وب 🌐</div>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">ثبت‌نام و هوش مصنوعی ویژه اپلیکیشن</div>
+            <button class="btn-primary" style="width:100%; margin-top:8px; padding:8px; font-size:12px;" onclick="closeDrawer(); openAppInstallModal('ورود به حساب و تشکیل پرونده سلامتی');">
+                📲 نصب سوپراپلیکیشن بادی‌مود
             </button>
         </div>
 
@@ -709,16 +747,28 @@
                 <span>🍽️ داشبورد کالری و آب</span>
                 <span>◀</span>
             </button>
+            <button class="drawer-item" onclick="closeDrawer(); openAppInstallModal('پرونده سلامتی و پروفایل بدنی');">
+                <span>👤 پرونده سلامتی و پروفایل</span>
+                <span style="background:var(--accent); color:#fff; font-size:10px; padding:1px 7px; border-radius:99px;">🔒 اپ</span>
+            </button>
+            <button class="drawer-item" onclick="closeDrawer(); openAppInstallModal('برنامه‌ساز تمرین ۳ تا ۱۲ ماهه با AI');">
+                <span>💪 برنامه‌ساز تمرین و آتیش</span>
+                <span style="background:var(--accent); color:#fff; font-size:10px; padding:1px 7px; border-radius:99px;">🔒 اپ</span>
+            </button>
+            <button class="drawer-item" onclick="closeDrawer(); openAppInstallModal('مربی هوش مصنوعی و اسکن عکس غذا');">
+                <span>🤖 مربی هوش مصنوعی و عکس غذا</span>
+                <span style="background:var(--accent); color:#fff; font-size:10px; padding:1px 7px; border-radius:99px;">🔒 اپ</span>
+            </button>
             <button class="drawer-item" data-tab="appFeaturesTab" onclick="switchTab('appFeaturesTab')">
-                <span>🤖 هوش مصنوعی و دانلود اپ اندروید</span>
-                <span style="background:var(--accent); color:#fff; font-size:10px; padding:1px 7px; border-radius:99px;">APP</span>
+                <span>❤️ حمایت مالی و دانلود اپ</span>
+                <span style="background:var(--primary-glow); color:var(--primary); font-size:10px; padding:1px 7px; border-radius:99px;">Donito</span>
             </button>
             <button class="drawer-item" data-tab="historyTab" onclick="switchTab('historyTab')">
                 <span>📊 تاریخچه روزها و ماه‌ها</span>
                 <span>◀</span>
             </button>
             <button class="drawer-item" data-tab="settingsTab" onclick="switchTab('settingsTab')">
-                <span>⚙️ پرونده بدنی و مشخصات</span>
+                <span>⚙️ تنظیم دستی کالری</span>
                 <span>◀</span>
             </button>
         </nav>
@@ -745,21 +795,21 @@
         </a>
     </div>
 
-    <!-- هدر وب‌سایت (بدون آیکون وضعیت اینترنت) -->
+    <!-- هدر وب‌سایت -->
     <header class="app-header">
         <div class="header-right">
             <button class="hamburger-btn" onclick="openDrawer()" title="منوی سایت">☰</button>
             <div class="brand-title">
                 <h1>⚡ BodyMod <span style="font-size:10px; background:var(--primary-glow); color:var(--primary); padding:2px 6px; border-radius:99px;">نسخه وب</span></h1>
-                <div class="greeting-line" id="userGreetingText">بدن و متابولیسم خودت رو هک کن!</div>
+                <div class="greeting-line">بدن و متابولیسم خودت رو هک کن!</div>
             </div>
         </div>
         <div class="header-left">
-            <div class="coin-pill" onclick="switchTab('appFeaturesTab')" title="موجودی بادی‌کوین">
-                🪙 <span id="headerCoinsCount">۳۰</span>
+            <div class="coin-pill" onclick="openAppInstallModal('کیف پول بادی‌کوین و اشتراک بتا')" title="موجودی بادی‌کوین">
+                🪙 <span>۳۰</span>
             </div>
-            <button class="auth-pill-btn" id="openAuthModalBtn" onclick="openAuthModal()">
-                <span id="headerAuthText">🔐 ورود / ثبت‌نام</span>
+            <button class="auth-pill-btn" onclick="openAppInstallModal('ورود به حساب و تشکیل پرونده سلامتی')">
+                <span>📲 نصب اپ / ورود</span>
             </button>
         </div>
     </header>
@@ -772,7 +822,7 @@
             <span style="margin: 0 4px; color:var(--border-color);">|</span>
             <span style="color:var(--primary); font-weight:800;">هوش مصنوعی ویژه اپلیکیشن اندروید</span>
         </div>
-        <button class="vip-trigger-btn" onclick="switchTab('appFeaturesTab')">
+        <button class="vip-trigger-btn" onclick="openAppInstallModal('دریافت اشتراک بتا و امکانات VIP')">
             📲 دریافت اپ اندروید
         </button>
     </div>
@@ -793,19 +843,17 @@
                 <button class="btn-primary" id="checkInWorkoutBtn" style="padding:4px 9px; font-size:11px;">✅ ثبت تمرین امروز</button>
             </div>
             <div style="display:flex; align-items:center; gap:6px;">
-                <span id="cloudSyncStatus" style="font-size:11px; color:var(--water); font-weight:700;">☁️ آماده سینک ابری</span>
+                <span style="font-size:11px; color:var(--water); font-weight:700;">💾 ذخیره در مرورگر وب</span>
                 <button class="btn-primary" id="jumpTodayBtn" style="padding:4px 8px; font-size:11px; display:none;">برگشت به امروز</button>
             </div>
         </div>
     </section>
 
-    <!-- ==========================================================================
-         TAB 1: DAILY TRACKER (کالری‌شمار و آب)
-         ========================================================================== -->
+    <!-- TAB 1: DAILY TRACKER -->
     <div id="trackerTab" class="tab-section active">
         <div class="card">
             <div class="card-header">
-                <div class="card-title" id="dashboardPersonalizedTitle">⚡ وضعیت کالری و ماکروهای امروزت</div>
+                <div class="card-title">⚡ وضعیت کالری و ماکروهای امروزت</div>
                 <span id="goalBadgeText" style="font-size:11px; color:var(--text-muted); font-weight:800;">هدف: ۲۰۰۰ کالری</span>
             </div>
             <div class="dashboard-grid">
@@ -889,8 +937,8 @@
         <div class="card">
             <div class="card-header">
                 <div class="card-title">🍲 وعده‌های ثبت شده امروز</div>
-                <button class="vip-trigger-btn" onclick="switchTab('appFeaturesTab')">
-                    📸 اسکن عکس غذا با AI (در اپ)
+                <button class="vip-trigger-btn" onclick="openAppInstallModal('اسکن عکس غذا با هوش مصنوعی')">
+                    📸 عکس از غذا با AI (🔒 ویژه اپ)
                 </button>
             </div>
 
@@ -932,36 +980,32 @@
         </div>
     </div>
 
-    <!-- ==========================================================================
-         TAB 2: APP FEATURES & DONITO (معرفی امکانات هوش مصنوعی اپ اندروید + درگاه دونیتو)
-         ========================================================================== -->
+    <!-- TAB 2: APP FEATURES & DONITO -->
     <div id="appFeaturesTab" class="tab-section">
         <div class="card" style="border:2px solid var(--primary);">
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:8px;">
                 <span style="background:var(--accent-light); color:var(--accent); border:1px solid var(--accent); padding:3px 10px; border-radius:99px; font-size:11px; font-weight:900;">
-                    🔒 ویژه اپلیکیشن رسمی اندروید (کافه‌بازار و مایکت)
+                    🔒 ویژه سوپراپلیکیشن رسمی اندروید
                 </span>
                 <span style="font-size:11px; font-weight:900; color:var(--primary);">۳۰+۲۰۰ بادی‌کوین</span>
             </div>
 
-            <h3 style="font-size:16px; font-weight:900; margin-bottom:6px;">📲 چرا امکانات هوش مصنوعی فقط در اپلیکیشن اندروید فعال است؟</h3>
+            <h3 style="font-size:16px; font-weight:900; margin-bottom:6px;">📲 دریافت سوپراپلیکیشن اندروید BodyMod</h3>
             <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
-                برای حفظ امنیت سرورهای هوش مصنوعی و اتصال مستقیم به درگاه پرداخت درون‌برنامه‌ای <strong>کافه‌بازار و مایکت</strong>، امکانات زیر انحصاراً در اپلیکیشن اندروید BodyMod باز هستند:
+                برای دسترسی به مربی هوشمند، اسکنر عکس غذا، برنامه‌ساز ورزشی و تشکیل پرونده سلامتی، نسخه رسمی اندروید رو نصب کن:
             </p>
 
             <div style="background:var(--bg-muted); padding:12px; border-radius:12px; font-size:12px; margin-bottom:12px; line-height:1.9;">
                 <div>✅ <strong>چت با مربی هوشمند:</strong> متصل به پرونده بدنی تو (روزی ۳ پیام تخصصی).</div>
                 <div>✅ <strong>تحلیل عکس غذا با دوربین:</strong> محاسبه کالری و ماکروها از روی عکس بشقاب غذا (روزی ۱ عکس).</div>
                 <div>✅ <strong>برنامه‌ساز ورزشی ۳ تا ۱۲ ماهه:</strong> مخصوص خانه یا باشگاه با هر تجهیزاتی که داری (ماهی ۱ برنامه).</div>
-                <div>✅ <strong>کارکرد ۱۰۰٪ آفلاین کالری‌شمار:</strong> بدون نیاز به اینترنت در هر شرایطی!</div>
             </div>
 
-            <a href="https://ble.ir/bodymod_channel" target="_blank" rel="noopener" class="btn-primary" style="display:block; text-decoration:none; padding:12px; font-size:13px;">
-                📥 دانلود آخرین نسخه اپلیکیشن اندروید از کانال بله (@bodymod_channel)
-            </a>
+            <button class="btn-primary" onclick="openAppInstallModal('دانلود مستقیم سوپراپلیکیشن اندروید')" style="width:100%; padding:12px; font-size:13px;">
+                📥 مشاهده راهنمای نصب و دانلود اپلیکیشن اندروید
+            </button>
         </div>
 
-        <!-- بنر حمایت مالی مستقیم Donito (مخصوص نسخه وب‌سایت) -->
         <div class="card">
             <div class="card-header">
                 <div class="card-title">❤️ حمایت مالی از توسعه سرورهای هوش مصنوعی BodyMod</div>
@@ -995,20 +1039,20 @@
         </div>
     </div>
 
-    <!-- TAB 4: PROFILE -->
+    <!-- TAB 4: MANUAL GOALS -->
     <div id="settingsTab" class="tab-section">
-        <div class="card">
+        <div class="card" style="border:1.5px dashed var(--accent);">
             <div class="card-header">
-                <div class="card-title">👤 پرونده بدنی ثبت‌شده تو در کلودفلر</div>
-                <button class="btn-primary" onclick="openOnboardingModal(true)" style="font-size:11px; padding:6px 10px;">✏️ ویرایش مشخصات و هدف</button>
+                <div class="card-title">🧬 تشکیل پرونده سلامتی هوشمند</div>
+                <button class="vip-trigger-btn" onclick="openAppInstallModal('تشکیل پرونده سلامتی و محاسبه خودکار BMI و کالری')">🔒 نصب اپلیکیشن</button>
             </div>
-            <div id="profileSummaryBox" style="font-size:12px; color:var(--text-muted); line-height:1.9;">
-                هنوز پرونده بدنی‌ت رو کامل نکردی رفیق! روی دکمه «ویرایش مشخصات و هدف» یا «ورود / ثبت‌نام» بزن.
-            </div>
+            <p style="font-size:12px; color:var(--text-muted);">
+                تشکیل پرونده سلامتی، محاسبه خودکار کالری بر اساس قد، وزن، سن و هدف بدنی در سوپراپلیکیشن اندروید بادی‌مود فعال است.
+            </p>
         </div>
 
         <div class="card">
-            <div class="card-header"><div class="card-title">✍️ ویرایش دستی کالری و ماکروها</div></div>
+            <div class="card-header"><div class="card-title">✍️ تنظیم دستی کالری و ماکروها (در مرورگر)</div></div>
             <div class="form-grid">
                 <div class="form-group full">
                     <label class="form-label">هدف کالری روزانه</label>
@@ -1031,9 +1075,7 @@
         </div>
     </div>
 
-    <!-- ==========================================================================
-         فوتر رسمی وب‌سایت همراه با کد دست‌نخورده اینماد و بج GitHub Pages
-         ========================================================================== -->
+    <!-- فوتر رسمی وب‌سایت همراه با کد دست‌نخورده اینماد و بج GitHub Pages -->
     <footer class="site-footer">
         <div style="font-size:13px; font-weight:900; color:var(--primary); margin-bottom:4px;">
             ⚡ BodyMod | بادی‌مود: بدن مود شده
@@ -1057,130 +1099,6 @@
 
 </div>
 
-<!-- مودال ورود (با پیش‌وند ثابت 0 برای شماره موبایل و ایگنور خودکار 0 اضافی) -->
-<div class="modal-backdrop" id="authModal">
-    <div class="modal-box">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h3 style="font-size:15px; font-weight:900; color:var(--primary);">🔐 ورود به حساب BodyMod</h3>
-            <button class="icon-btn" onclick="closeModalById('authModal')">✕</button>
-        </div>
-
-        <p style="font-size:11px; color:var(--text-muted); margin-bottom:12px;">
-            با شماره موبایل اکانت «بله» یا حساب گوگل وارد شو تا اطلاعاتت بین سایت و اپلیکیشن اندروید سینک بشه!
-        </p>
-
-        <!-- بخش ورود با شماره موبایل بله (با پیش‌وند ثابت 0) -->
-        <div style="margin-bottom:14px;">
-            <div style="font-size:12px; font-weight:800; color:var(--primary); margin-bottom:8px;">
-                💬 ورود سریع با شماره موبایل (از طریق ربات «بله»):
-            </div>
-            <div class="form-grid">
-                <div class="form-group full">
-                    <label class="form-label">شماره موبایل اکانت بله (بدون صفر اول) *</label>
-                    <div class="phone-input-wrapper">
-                        <span class="phone-zero-prefix">0</span>
-                        <input type="tel" inputmode="numeric" maxlength="10" id="balePhoneInput" class="phone-input-field" placeholder="9xxxxxxxxx">
-                    </div>
-                </div>
-                <div class="form-group full" id="baleOtpGroup" style="display:none;">
-                    <label class="form-label">کد تایید ۶ رقمی ارسال شده در بله *</label>
-                    <input type="tel" inputmode="numeric" maxlength="6" id="baleOtpInput" class="form-control" placeholder="------" dir="ltr" style="text-align:center; font-size:16px; letter-spacing:4px;">
-                </div>
-            </div>
-            <div style="display:flex; gap:8px;">
-                <button class="btn-primary" id="sendBaleOtpBtn" style="flex:1;">📲 ارسال کد تایید</button>
-                <button class="btn-primary" id="verifyBaleOtpBtn" style="flex:1; display:none; background:var(--success);">✅ تایید و ادامه</button>
-                <button class="nav-arrow-btn" id="logoutBtn" style="display:none; color:var(--danger);">خروج</button>
-            </div>
-        </div>
-
-        <!-- بخش ورود با گوگل -->
-        <div style="border-top:1px dashed var(--border-color); padding-top:12px; text-align:center;">
-            <div style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">یا ورود با حساب گوگل:</div>
-            <div id="googleButtonContainer" style="display:flex; justify-content:center; margin:6px 0;"></div>
-        </div>
-    </div>
-</div>
-
-<!-- مودال تکمیل مشخصات بدنی (Onboarding) -->
-<div class="modal-backdrop" id="onboardingModal">
-    <div class="modal-box">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h3 style="font-size:15px; font-weight:900; color:var(--primary);">🧬 تکمیل پرونده بدنی تو (اجباری)</h3>
-            <button class="icon-btn" id="closeOnboardingBtn" style="display:none;" onclick="closeModalById('onboardingModal')">✕</button>
-        </div>
-
-        <div class="form-grid">
-            <div class="form-group">
-                <label class="form-label">اسم کوچیکت *</label>
-                <input type="text" id="obName" class="form-control" placeholder="مثلاً: متین">
-            </div>
-            <div class="form-group">
-                <label class="form-label">شهر سکونت *</label>
-                <input type="text" id="obCity" class="form-control" placeholder="مثلاً: ارومیه">
-            </div>
-
-            <div class="form-group full">
-                <label class="form-label">تاریخ تولد (شمسی) *</label>
-                <div style="display:grid; grid-template-columns: 1fr 1fr 1.2fr; gap:6px;">
-                    <input type="tel" inputmode="numeric" id="obBirthDay" class="form-control" placeholder="روز (۱۴)">
-                    <input type="tel" inputmode="numeric" id="obBirthMonth" class="form-control" placeholder="ماه (۱۰)">
-                    <input type="tel" inputmode="numeric" id="obBirthYear" class="form-control" placeholder="سال (۱۳۸۳)">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">جنسیت *</label>
-                <select id="obGender" class="form-control">
-                    <option value="">انتخاب کن...</option>
-                    <option value="male">مرد</option>
-                    <option value="female">زن</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">تحرک روزانه *</label>
-                <select id="obActivity" class="form-control">
-                    <option value="1.2">کم‌تحرک</option>
-                    <option value="1.375">سبک</option>
-                    <option value="1.55" selected>متوسط</option>
-                    <option value="1.725">سنگین</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">قد (سانتی‌متر) *</label>
-                <input type="tel" inputmode="numeric" id="obHeight" class="form-control" placeholder="178">
-            </div>
-            <div class="form-group">
-                <label class="form-label">وزن (کیلوگرم) *</label>
-                <input type="tel" inputmode="numeric" id="obWeight" class="form-control" placeholder="75">
-            </div>
-
-            <div class="form-group full">
-                <label class="form-label">هدفت چیه؟ *</label>
-                <select id="obGoalMode" class="form-control">
-                    <option value="">هدفت رو انتخاب کن...</option>
-                    <option value="lose">۱. کات و کاهش وزن</option>
-                    <option value="maintain">۲. تثبیت وزن</option>
-                    <option value="gain_weight">۳. افزایش وزن عمومی</option>
-                    <option value="muscle">۴. عضله‌سازی ورزشی</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="privacy-terms-box">
-            <div style="font-weight:900; color:var(--primary); margin-bottom:4px;">🛡️ تعهدنامه حریم خصوصی:</div>
-            <p style="color:var(--text-main);">«عزیز من این اطلاعات لازمه تا بتونیم کمکت کنیم و توسط هوش مصنوعی تحلیل میشه؛ اما خیالت راحت باشه! <strong>خط قرمز من نقض حریم خصوصیه 😂❤️</strong>»</p>
-            <label style="display:flex; align-items:center; gap:8px; margin-top:8px; cursor:pointer; font-weight:800; color:var(--accent);">
-                <input type="checkbox" id="obTermsAccept" style="width:18px; height:18px;">
-                <span>حله رفیق! قوانین رو قبول دارم ✅</span>
-            </label>
-        </div>
-
-        <button class="btn-primary" id="submitOnboardingBtn" style="width:100%; padding:12px;">🚀 ثبت اطلاعات در کلودفلر و شروع</button>
-    </div>
-</div>
-
 <!-- مودال خوراکی سفارشی -->
 <div class="modal-backdrop" id="customFoodModal">
     <div class="modal-box">
@@ -1201,14 +1119,7 @@
 </div>
 
 <script>
-    /* ==========================================================================
-       👑 مشخصات رسمی مدیرعامل (متین محمدی - CEO Edition)
-       ========================================================================== */
-    const CEO_GMAIL = "diaperloveradultbaby5@gmail.com";
-    const CEO_PHONE = "09058586834";
-
-    const WORKER_BASE_URL = "https://matin-creator-developer.workers.dev";
-    const GOOGLE_CLIENT_ID = "308314086801-gb47cnlqkrpf9v42j1ptt82cg8gqr10a.apps.googleusercontent.com";
+    const WORKER_BASE_URL = "https://server.matin-mohammadi.ir";
 
     const toFa = (n) => (n === null || n === undefined) ? '۰' : String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
     const toEnDigits = (s) => String(s || '').replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
@@ -1237,25 +1148,20 @@
         return diff < -1 ? `${toFa(Math.abs(diff))} روز قبل` : `${toFa(diff)} روز بعد`;
     };
 
-    /* ==========================================================================
-       فیلتر هوشمند کادر شماره موبایل: حذف خودکار صفر اول و شروع اجباری از 9
-       ========================================================================== */
-    const balePhoneInputEl = document.getElementById('balePhoneInput');
-    balePhoneInputEl.addEventListener('input', (e) => {
-        let val = toEnDigits(e.target.value).replace(/\D/g, '');
-        if (val.startsWith('98')) val = val.slice(2);
-        while (val.startsWith('0')) {
-            val = val.slice(1);
+    window.openAppInstallModal = (featureTitle = '') => {
+        const reasonEl = document.getElementById('lockedFeatureReasonText');
+        if (featureTitle) {
+            reasonEl.innerHTML = `بخش <strong>«${featureTitle}»</strong> به همراه مربی هوش مصنوعی، اسکنر عکس غذا، برنامه‌ساز ورزشی و پرونده سلامتی انحصاراً داخل اپلیکیشن اندروید باز هستن!`;
+        } else {
+            reasonEl.innerHTML = `توی نسخه وب فقط کالری‌شمار و پایش آب فعاله؛ اما <strong>مربی هوش مصنوعی، اسکنر عکس غذا، برنامه‌ساز ورزشی و پرونده سلامتی</strong> انحصاراً داخل اپلیکیشن اندروید باز هستن!`;
         }
-        if (val.length > 0 && !val.startsWith('9')) {
-            val = '';
-        }
-        e.target.value = val.slice(0, 10);
-    });
+        document.getElementById('appInstallModal').classList.add('open');
+        document.body.classList.add('modal-open');
+    };
 
-    const getFormattedFullPhone = () => {
-        const raw10 = toEnDigits(balePhoneInputEl.value).replace(/\D/g, '');
-        return raw10.length === 10 && raw10.startsWith('9') ? ('0' + raw10) : '';
+    window.closeAppInstallModal = () => {
+        document.getElementById('appInstallModal').classList.remove('open');
+        document.body.classList.remove('modal-open');
     };
 
     window.openModalById = (id) => {
@@ -1269,14 +1175,6 @@
         }
     };
 
-    document.querySelectorAll('.modal-box input, .modal-box select').forEach(inp => {
-        inp.addEventListener('focus', () => {
-            setTimeout(() => {
-                inp.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 280);
-        });
-    });
-
     let toastTimer = null;
     window.showToast = (msg) => {
         const el = document.getElementById('cyberToast');
@@ -1286,7 +1184,6 @@
         toastTimer = setTimeout(() => el.classList.remove('show'), 4000);
     };
 
-    /* تضمین حداقل ۲.۵ ثانیه نمایش لودینگ حرکت شنا */
     let loaderShownAt = 0;
     let loaderHideTimeout = null;
     const MIN_LOADER_DURATION_MS = 2500;
@@ -1308,7 +1205,6 @@
         }, remaining);
     };
 
-    // --- دیتابیس خوراکی‌های ایرانی ---
     const createFood = (id, name, cat, cal100, prot100, carb100, fat100, unitsObj) => ({
         id, name, cat, cal100, prot100, carb100, fat100, units: unitsObj
     });
@@ -1355,7 +1251,7 @@
         createFood('b_sangak', 'نان سنگک / بربری / لواش', 'bread', 265, 8.5, 54.0, 1.4, U_BREAD)
     ];
 
-    const STORAGE_KEY = 'bodymod_web_official_v6';
+    const STORAGE_KEY = 'bodymod_web_official_v9';
     const getInitialTheme = () => {
         try {
             const saved = localStorage.getItem('bodymod_user_theme');
@@ -1369,40 +1265,11 @@
         selectedDate: todayISO,
         selectedMeal: 'breakfast',
         selectedCat: 'none',
-        bodyCoins: 30,
-        vipExpiresAt: 0,
         streakCount: 0,
         lastWorkoutDate: '',
-        streakHistory: [],
-        authUser: { email: '', phone: '', loggedIn: false },
-        userProfile: {
-            profileCompleted: false,
-            nickname: '',
-            birthDate: '',
-            age: 21,
-            gender: 'male',
-            city: '',
-            height: 178,
-            weight: 75,
-            activity: 1.55,
-            goalMode: 'maintain',
-            termsAccepted: false
-        },
         goals: { cal: 2000, prot: 140, carb: 220, fat: 65, waterGlasses: 10, waterAuto: true },
         customFoods: [],
         daysLog: {}
-    };
-
-    const computeAutoWaterGlasses = (cal, weightKg, goalMode) => {
-        const baseMl = Math.round((cal * 0.6) + (weightKg * 18));
-        const bonusMl = (goalMode === 'muscle' || goalMode === 'gain_weight') ? 300 : 0;
-        return Math.max(6, Math.min(22, Math.round((baseMl + bonusMl) / 200)));
-    };
-
-    const getActiveUserKey = () => (state.authUser.email || state.authUser.phone || "").toLowerCase().trim();
-    const isCeoUser = () => {
-        const k = getActiveUserKey();
-        return k && (k === CEO_GMAIL.toLowerCase().trim() || k === CEO_PHONE.trim() || k === "matin_ceo_edition");
     };
 
     const loadState = () => {
@@ -1415,7 +1282,6 @@
                     ...parsed,
                     theme: getInitialTheme(),
                     selectedDate: todayISO,
-                    userProfile: { ...state.userProfile, ...(parsed.userProfile || {}) },
                     goals: { ...state.goals, ...(parsed.goals || {}) }
                 };
             }
@@ -1450,43 +1316,6 @@
         renderAll();
     };
 
-    const syncToCloudflare = async (showLoader = false) => {
-        const userKey = getActiveUserKey();
-        const badge = document.getElementById('cloudSyncStatus');
-        if (!userKey) {
-            badge.textContent = '💾 ذخیره در مرورگر';
-            return;
-        }
-        if (showLoader) showPushupLoader('درحال تمرین... (سینک با کلودفلر)');
-        badge.textContent = '⏳ سینک کلودفلر...';
-        try {
-            const res = await fetch(`${WORKER_BASE_URL}/api/user/sync`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-App-Client': 'BodyMod-Web' },
-                body: JSON.stringify({
-                    userKey,
-                    userProfile: state.userProfile,
-                    goals: state.goals,
-                    daysLog: state.daysLog,
-                    customFoods: state.customFoods,
-                    streakHistory: state.streakHistory
-                })
-            });
-            if (res.ok) {
-                const data = await res.json();
-                if (data.user) {
-                    state.bodyCoins = data.user.bodyCoins ?? state.bodyCoins;
-                    state.vipExpiresAt = data.user.vipExpiresAt ?? state.vipExpiresAt;
-                }
-                badge.textContent = '☁️ سینک ابری فعال';
-            }
-        } catch {
-            badge.textContent = '⚠️ کلودفلر مسدود (ذخیره در مرورگر)';
-        } finally {
-            if (showLoader) hidePushupLoader();
-        }
-    };
-
     const fetchLiveBetaStatus = async () => {
         const textEl = document.getElementById('liveBetaCapacityText');
         try {
@@ -1508,169 +1337,7 @@
         state.streakCount = (state.streakCount || 0) + 1;
         state.lastWorkoutDate = today;
         renderAll();
-        syncToCloudflare(false);
         showToast(`ایول قهرمان! تمرین امروز ثبت شد — آتیش: ${toFa(state.streakCount)} روز 🔥💪`);
-    });
-
-    window.openOnboardingModal = (allowClose = false) => {
-        document.getElementById('closeOnboardingBtn').style.display = allowClose ? 'inline-flex' : 'none';
-        const p = state.userProfile;
-        document.getElementById('obName').value = p.nickname || '';
-        document.getElementById('obCity').value = p.city || '';
-        if (p.birthDate && p.birthDate.includes('/')) {
-            const [y, m, d] = p.birthDate.split('/');
-            document.getElementById('obBirthYear').value = y || '';
-            document.getElementById('obBirthMonth').value = m || '';
-            document.getElementById('obBirthDay').value = d || '';
-        }
-        document.getElementById('obGender').value = p.gender || '';
-        document.getElementById('obHeight').value = p.height || '';
-        document.getElementById('obWeight').value = p.weight || '';
-        document.getElementById('obActivity').value = p.activity || 1.55;
-        document.getElementById('obGoalMode').value = p.profileCompleted ? (p.goalMode || 'maintain') : '';
-        document.getElementById('obTermsAccept').checked = !!p.termsAccepted;
-        openModalById('onboardingModal');
-    };
-
-    document.getElementById('submitOnboardingBtn').addEventListener('click', async () => {
-        const nickname = document.getElementById('obName').value.trim();
-        const city = document.getElementById('obCity').value.trim();
-        const bDay = parseInt(toEnDigits(document.getElementById('obBirthDay').value));
-        const bMonth = parseInt(toEnDigits(document.getElementById('obBirthMonth').value));
-        const bYear = parseInt(toEnDigits(document.getElementById('obBirthYear').value));
-        const gender = document.getElementById('obGender').value;
-        const height = parseFloat(toEnDigits(document.getElementById('obHeight').value));
-        const weight = parseFloat(toEnDigits(document.getElementById('obWeight').value));
-        const activity = parseFloat(document.getElementById('obActivity').value) || 1.55;
-        const goalMode = document.getElementById('obGoalMode').value;
-        const termsAccepted = document.getElementById('obTermsAccept').checked;
-
-        if (!nickname || !city || !bDay || !bMonth || !bYear || !gender || !height || !weight || !goalMode) {
-            showToast('رفیق! تمام فیلدها (اسم، تولد، جنسیت، شهر، قد، وزن و هدف) اجباری هستن ❤️');
-            return;
-        }
-        if (!termsAccepted) {
-            showToast('لطفاً تیک تایید قوانین حریم خصوصی رو بزن رفیق! 🛡️');
-            return;
-        }
-
-        const age = Math.max(10, Math.min(95, 1405 - bYear));
-        const birthDate = `${bYear}/${String(bMonth).padStart(2, '0')}/${String(bDay).padStart(2, '0')}`;
-        const bmr = gender === 'male' ? (10 * weight) + (6.25 * height) - (5 * age) + 5 : (10 * weight) + (6.25 * height) - (5 * age) - 161;
-        const tdee = Math.round(bmr * activity);
-
-        let targetCal = tdee, protRatio = 0.28, carbRatio = 0.44, fatRatio = 0.28;
-        if (goalMode === 'lose') { targetCal = Math.max(1200, tdee - 500); protRatio = 0.32; carbRatio = 0.40; fatRatio = 0.28; }
-        else if (goalMode === 'gain_weight') { targetCal = tdee + 500; protRatio = 0.18; carbRatio = 0.52; fatRatio = 0.30; }
-        else if (goalMode === 'muscle') { targetCal = tdee + 300; protRatio = 0.30; carbRatio = 0.45; fatRatio = 0.25; }
-
-        state.userProfile = { profileCompleted: true, nickname, birthDate, age, gender, city, height, weight, activity, goalMode, termsAccepted: true };
-        state.goals = {
-            cal: targetCal,
-            prot: Math.round((targetCal * protRatio) / 4),
-            carb: Math.round((targetCal * carbRatio) / 4),
-            fat: Math.round((targetCal * fatRatio) / 9),
-            waterGlasses: computeAutoWaterGlasses(targetCal, weight, goalMode),
-            waterAuto: true
-        };
-
-        ensureDay(state.selectedDate).targetCal = targetCal;
-        closeModalById('onboardingModal');
-        renderAll();
-        await syncToCloudflare(true);
-        showToast(`ایول ${nickname} عزیز! هدف روزانه‌ات شد ${toFa(targetCal)} کالری 🔥`);
-    });
-
-    window.openAuthModal = () => {
-        if (window.google && GOOGLE_CLIENT_ID) {
-            try {
-                google.accounts.id.initialize({
-                    client_id: GOOGLE_CLIENT_ID,
-                    ux_mode: 'popup',
-                    callback: async (response) => {
-                        const base64 = response.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-                        const payload = JSON.parse(decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')));
-                        state.authUser = { email: payload.email.toLowerCase().trim(), phone: '', loggedIn: true };
-                        if (!state.userProfile.nickname && payload.given_name) state.userProfile.nickname = payload.given_name;
-                        closeModalById('authModal');
-                        if (!state.userProfile.profileCompleted) openOnboardingModal(false);
-                        else { await syncToCloudflare(true); renderAll(); }
-                    }
-                });
-                google.accounts.id.renderButton(document.getElementById('googleButtonContainer'), { theme: 'outline', size: 'large', text: 'signin_with', locale: 'fa', width: 260 });
-            } catch (e) {}
-        }
-        openModalById('authModal');
-    };
-
-    document.getElementById('sendBaleOtpBtn').addEventListener('click', async () => {
-        const fullPhone = getFormattedFullPhone();
-        if (!fullPhone) {
-            showToast('شماره موبایلت رو از 9 وارد کن (مثلاً 914xxxxxxx)! 📱');
-            return;
-        }
-
-        showPushupLoader('درحال تمرین... (ارسال کد تایید به بله)');
-        try {
-            const res = await fetch(`${WORKER_BASE_URL}/api/auth/bale/send-otp`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone: fullPhone })
-            });
-            const data = await res.json();
-            hidePushupLoader(() => {
-                if (!res.ok || !data.ok) {
-                    showToast(data.error || 'خطا در ارسال کد بله!');
-                    return;
-                }
-                document.getElementById('baleOtpGroup').style.display = 'flex';
-                document.getElementById('sendBaleOtpBtn').style.display = 'none';
-                document.getElementById('verifyBaleOtpBtn').style.display = 'inline-block';
-                showToast('کد تایید ۶ رقمی به پیام‌رسان «بله» ارسال شد! 📲');
-            });
-        } catch {
-            hidePushupLoader(() => showToast('⚠️ سرور کلودفلر روی خطت مسدوده! فیلترشکنت رو روشن کن رفیق.'));
-        }
-    });
-
-    document.getElementById('verifyBaleOtpBtn').addEventListener('click', async () => {
-        const fullPhone = getFormattedFullPhone();
-        const code = toEnDigits(document.getElementById('baleOtpInput').value).trim();
-        if (!fullPhone || !code) { showToast('کد ۶ رقمی رو وارد کن رفیق!'); return; }
-
-        showPushupLoader('درحال تمرین... (بررسی کد تایید)');
-        try {
-            const res = await fetch(`${WORKER_BASE_URL}/api/auth/bale/verify-otp`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone: fullPhone, code })
-            });
-            const data = await res.json();
-            hidePushupLoader(async () => {
-                if (!data.ok) {
-                    showToast(data.error || 'کد اشتباهه رفیق!');
-                    return;
-                }
-                if (data.user) {
-                    state.bodyCoins = data.user.bodyCoins ?? state.bodyCoins;
-                    state.vipExpiresAt = data.user.vipExpiresAt ?? state.vipExpiresAt;
-                    if (data.user.userProfile) state.userProfile = { ...state.userProfile, ...data.user.userProfile };
-                }
-                state.authUser = { email: '', phone: fullPhone, loggedIn: true };
-                closeModalById('authModal');
-                if (!state.userProfile.profileCompleted) openOnboardingModal(false);
-                else { await syncToCloudflare(false); renderAll(); }
-            });
-        } catch {
-            hidePushupLoader(() => showToast('⚠️ ارتباط با کلودفلر برقرار نشد! فیلترشکن رو بررسی کن.'));
-        }
-    });
-
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-        state.authUser = { email: '', phone: '', loggedIn: false };
-        closeModalById('authModal');
-        renderAll();
-        showToast('از حساب خارج شدی رفیق 👋');
     });
 
     const ensureDay = (iso) => {
@@ -1721,48 +1388,11 @@
         return { text: `${toFa(diff)} کالری بیشتر از هدف`, cls: 'diff-over' };
     };
 
-    const goalLabels = {
-        lose: 'کات و کاهش وزن',
-        maintain: 'تثبیت وزن',
-        gain_weight: 'افزایش وزن عمومی',
-        muscle: 'عضله‌سازی ورزشی'
-    };
-
     const renderAll = () => {
         document.documentElement.setAttribute('data-theme', state.theme);
         document.getElementById('drawerThemeIcon').textContent = state.theme === 'dark' ? '☀️' : '🌙';
 
-        const p = state.userProfile;
-        const nick = (p.nickname || '').trim();
-        const userKey = getActiveUserKey();
-        const isVip = isCeoUser() || (state.vipExpiresAt && state.vipExpiresAt > Date.now());
-
-        document.getElementById('headerCoinsCount').textContent = toFa(isCeoUser() ? 9999 : (state.bodyCoins || 0));
         document.getElementById('streakFireCount').textContent = `${toFa(state.streakCount || 0)} روز`;
-
-        document.getElementById('userGreetingText').textContent = nick
-            ? `سلام ${nick} عزیز (${p.city || 'ایران'}) 🔥`
-            : `بدن و متابولیسم خودت رو هک کن!`;
-        document.getElementById('dashboardPersonalizedTitle').textContent = nick
-            ? `⚡ وضعیت کالری امروز ${nick}`
-            : `⚡ وضعیت کالری و ماکروهای امروزت`;
-
-        document.getElementById('headerAuthText').textContent = state.authUser.loggedIn && userKey ? (nick || 'حساب من') : '🔐 ورود / ثبت‌نام';
-        document.getElementById('drawerUserName').textContent = nick ? `${nick} (${p.city || ''})` : 'کاربر مهمان 👋';
-        document.getElementById('drawerUserSub').textContent = userKey ? `حساب: ${userKey}` : 'برای سینک ابری وارد شو';
-        document.getElementById('drawerVipStatus').textContent = isCeoUser()
-            ? '👑 حساب مدیرعامل (آنلاک دائمی)'
-            : (isVip ? '💎 اشتراک VIP بتا: فعال' : '🌐 نسخه وب‌سایت');
-        document.getElementById('logoutBtn').style.display = state.authUser.loggedIn ? 'inline-block' : 'none';
-
-        if (p.profileCompleted) {
-            document.getElementById('profileSummaryBox').innerHTML = `
-                <div>👤 <strong>نام:</strong> ${p.nickname} | 🏙️ <strong>شهر:</strong> ${p.city}</div>
-                <div>🎂 <strong>تولد:</strong> ${toFa(p.birthDate)} (${toFa(p.age)} ساله) | 🚻 <strong>جنسیت:</strong> ${p.gender === 'male' ? 'مرد' : 'زن'}</div>
-                <div>📏 <strong>قد:</strong> ${toFa(p.height)} cm | ⚖️ <strong>وزن:</strong> ${toFa(p.weight)} kg</div>
-                <div>🎯 <strong>هدف:</strong> <span style="color:var(--primary); font-weight:800;">${goalLabels[p.goalMode] || p.goalMode}</span></div>
-            `;
-        }
 
         document.getElementById('shamsiDateDisplay').textContent = getShamsiFull(state.selectedDate);
         document.getElementById('relativeDayDisplay').textContent = getRelLabel(state.selectedDate);
@@ -1913,12 +1543,12 @@
     document.getElementById('addWaterBtn').addEventListener('click', () => { ensureDay(state.selectedDate).waterGlasses++; renderAll(); showToast('نوش جان! +۱ لیوان آب ثبت شد 💧'); });
     document.getElementById('removeWaterBtn').addEventListener('click', () => { const d = ensureDay(state.selectedDate); d.waterGlasses = Math.max(0, d.waterGlasses - 1); renderAll(); });
     document.getElementById('saveManualWaterBtn').addEventListener('click', () => {
-        state.goals.waterGlasses = Math.max(1, parseInt(document.getElementById('manualWaterGlassesInput').value) || 10);
+        state.goals.waterGlasses = Math.max(1, parseInt(toEnDigits(document.getElementById('manualWaterGlassesInput').value)) || 10);
         state.goals.waterAuto = false; renderAll(); showToast('هدف آب ذخیره شد 💧');
     });
     document.getElementById('resetAutoWaterBtn').addEventListener('click', () => {
         state.goals.waterAuto = true;
-        state.goals.waterGlasses = computeAutoWaterGlasses(state.goals.cal, state.userProfile.weight, state.userProfile.goalMode);
+        state.goals.waterGlasses = 10;
         renderAll(); showToast('محاسبه خودکار آب فعال شد ⚡');
     });
 
@@ -1932,7 +1562,6 @@
         if (existing) existing.qty = +(existing.qty + qty).toFixed(2);
         else list.push({ id: food.id, name: food.name, cal100: food.cal100, prot100: food.prot100, carb100: food.carb100, fat100: food.fat100, units: food.units, unitName, unitGram: food.units[unitName], qty });
         renderAll();
-        syncToCloudflare(false);
         showToast(`«${food.name}» به وعده‌ات اضافه شد! 🍲`);
     };
 
@@ -1967,10 +1596,10 @@
     document.getElementById('historyMonthFilter').addEventListener('change', renderAll);
 
     document.getElementById('saveManualGoalsBtn').addEventListener('click', () => {
-        state.goals.cal = parseInt(document.getElementById('manualCalInput').value) || 2000;
-        state.goals.prot = parseInt(document.getElementById('manualProtInput').value) || 140;
-        state.goals.carb = parseInt(document.getElementById('manualCarbInput').value) || 220;
-        state.goals.fat = parseInt(document.getElementById('manualFatInput').value) || 65;
+        state.goals.cal = parseInt(toEnDigits(document.getElementById('manualCalInput').value)) || 2000;
+        state.goals.prot = parseInt(toEnDigits(document.getElementById('manualProtInput').value)) || 140;
+        state.goals.carb = parseInt(toEnDigits(document.getElementById('manualCarbInput').value)) || 220;
+        state.goals.fat = parseInt(toEnDigits(document.getElementById('manualFatInput').value)) || 65;
         ensureDay(state.selectedDate).targetCal = state.goals.cal;
         renderAll();
         showToast('اهداف روزانه با موفقیت ذخیره شد! 🎯');
@@ -1996,10 +1625,10 @@
     document.getElementById('saveCustomFoodBtn').addEventListener('click', () => {
         const name = document.getElementById('cfName').value.trim();
         const unitName = document.getElementById('cfUnitName').value;
-        const cal = parseFloat(document.getElementById('cfCal').value);
-        const prot = parseFloat(document.getElementById('cfProt').value) || 0;
-        const carb = parseFloat(document.getElementById('cfCarb').value) || 0;
-        const fat = parseFloat(document.getElementById('cfFat').value) || 0;
+        const cal = parseFloat(toEnDigits(document.getElementById('cfCal').value));
+        const prot = parseFloat(toEnDigits(document.getElementById('cfProt').value)) || 0;
+        const carb = parseFloat(toEnDigits(document.getElementById('cfCarb').value)) || 0;
+        const fat = parseFloat(toEnDigits(document.getElementById('cfFat').value)) || 0;
         if (!name || isNaN(cal)) { showToast('نام و کالری خوراکی رو وارد کن رفیق!'); return; }
         const unitGramsMap = { 'بشقاب': 250, 'کاسه': 300, 'پرس': 350, 'عدد': 100 };
         const baseGram = unitGramsMap[unitName] || 100;
@@ -2011,7 +1640,6 @@
         showToast(`«${name}» به بانک غذای تو اضافه شد! 🥗`);
     });
 
-    // نمایش تضمینی ۲.۵ ثانیه‌ای لودینگ حرکت شنا در ابتدای باز شدن سایت
     showPushupLoader('درحال تمرین... (لودینگ)');
     hidePushupLoader();
 
