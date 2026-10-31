@@ -167,11 +167,11 @@
             50% { opacity: 0.55; }
         }
 
-        /* ۲. مودال پاپ‌آپ آفلاین با ویدیوی کره زمین (earth_burn.mp4) بدون حاشیه سیاه */
+        /* ۲. مودال پاپ‌آپ آفلاین با ویدیوی کره زمین (earth_burn.mp4) با پس‌زمینه مشکی مطلق */
         .offline-cyber-modal {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.94);
+            background: rgba(0, 0, 0, 0.95);
             backdrop-filter: blur(10px);
             z-index: 4500;
             display: none;
@@ -182,8 +182,8 @@
         .offline-cyber-modal.open { display: flex; }
 
         .offline-cyber-box {
-            background: #000000;
-            color: #f8fafc;
+            background: #000000 !important;
+            color: #f8fafc !important;
             width: 100%;
             max-width: 400px;
             border-radius: 24px;
@@ -199,19 +199,18 @@
             height: 210px;
             border-radius: 16px;
             overflow: hidden;
-            background: #000000;
+            background: #000000 !important;
             margin-bottom: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 1px solid rgba(255, 84, 0, 0.4);
         }
 
         .earth-video-container video {
             width: 100%;
             height: 100%;
-            object-fit: cover;
-            background: #000000;
+            object-fit: contain;
+            background: #000000 !important;
         }
 
         /* نوتیفیکیشن داخلی */
@@ -769,11 +768,11 @@
     <div style="font-size:11px; color:#94a3b8; margin-top:4px;">موتور سایبرنتیک BodyMod</div>
 </div>
 
-<!-- ۲. مودال پاپ‌آپ آفلاین با ویدیوی خفن کره زمین (earth_burn.mp4) بدون حاشیه سیاه -->
+<!-- ۲. مودال پاپ‌آپ آفلاین با ویدیوی خفن کره زمین (earth_burn.mp4) با پس‌زمینه مشکی یکدست -->
 <div class="offline-cyber-modal" id="offlineModal">
     <div class="offline-cyber-box">
         <div class="earth-video-container">
-            <video id="earthBurnVideo" autoplay loop muted playsinline src="earth_burn.mp4"></video>
+            <video id="earthBurnVideo" autoplay loop playsinline src="earth_burn.mp4"></video>
         </div>
 
         <h3 style="font-size:15px; font-weight:900; color:#ff9e00; margin-bottom:6px;" id="offlineModalMainTitle">
@@ -1234,19 +1233,19 @@
             <div class="form-grid">
                 <div class="form-group">
                     <label class="form-label">اسم کوچیکت *</label>
-                    <input type="text" id="profEditName" class="form-control" placeholder="مثلاً: متین">
+                    <input type="text" id="profEditName" class="form-control" placeholder="حداقل دو حرف">
                 </div>
                 <div class="form-group">
                     <label class="form-label">شهر سکونت *</label>
-                    <input type="text" id="profEditCity" class="form-control" placeholder="مثلاً: ارومیه">
+                    <input type="text" id="profEditCity" class="form-control" placeholder="حداقل دو حرف">
                 </div>
 
                 <div class="form-group full">
                     <label class="form-label">تاریخ تولد (شمسی) *</label>
                     <div style="display:grid; grid-template-columns: 1fr 1fr 1.2fr; gap:6px;">
-                        <input type="tel" inputmode="numeric" id="profEditBirthDay" class="form-control" placeholder="روز (۱۳)">
-                        <input type="tel" inputmode="numeric" id="profEditBirthMonth" class="form-control" placeholder="ماه (۱۰)">
-                        <input type="tel" inputmode="numeric" id="profEditBirthYear" class="form-control" placeholder="سال (۱۳۸۳)">
+                        <input type="tel" inputmode="numeric" id="profEditBirthDay" class="form-control" placeholder="روز">
+                        <input type="tel" inputmode="numeric" id="profEditBirthMonth" class="form-control" placeholder="ماه">
+                        <input type="tel" inputmode="numeric" id="profEditBirthYear" class="form-control" placeholder="سال">
                     </div>
                 </div>
 
@@ -1269,11 +1268,11 @@
 
                 <div class="form-group">
                     <label class="form-label">قد (سانتی‌متر) *</label>
-                    <input type="tel" inputmode="numeric" id="profEditHeight" class="form-control" placeholder="178">
+                    <input type="tel" inputmode="numeric" id="profEditHeight" class="form-control" placeholder="1">
                 </div>
                 <div class="form-group">
                     <label class="form-label">وزن فعلی (کیلوگرم) *</label>
-                    <input type="tel" inputmode="numeric" id="profEditWeight" class="form-control" placeholder="75">
+                    <input type="tel" inputmode="numeric" id="profEditWeight" class="form-control" placeholder="1">
                 </div>
 
                 <div class="form-group full">
@@ -1329,7 +1328,7 @@
 
 </div>
 
-<!-- مودال ورود -->
+<!-- مودال ورود (به همراه شمارش معکوس ۳۰ ثانیه‌ای و دکمه ارسال مجدد) -->
 <div class="modal-backdrop" id="authModal">
     <div class="modal-box">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
@@ -1356,6 +1355,14 @@
                 <div class="form-group full" id="baleOtpGroup" style="display:none;">
                     <label class="form-label">کد تایید ۶ رقمی ارسال شده در بله *</label>
                     <input type="tel" inputmode="numeric" maxlength="6" id="baleOtpInput" class="form-control" placeholder="------" dir="ltr" style="text-align:center; font-size:16px; letter-spacing:4px;">
+                    
+                    <!-- باکس شمارش معکوس ۳۰ ثانیه و دکمه ارسال مجدد -->
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-top:6px; font-size:11px;">
+                        <span id="otpCountdownText" style="color:var(--carbs); font-weight:800;">⏳ ارسال مجدد تا ۳۰ ثانیه دیگر...</span>
+                        <button type="button" class="nav-arrow-btn" id="resendBaleOtpBtn" style="display:none; color:var(--primary); border-color:var(--primary); padding:4px 10px;">
+                            🔄 ارسال مجدد کد
+                        </button>
+                    </div>
                 </div>
             </div>
             <div style="display:flex; gap:8px;">
@@ -1372,7 +1379,7 @@
     </div>
 </div>
 
-<!-- مودال تکمیل مشخصات بدنی اولیه -->
+<!-- مودال تکمیل مشخصات بدنی اولیه (بدون اطلاعات شخصی، با مثال‌های جدید) -->
 <div class="modal-backdrop" id="onboardingModal">
     <div class="modal-box">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
@@ -1383,19 +1390,19 @@
         <div class="form-grid">
             <div class="form-group">
                 <label class="form-label">اسم کوچیکت *</label>
-                <input type="text" id="obName" class="form-control" placeholder="مثلاً: متین">
+                <input type="text" id="obName" class="form-control" placeholder="حداقل دو حرف">
             </div>
             <div class="form-group">
                 <label class="form-label">شهر سکونت *</label>
-                <input type="text" id="obCity" class="form-control" placeholder="مثلاً: ارومیه">
+                <input type="text" id="obCity" class="form-control" placeholder="حداقل دو حرف">
             </div>
 
             <div class="form-group full">
                 <label class="form-label">تاریخ تولد (شمسی) *</label>
                 <div style="display:grid; grid-template-columns: 1fr 1fr 1.2fr; gap:6px;">
-                    <input type="tel" inputmode="numeric" id="obBirthDay" class="form-control" placeholder="روز (۱۳)">
-                    <input type="tel" inputmode="numeric" id="obBirthMonth" class="form-control" placeholder="ماه (۱۰)">
-                    <input type="tel" inputmode="numeric" id="obBirthYear" class="form-control" placeholder="سال (۱۳۸۳)">
+                    <input type="tel" inputmode="numeric" id="obBirthDay" class="form-control" placeholder="روز">
+                    <input type="tel" inputmode="numeric" id="obBirthMonth" class="form-control" placeholder="ماه">
+                    <input type="tel" inputmode="numeric" id="obBirthYear" class="form-control" placeholder="سال">
                 </div>
             </div>
 
@@ -1419,11 +1426,11 @@
 
             <div class="form-group">
                 <label class="form-label">قد (سانتی‌متر) *</label>
-                <input type="tel" inputmode="numeric" id="obHeight" class="form-control" placeholder="178">
+                <input type="tel" inputmode="numeric" id="obHeight" class="form-control" placeholder="1">
             </div>
             <div class="form-group">
                 <label class="form-label">وزن (کیلوگرم) *</label>
-                <input type="tel" inputmode="numeric" id="obWeight" class="form-control" placeholder="75">
+                <input type="tel" inputmode="numeric" id="obWeight" class="form-control" placeholder="1">
             </div>
 
             <div class="form-group full">
@@ -1550,9 +1557,12 @@
         toastTimer = setTimeout(() => el.classList.remove('show'), 3800);
     };
 
-    let netRadarState = { status: 'online', cfOk: false, domesticOk: false, checking: false };
+    /* ==========================================================================
+       📡 رادار پینگ هوشمند (ضد خطای کاذب هنگام سوییچ بین 4G و Wi-Fi)
+       ========================================================================== */
+    let netRadarState = { status: 'online', cfOk: true, domesticOk: true, checking: false, busySyncing: false, failStreak: 0 };
 
-    const pingUrlNoCors = (url, timeoutMs = 2800) => {
+    const pingUrlNoCors = (url, timeoutMs = 5500) => {
         return new Promise((resolve) => {
             const ctrl = new AbortController();
             const t = setTimeout(() => { ctrl.abort(); resolve(false); }, timeoutMs);
@@ -1562,7 +1572,7 @@
         });
     };
 
-    const pingCloudflareCors = (timeoutMs = 3200) => {
+    const pingCloudflareCors = (timeoutMs = 6000) => {
         return new Promise((resolve) => {
             const ctrl = new AbortController();
             const t = setTimeout(() => { ctrl.abort(); resolve({ ok: false }); }, timeoutMs);
@@ -1603,13 +1613,22 @@
     };
 
     window.runRealtimeNetworkProbe = async (manualClick = false) => {
-        if (netRadarState.checking) return netRadarState;
+        if (netRadarState.checking || (netRadarState.busySyncing && !manualClick)) return netRadarState;
         netRadarState.checking = true;
 
+        if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+            const prev = netRadarState.status;
+            netRadarState.status = 'offline';
+            netRadarState.checking = false;
+            updateWifiUI();
+            if (manualClick || prev !== 'offline') showToast('اینترنت قطع شد! 🔴');
+            return netRadarState;
+        }
+
         const [cfResult, myketOk, googleOk] = await Promise.all([
-            pingCloudflareCors(3000),
-            pingUrlNoCors('https://myket.ir/favicon.ico', 2600),
-            pingUrlNoCors('https://www.google.com/generate_204', 2600)
+            pingCloudflareCors(6000),
+            pingUrlNoCors('https://myket.ir/favicon.ico', 5500),
+            pingUrlNoCors('https://www.google.com/generate_204', 5500)
         ]);
 
         const prevStatus = netRadarState.status;
@@ -1617,15 +1636,22 @@
         netRadarState.domesticOk = myketOk || googleOk;
 
         if (cfResult.ok) {
+            netRadarState.failStreak = 0;
             netRadarState.status = 'online';
             if (cfResult.data && cfResult.data.remaining !== undefined) {
                 document.getElementById('liveBetaCapacityText').textContent =
                     `${toFa(cfResult.data.remaining)} از ${toFa(cfResult.data.totalCapacity || 1000)} نفر`;
             }
         } else if (myketOk || googleOk) {
-            netRadarState.status = 'cf-blocked';
+            netRadarState.failStreak++;
+            if (manualClick || netRadarState.failStreak >= 2) {
+                netRadarState.status = 'cf-blocked';
+            }
         } else {
-            netRadarState.status = 'offline';
+            netRadarState.failStreak++;
+            if (manualClick || netRadarState.failStreak >= 2) {
+                netRadarState.status = 'offline';
+            }
         }
 
         netRadarState.checking = false;
@@ -1634,16 +1660,16 @@
         if (manualClick || prevStatus !== netRadarState.status) {
             if (netRadarState.status === 'online' && prevStatus !== 'online') {
                 showToast('اتصال به سرور بادی‌مود برقرار شد! 🟢⚡');
-            } else if (netRadarState.status === 'cf-blocked') {
+            } else if (netRadarState.status === 'cf-blocked' && manualClick) {
                 showToast('اینترنت هست ولی سرور جواب نداد! 🟡');
-            } else if (netRadarState.status === 'offline') {
+            } else if (netRadarState.status === 'offline' && prevStatus !== 'offline') {
                 showToast('اینترنت قطع شد! 🔴');
             }
         }
         return netRadarState;
     };
 
-    setInterval(() => { runRealtimeNetworkProbe(false); }, 4000);
+    setInterval(() => { runRealtimeNetworkProbe(false); }, 6000);
 
     window.showWifiStatusToast = async () => {
         showToast('⏳ در حال پینگ همزمان سرور بادی‌مود، مایکت و گوگل...');
@@ -1680,7 +1706,7 @@
         document.getElementById('pushupLoader').classList.remove('active');
         lastRetryCallback = retryFn;
 
-        const probe = await runRealtimeNetworkProbe(false);
+        const probe = await runRealtimeNetworkProbe(true);
         const mainTitle = document.getElementById('offlineModalMainTitle');
         const subHeadline = document.getElementById('offlineModalSubHeadline');
         const reasonEl = document.getElementById('offlineReasonSubText');
@@ -1696,12 +1722,21 @@
         }
 
         const vid = document.getElementById('earthBurnVideo');
-        if (vid) { vid.currentTime = 0; vid.play().catch(() => {}); }
+        if (vid) {
+            vid.muted = false;
+            vid.currentTime = 0;
+            vid.play().catch(() => {
+                vid.muted = true;
+                vid.play().catch(() => {});
+            });
+        }
 
         document.getElementById('offlineModal').classList.add('open');
     };
 
     window.closeOfflineModal = () => {
+        const vid = document.getElementById('earthBurnVideo');
+        if (vid) { vid.pause(); }
         document.getElementById('offlineModal').classList.remove('open');
     };
 
@@ -1766,7 +1801,7 @@
         createFood('b_sangak', 'نان سنگک / بربری / لواش', 'bread', 265, 8.5, 54.0, 1.4, U_BREAD)
     ];
 
-    const STORAGE_KEY = 'bodymod_app_fixed_v9';
+    const STORAGE_KEY = 'bodymod_app_fixed_v10';
     const getInitialTheme = () => {
         try {
             const saved = localStorage.getItem('bodymod_user_theme');
@@ -1792,11 +1827,11 @@
             profileCompleted: false,
             nickname: '',
             birthDate: '',
-            age: 21,
+            age: 0,
             gender: 'male',
             city: '',
-            height: 178,
-            weight: 75,
+            height: '',
+            weight: '',
             activity: 1.55,
             goalMode: 'maintain',
             termsAccepted: false
@@ -1842,11 +1877,15 @@
             document.getElementById('profEditBirthYear').value = y || '';
             document.getElementById('profEditBirthMonth').value = m || '';
             document.getElementById('profEditBirthDay').value = d || '';
+        } else {
+            document.getElementById('profEditBirthYear').value = '';
+            document.getElementById('profEditBirthMonth').value = '';
+            document.getElementById('profEditBirthDay').value = '';
         }
         document.getElementById('profEditGender').value = p.gender || 'male';
         document.getElementById('profEditActivity').value = String(p.activity || 1.55);
-        document.getElementById('profEditHeight').value = p.height || 178;
-        document.getElementById('profEditWeight').value = p.weight || 75;
+        document.getElementById('profEditHeight').value = p.height ? p.height : '';
+        document.getElementById('profEditWeight').value = p.weight ? p.weight : '';
         document.getElementById('profEditGoalMode').value = p.goalMode || 'maintain';
 
         document.getElementById('manualCalInput').value = state.goals.cal || 2000;
@@ -1924,12 +1963,16 @@
             badge.textContent = '💾 حافظه آفلاین گوشی';
             return;
         }
+        netRadarState.busySyncing = true;
         if (showLoader) showPushupLoader('درحال تمرین... (سینک با سرور)');
         badge.textContent = '⏳ سینک ابری...';
         try {
+            const ctrl = new AbortController();
+            const t = setTimeout(() => ctrl.abort(), 9000);
             const res = await fetch(`${WORKER_BASE_URL}/api/user/sync`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-App-Client': 'BodyMod-Android' },
+                signal: ctrl.signal,
                 body: JSON.stringify({
                     userKey,
                     userProfile: state.userProfile,
@@ -1939,6 +1982,7 @@
                     streakHistory: state.streakHistory
                 })
             });
+            clearTimeout(t);
             if (res.ok) {
                 const data = await res.json();
                 if (data.user) {
@@ -1946,12 +1990,16 @@
                     state.vipExpiresAt = data.user.vipExpiresAt ?? state.vipExpiresAt;
                 }
                 badge.textContent = '☁️ سینک ابری فعال';
+                netRadarState.failStreak = 0;
                 netRadarState.status = 'online';
                 updateWifiUI();
+            } else {
+                badge.textContent = '💾 ذخیره در حافظه گوشی';
             }
         } catch {
-            badge.textContent = '💾 حافظه آفلاین گوشی';
+            badge.textContent = '💾 ذخیره در حافظه گوشی';
         } finally {
+            netRadarState.busySyncing = false;
             if (showLoader) hidePushupLoader();
         }
     };
@@ -2174,10 +2222,14 @@
             document.getElementById('obBirthYear').value = y || '';
             document.getElementById('obBirthMonth').value = m || '';
             document.getElementById('obBirthDay').value = d || '';
+        } else {
+            document.getElementById('obBirthYear').value = '';
+            document.getElementById('obBirthMonth').value = '';
+            document.getElementById('obBirthDay').value = '';
         }
-        document.getElementById('obGender').value = p.gender || '';
-        document.getElementById('obHeight').value = p.height || '';
-        document.getElementById('obWeight').value = p.weight || '';
+        document.getElementById('obGender').value = p.profileCompleted ? (p.gender || 'male') : '';
+        document.getElementById('obHeight').value = p.profileCompleted && p.height ? p.height : '';
+        document.getElementById('obWeight').value = p.profileCompleted && p.weight ? p.weight : '';
         document.getElementById('obActivity').value = p.activity || 1.55;
         document.getElementById('obGoalMode').value = p.profileCompleted ? (p.goalMode || 'maintain') : '';
         document.getElementById('obTermsAccept').checked = !!p.termsAccepted;
@@ -2197,8 +2249,12 @@
         const goalMode = document.getElementById('obGoalMode').value;
         const termsAccepted = document.getElementById('obTermsAccept').checked;
 
-        if (!nickname || !city || !bDay || !bMonth || !bYear || !gender || !height || !weight || !goalMode) {
-            showToast('رفیق! تمام فیلدها (اسم، تولد، جنسیت، شهر، قد، وزن و هدف) اجباری هستن ❤️');
+        if (nickname.length < 2 || city.length < 2) {
+            showToast('رفیق! اسم و شهر باید حداقل ۲ حرف باشن ❤️');
+            return;
+        }
+        if (!bDay || !bMonth || !bYear || !gender || !height || !weight || !goalMode) {
+            showToast('رفیق! تمام فیلدها (تاریخ تولد، جنسیت، قد، وزن و هدف) اجباری هستن ❤️');
             return;
         }
         if (!termsAccepted) {
@@ -2232,7 +2288,11 @@
         const activity = parseFloat(document.getElementById('profEditActivity').value) || 1.55;
         const goalMode = document.getElementById('profEditGoalMode').value;
 
-        if (!nickname || !city || !bDay || !bMonth || !bYear || !gender || !height || !weight || !goalMode) {
+        if (nickname.length < 2 || city.length < 2) {
+            showToast('رفیق اسم و شهر باید حداقل ۲ حرف باشن! ✍️');
+            return;
+        }
+        if (!bDay || !bMonth || !bYear || !gender || !height || !weight || !goalMode) {
             showToast('رفیق لطفاً همه فیلدهای پرونده بدنی رو کامل پر کن! ✍️');
             return;
         }
@@ -2284,13 +2344,40 @@
         openModalById('authModal');
     };
 
-    document.getElementById('sendBaleOtpBtn').addEventListener('click', async () => {
+    /* ==========================================================================
+       تایمر شمارش معکوس ۳۰ ثانیه‌ای و دکمه ارسال مجدد کد تایید بله
+       ========================================================================== */
+    let otpCountdownInterval = null;
+    const startOtpCountdown = () => {
+        clearInterval(otpCountdownInterval);
+        let secondsLeft = 30;
+        const countdownEl = document.getElementById('otpCountdownText');
+        const resendBtn = document.getElementById('resendBaleOtpBtn');
+
+        countdownEl.style.display = 'inline';
+        resendBtn.style.display = 'none';
+        countdownEl.textContent = `⏳ ارسال مجدد کد تا ${toFa(secondsLeft)} ثانیه دیگر...`;
+
+        otpCountdownInterval = setInterval(() => {
+            secondsLeft--;
+            if (secondsLeft > 0) {
+                countdownEl.textContent = `⏳ ارسال مجدد کد تا ${toFa(secondsLeft)} ثانیه دیگر...`;
+            } else {
+                clearInterval(otpCountdownInterval);
+                countdownEl.style.display = 'none';
+                resendBtn.style.display = 'inline-block';
+            }
+        }, 1000);
+    };
+
+    const requestBaleOtpCode = async () => {
         const fullPhone = getFormattedFullPhone();
         if (!fullPhone) {
             showToast('شماره موبایلت رو از 9 وارد کن (مثلاً 914xxxxxxx)! 📱');
             return;
         }
 
+        netRadarState.busySyncing = true;
         showPushupLoader('درحال تمرین... (ارسال کد به بله)');
         try {
             const res = await fetch(`${WORKER_BASE_URL}/api/auth/bale/send-otp`, {
@@ -2299,6 +2386,7 @@
                 body: JSON.stringify({ phone: fullPhone })
             });
             const data = await res.json();
+            netRadarState.busySyncing = false;
             hidePushupLoader(() => {
                 if (!res.ok || !data.ok) {
                     showToast(data.error || 'خطا در ارسال کد بله!');
@@ -2307,18 +2395,24 @@
                 document.getElementById('baleOtpGroup').style.display = 'flex';
                 document.getElementById('sendBaleOtpBtn').style.display = 'none';
                 document.getElementById('verifyBaleOtpBtn').style.display = 'inline-block';
+                startOtpCountdown();
                 showToast('کد تایید ۶ رقمی به پیام‌رسان «بله» ارسال شد! 📲');
             });
         } catch {
-            showOfflineModal('خطا در ارتباط با سرور برای ارسال کد بله!', () => document.getElementById('sendBaleOtpBtn').click());
+            netRadarState.busySyncing = false;
+            showOfflineModal('خطا در ارتباط با سرور برای ارسال کد بله!', requestBaleOtpCode);
         }
-    });
+    };
+
+    document.getElementById('sendBaleOtpBtn').addEventListener('click', requestBaleOtpCode);
+    document.getElementById('resendBaleOtpBtn').addEventListener('click', requestBaleOtpCode);
 
     document.getElementById('verifyBaleOtpBtn').addEventListener('click', async () => {
         const fullPhone = getFormattedFullPhone();
         const code = toEnDigits(document.getElementById('baleOtpInput').value).trim();
         if (!fullPhone || !code) { showToast('کد ۶ رقمی رو وارد کن رفیق!'); return; }
 
+        netRadarState.busySyncing = true;
         showPushupLoader('درحال تمرین... (بررسی کد تایید)');
         try {
             const res = await fetch(`${WORKER_BASE_URL}/api/auth/bale/verify-otp`, {
@@ -2327,11 +2421,13 @@
                 body: JSON.stringify({ phone: fullPhone, code })
             });
             const data = await res.json();
+            netRadarState.busySyncing = false;
             hidePushupLoader(async () => {
                 if (!data.ok) {
                     showToast(data.error || 'کد اشتباهه رفیق!');
                     return;
                 }
+                clearInterval(otpCountdownInterval);
                 if (data.user) {
                     state.bodyCoins = data.user.bodyCoins ?? state.bodyCoins;
                     state.vipExpiresAt = data.user.vipExpiresAt ?? state.vipExpiresAt;
@@ -2343,6 +2439,7 @@
                 else { populateDirectProfileForm(); await syncToCloudflare(false); renderAll(); }
             });
         } catch {
+            netRadarState.busySyncing = false;
             showOfflineModal('خطا در تایید کد! ارتباط با سرور برقرار نشد.', () => document.getElementById('verifyBaleOtpBtn').click());
         }
     });
@@ -2638,7 +2735,7 @@
     });
     document.getElementById('resetAutoWaterBtn').addEventListener('click', () => {
         state.goals.waterAuto = true;
-        state.goals.waterGlasses = computeAutoWaterGlasses(state.goals.cal, state.userProfile.weight, state.userProfile.goalMode);
+        state.goals.waterGlasses = computeAutoWaterGlasses(state.goals.cal, state.userProfile.weight || 75, state.userProfile.goalMode);
         renderAll(); showToast('محاسبه خودکار آب فعال شد ⚡');
     });
 
@@ -2693,6 +2790,7 @@
         state.goals.fat = parseInt(toEnDigits(document.getElementById('manualFatInput').value)) || 65;
         ensureDay(state.selectedDate).targetCal = state.goals.cal;
         renderAll();
+        syncToCloudflare(false);
         showToast('اهداف روزانه با موفقیت ذخیره شد! 🎯');
     });
 
