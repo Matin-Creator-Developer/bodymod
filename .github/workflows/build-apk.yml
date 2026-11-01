@@ -30,7 +30,7 @@ jobs:
         with:
           node-version: '20'
 
-      - name: 📦 ساخت APK با آیکون و تنظیمات بومی
+      - name: 📦 ساخت APK با آیکون و هدایت مستقیم به مرورگر پیش‌فرض گوشی
         run: |
           export ANDROID_SDK_ROOT=$ANDROID_HOME
           npm install -g cordova
@@ -42,9 +42,12 @@ jobs:
           [ -f "../earth_burn.mp4" ] && cp ../earth_burn.mp4 www/earth_burn.mp4
           [ -f "../icon.png" ] && cp ../icon.png ./icon.png && cp ../icon.png www/icon.png
 
+          # اتصال خودکار دکمه گوگل در index.html به پل بومی جاوا (برای باز شدن حتمی در مرورگر اصلی گوشی)
+          sed -i "s|window.open(\`\${WORKER_BASE_URL}/auth/google-direct\`, '_system');|if(window.AndroidNative \&\& window.AndroidNative.openExternal){window.AndroidNative.openExternal(\`\${WORKER_BASE_URL}/auth/google-direct\`);}else{window.location.href=\`\${WORKER_BASE_URL}/auth/google-direct\`;}|g" www/index.html
+
           cat << 'EOF' > config.xml
           <?xml version='1.0' encoding='utf-8'?>
-          <widget id="ir.matinmohammadi.bodymod" version="1.0.8" android-versionCode="9" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android">
+          <widget id="ir.matinmohammadi.bodymod" version="1.0.9" android-versionCode="10" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android">
               <name>BodyMod</name>
               <description>سوپراپلیکیشن هوشمند بادی‌مود</description>
               <author email="diaperloveradultbaby5@gmail.com" href="https://bodymod.matin-mohammadi.ir">Matin Mohammadi</author>
@@ -53,7 +56,8 @@ jobs:
               <allow-intent href="http://*/*" />
               <allow-intent href="https://*/*" />
               <allow-intent href="bodymod://*/*" />
-              <allow-navigation href="*" />
+              <allow-navigation href="https://localhost/*" />
+              <allow-navigation href="http://localhost/*" />
               <preference name="AndroidLaunchMode" value="singleTask" />
               <preference name="Scheme" value="https" />
               <preference name="Hostname" value="localhost" />
@@ -79,13 +83,15 @@ jobs:
 
           cordova platform add android@13.0.0
 
-          # تزریق جاوا برای لغو اینتنت گوگل و برگشت خودکار
+          # تزریق جاوا برای باز کردن مرورگر پیش‌فرض گوشی + دریافت خودکار بازگشت از گوگل
           MAIN_ACT="platforms/android/app/src/main/java/ir/matinmohammadi/bodymod/MainActivity.java"
           cat << 'EOF' > "$MAIN_ACT"
           package ir.matinmohammadi.bodymod;
           import android.os.Bundle;
           import android.content.Intent;
           import android.net.Uri;
+          import android.webkit.JavascriptInterface;
+          import android.webkit.WebView;
           import org.apache.cordova.*;
 
           public class MainActivity extends CordovaActivity {
@@ -97,6 +103,22 @@ jobs:
                       moveTaskToBack(true);
                   }
                   loadUrl(launchUrl);
+
+                  // ایجاد پل مستقیم جاوا برای باز کردن لینک‌ها در مرورگر پیش‌فرض گوشی کاربر
+                  if (appView != null && appView.getView() instanceof WebView) {
+                      WebView wv = (WebView) appView.getView();
+                      wv.addJavascriptInterface(new Object() {
+                          @JavascriptInterface
+                          public void openExternal(String url) {
+                              try {
+                                  Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                                  browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                  startActivity(browserIntent);
+                              } catch (Exception ignored) {}
+                          }
+                      }, "AndroidNative");
+                  }
+
                   handleGoogleDeepLink(getIntent());
               }
 
@@ -149,7 +171,6 @@ jobs:
       - name: 🔐 امضای دیجیتال APK با کلید ثابت
         run: |
           cd bodymod_native/platforms/android/app/build/outputs/apk/release
-          # کپی کردن فایل keystore که در پروژه ساختیم با آدرس داینامیک
           cp ${{ github.workspace }}/bodymod-release.keystore .
           $ANDROID_HOME/build-tools/34.0.0/zipalign -v -p 4 app-release-unsigned.apk BodyMod-Aligned.apk
           $ANDROID_HOME/build-tools/34.0.0/apksigner sign --ks bodymod-release.keystore --ks-key-alias bodymod_key --ks-pass pass:MatinBodyMod2026 --key-pass pass:MatinBodyMod2026 --out BodyMod-Official-Market.apk BodyMod-Aligned.apk
