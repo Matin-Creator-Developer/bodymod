@@ -37,7 +37,7 @@
         body.modal-open { overflow: hidden !important; }
         .container { width: 100%; max-width: 720px; margin: 0 auto; padding: 10px; }
 
-        /* ۱. لودینگ حرکت شنا */
+        /* لودینگ حرکت شنا */
         .pushup-loader-overlay { position: fixed; inset: 0; background: rgba(7, 10, 18, 0.95); backdrop-filter: blur(8px); z-index: 5000; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
         .pushup-loader-overlay.active { display: flex; }
         .pushup-stage { width: 200px; height: 120px; position: relative; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 14px; }
@@ -48,7 +48,7 @@
         @keyframes armBend { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-22deg); } }
         .pushup-title { font-size: 16px; font-weight: 900; color: #00f5d4; text-shadow: 0 0 12px rgba(0, 245, 212, 0.4); }
 
-        /* ۲. پاپ‌آپ آفلاین با پس‌زمینه مشکی مطلق (#000000) حتی در حالت روشن */
+        /* پاپ‌آپ آفلاین با مشکی مطلق */
         .offline-cyber-modal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.96); backdrop-filter: blur(10px); z-index: 4500; display: none; align-items: center; justify-content: center; padding: 16px; }
         .offline-cyber-modal.open { display: flex; }
         .offline-cyber-box { background: #000000 !important; color: #ffffff !important; width: 100%; max-width: 400px; border-radius: 24px; padding: 18px 16px; border: 2px solid #ff5400; box-shadow: 0 0 45px rgba(255, 84, 0, 0.55); text-align: center; }
@@ -179,23 +179,7 @@
         .vip-trigger-btn { background: linear-gradient(135deg, var(--accent), #7209b7); color: #fff; border: none; padding: 7px 12px; border-radius: 999px; font-size: 11px; font-weight: 800; cursor: pointer; }
         .icon-btn { background: var(--bg-muted); border: 1px solid var(--border-color); color: var(--text-main); width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 15px; }
 
-        /* استایل دکمه رسمی ورود با گوگل */
-        .google-official-btn {
-            width: 100%;
-            background: #ffffff;
-            color: #1f2937;
-            border: 1.5px solid #cbd5e1;
-            border-radius: 12px;
-            padding: 11px 14px;
-            font-size: 13px;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
+        .google-official-btn { width: 100%; background: #ffffff; color: #1f2937; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 11px 14px; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); }
 
         .modal-backdrop { position: fixed; inset: 0; background: rgba(7, 10, 18, 0.88); backdrop-filter: blur(7px); display: none; align-items: flex-start; justify-content: center; z-index: 2000; padding: 16px 12px 150px 12px; overflow-y: auto; }
         .modal-backdrop.open { display: flex; }
@@ -206,7 +190,6 @@
 </head>
 <body>
 
-<!-- ۱. صفحه لودینگ حرکت شنا -->
 <div class="pushup-loader-overlay" id="pushupLoader">
     <div class="pushup-stage">
         <div class="pushup-floor"></div>
@@ -226,7 +209,6 @@
     <div style="font-size:11px; color:#94a3b8; margin-top:4px;">موتور سایبرنتیک BodyMod</div>
 </div>
 
-<!-- ۲. پاپ‌آپ آفلاین با ویدیوی کره زمین (وابسته به باز بودن پاپ‌آپ) -->
 <div class="offline-cyber-modal" id="offlineModal">
     <div class="offline-cyber-box">
         <div class="earth-video-container">
@@ -244,7 +226,6 @@
 
 <div class="cyber-toast" id="cyberToast"></div>
 
-<!-- منوی همبرگری کشویی (به همراه دکمه خروج و پاکسازی کش) -->
 <div class="drawer-backdrop" id="drawerBackdrop" onclick="closeDrawer()"></div>
 <aside class="side-drawer" id="sideDrawer">
     <div>
@@ -268,18 +249,14 @@
             <button class="drawer-item" data-tab="aiChatTab" onclick="switchTab('aiChatTab')"><span>🤖 مربی هوش مصنوعی</span><span>⚡</span></button>
             <button class="drawer-item" data-tab="marketVipTab" onclick="switchTab('marketVipTab')"><span>💎 اشتراک بتا و فروشگاه</span><span style="background:var(--accent); color:#fff; font-size:10px; padding:1px 7px; border-radius:99px;">VIP</span></button>
             <button class="drawer-item" data-tab="historyTab" onclick="switchTab('historyTab')"><span>📊 تاریخچه روزها و ماه‌ها</span><span>◀</span></button>
-            <!-- دکمه مخفی پنل مدیرعامل -->
             <button class="drawer-item" id="ceoDrawerBtn" data-tab="ceoAdminTab" onclick="switchTab('ceoAdminTab')" style="display:none; border:1.5px solid var(--carbs); background:rgba(245,158,11,0.12); color:var(--carbs);">
-                <span>👑 پنل مدیرعامل (آمار کلان)</span>
-                <span>📊</span>
+                <span>👑 پنل مدیرعامل (آمار کلان)</span><span>📊</span>
             </button>
         </nav>
     </div>
     <div class="drawer-footer">
-        <!-- دکمه مستقیم خروج از حساب و پاکسازی کامل کش در منوی همبرگری -->
         <button class="drawer-item" id="drawerLogoutBtn" onclick="fullLogoutAndClearCache()" style="display:none; background:rgba(239, 68, 68, 0.14); color:var(--danger); border-color:var(--danger);">
-            <span>🚪 خروج از حساب (پاکسازی کش)</span>
-            <span>✕</span>
+            <span>🚪 خروج از حساب</span><span>✕</span>
         </button>
         <button class="drawer-item" onclick="toggleTheme()" style="background:var(--bg-muted);"><span>🌓 تغییر تم (تیره / روشن)</span><span id="drawerThemeIcon">☀️</span></button>
     </div>
@@ -405,7 +382,7 @@
             </div>
         </div>
 
-        <!-- تحلیل هوشمند غذا با AI (نیازمند ثبت‌نام و تکمیل پرونده) -->
+        <!-- تحلیل هوشمند غذا با AI -->
         <div class="card" style="border:1.5px solid var(--primary);">
             <div class="card-header">
                 <div class="card-title">🤖 تحلیل هوشمند خوراکی با هوش مصنوعی</div>
@@ -420,7 +397,7 @@
             <div id="aiFoodAnalysisResultBox" style="display:none; background:var(--bg-muted); border:1px solid var(--primary); border-radius:12px; padding:12px; margin-top:8px; font-size:12px;"></div>
         </div>
 
-        <!-- وعده‌های غذایی ثبت شده -->
+        <!-- وعده‌های غذایی -->
         <div class="card">
             <div class="card-header"><div class="card-title">🍲 وعده‌های ثبت شده امروز</div></div>
             <div class="meals-tabs">
@@ -525,7 +502,7 @@
         </div>
     </div>
 
-    <!-- TAB 6: PROFILE & HEALTH RECORD -->
+    <!-- TAB 6: PROFILE & HEALTH RECORD (به همراه منطقه خطرناک حذف حساب با قانون دینامیت و تایید امنیتی) -->
     <div id="settingsTab" class="tab-section">
         <div class="card" style="border:1.5px solid var(--primary);">
             <div class="card-header">
@@ -560,9 +537,27 @@
             </div>
             <button class="btn-primary" id="saveDirectProfileBtn" style="width:100%; padding:12px;">💾 ذخیره تغییرات پروفایل و بروزرسانی هوشمند کالری</button>
         </div>
+
+        <!-- منطقه خطرناک: حذف دائمی حساب با دینامیت ☢️💣 -->
+        <div class="card" style="border: 2px dashed var(--danger); background: rgba(239, 68, 68, 0.04);">
+            <div class="card-header">
+                <div class="card-title" style="color: var(--danger);">☢️ منطقه خطرناک (حذف دائمی حساب کاربری)</div>
+            </div>
+            <p style="font-size: 11px; color: var(--text-muted); line-height: 1.7; margin-bottom: 10px;">
+                به منطقه خطرناک اومدی! میخای دینامیت بزاری و کل حسابتو پودر کنی؟ 😂💣☢️<br>
+                <strong>توجه:</strong> تمام بادی‌کوین‌ها و اشتراک‌هات هم اگه خریدی نابود میشه! پس از درخواست، ۳ روز فرصت داری تا پشیمون بشی و با یک بار لاگین مجدد، حسابتو نجات بدی؛ در غیر این صورت برای همیشه حذف میشه.
+            </p>
+            <div class="form-group" style="margin-bottom: 10px;">
+                <label class="form-label">برای تایید امنیتی، عبارت «حذف حساب» را دقیقاً تایپ کن:</label>
+                <input type="text" id="deleteConfirmInput" class="form-control" placeholder="حذف حساب" style="border-color: var(--danger);">
+            </div>
+            <button type="button" class="btn-primary" onclick="requestAccountDeletion()" style="width: 100%; background: var(--danger); color: #fff;">
+                💣 منفجر کردن حساب و درخواست حذف دائمی (مهلت ۳ روزه)
+            </button>
+        </div>
     </div>
 
-    <!-- TAB 7: CEO ADMIN PANEL (مخصوص مدیرعامل - متین محمدی) -->
+    <!-- TAB 7: CEO ADMIN PANEL -->
     <div id="ceoAdminTab" class="tab-section">
         <div class="card" style="border:2px solid var(--carbs);">
             <div class="card-header">
@@ -581,7 +576,7 @@
     </footer>
 </div>
 
-<!-- مودال یکپارچه ورود (شماره موبایل بله و اکانت رسمی گوگل کنار هم) -->
+<!-- مودال یکپارچه ورود (شماره موبایل بله و دکمه رسمی گوگل) -->
 <div class="modal-backdrop" id="authModal">
     <div class="modal-box">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
@@ -593,7 +588,6 @@
             💡 <strong>توجه:</strong> برای دریافت کد تایید، حتماً لازمه که در پیام‌رسان <strong>«بله»</strong> ثبت‌نام کرده باشی یا از دکمه <strong>Google</strong> پایین استفاده کنی! (اگر قبلاً ثبت‌نام کردی، اطلاعاتت خودکار بازیابی میشه).
         </div>
 
-        <!-- بخش ۱: شماره موبایل بله -->
         <div style="margin-bottom:14px;">
             <div class="form-grid">
                 <div class="form-group full">
@@ -618,7 +612,6 @@
             </div>
         </div>
 
-        <!-- بخش ۲: دکمه استاندارد با لوگوی ۴ رنگ رسمی گوگل -->
         <div style="border-top:1px dashed var(--border-color); padding-top:14px; text-align:center;">
             <div style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">یا ورود مستقیم با حساب گوگل:</div>
             <button type="button" class="google-official-btn" onclick="launchDirectGoogleAuth()">
@@ -634,7 +627,7 @@
     </div>
 </div>
 
-<!-- مودال تکمیل مشخصات بدنی (برای کاربران جدید — اگر با ضربدر بسته شود، امکانات آنلاین قفل می‌شوند) -->
+<!-- مودال تکمیل مشخصات بدنی -->
 <div class="modal-backdrop" id="onboardingModal">
     <div class="modal-box">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
@@ -675,7 +668,6 @@
     </div>
 </div>
 
-<!-- مودال خوراکی سفارشی -->
 <div class="modal-backdrop" id="customFoodModal">
     <div class="modal-box">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -733,7 +725,6 @@
     let toastTimer = null;
     window.showToast = (msg) => { const el = document.getElementById('cyberToast'); el.textContent = msg; el.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 4000); };
 
-    /* رادار پینگ هوشمند */
     let netRadarState = { status: 'online', checking: false, busySyncing: false, failStreak: 0 };
     const pingNoCors = (url, ms = 5500) => new Promise(r => { const c = new AbortController(); const t = setTimeout(() => { c.abort(); r(false); }, ms); fetch(url + '?_t=' + Date.now(), { mode: 'no-cors', cache: 'no-store', signal: c.signal }).then(() => { clearTimeout(t); r(true); }).catch(() => { clearTimeout(t); r(false); }); });
     const pingCfCors = (ms = 6000) => new Promise(r => { const c = new AbortController(); const t = setTimeout(() => { c.abort(); r({ ok: false }); }, ms); fetch(`${WORKER_BASE_URL}/api/beta/status?_t=${Date.now()}`, { cache: 'no-store', signal: c.signal }).then(async res => { clearTimeout(t); r(res.ok ? { ok: true, data: await res.json().catch(() => ({})) } : { ok: false }); }).catch(() => { clearTimeout(t); r({ ok: false }); }); });
@@ -771,7 +762,6 @@
     window.showPushupLoader = (text = "درحال تمرین... (لودینگ)") => { clearTimeout(loaderHideTimeout); loaderShownAt = Date.now(); document.getElementById('pushupLoaderText').textContent = text; document.getElementById('pushupLoader').classList.add('active'); };
     window.hidePushupLoader = (cb) => { const rem = Math.max(0, 2500 - (Date.now() - loaderShownAt)); clearTimeout(loaderHideTimeout); loaderHideTimeout = setTimeout(() => { document.getElementById('pushupLoader').classList.remove('active'); if (cb) cb(); }, rem); };
 
-    /* سینک ۱۰۰٪ صدا و تصویر ویدیوی کره زمین با پاپ‌آپ قطعی اینترنت */
     let lastRetryCallback = null;
     window.showOfflineModal = async (reasonText, retryFn = null) => {
         clearTimeout(loaderHideTimeout);
@@ -814,7 +804,6 @@
         if (lastRetryCallback) lastRetryCallback();
     });
 
-    /* بانک فشرده غذاهای ایرانی */
     const U_RICE = { 'بشقاب': 250, 'کفگیر': 85, 'پرس': 320, '۱۰۰ گرم': 100 }, U_STEW = { 'کاسه': 250, 'بشقاب': 200, 'ملاقه': 90 }, U_SOUP = { 'کاسه': 320, 'ملاقه': 100 }, U_KEBAB = { 'پرس': 240, 'سیخ': 110, '۱۰۰ گرم': 100 }, U_SYRUP = { 'قاشق': 20, 'پیاله': 60 }, U_BREAD = { 'کف دست': 30, 'نان کامل': 250 }, U_JUICE = { 'لیوان (۲۰۰cc)': 200 };
     const RAW_FOODS = [
         ['s_grape', 'شیره انگور / خرما / عسل', 'syrup', 300, 1, 75, 0.1, U_SYRUP], ['s_ardeh', 'ارده کنجد', 'syrup', 595, 17, 21, 53, U_SYRUP],
@@ -830,7 +819,7 @@
     ];
     const DEFAULT_FOODS = RAW_FOODS.map(([id, name, cat, cal100, prot100, carb100, fat100, units]) => ({ id, name, cat, cal100, prot100, carb100, fat100, units }));
 
-    const STORAGE_KEY = 'bodymod_app_v12';
+    const STORAGE_KEY = 'bodymod_app_v13';
     const getFreshDefaultState = () => ({
         theme: document.documentElement.getAttribute('data-theme') || 'dark',
         selectedDate: todayISO, selectedMeal: 'breakfast', selectedCat: 'none',
@@ -849,9 +838,6 @@
         return k && (k === CEO_GMAIL.toLowerCase().trim() || k === CEO_PHONE.trim() || k.endsWith("9058586834"));
     };
 
-    /* ==========================================================================
-       گارد قفل امکانات: اگر کاربر وارد نشده یا فرم پرونده را با ضربدر بسته باشد، همه چیز قفل است!
-       ========================================================================== */
     const requireCompletedAccount = (featureName) => {
         if (!state.authUser.loggedIn || !getActiveUserKey()) {
             showToast(`🔒 برای استفاده از «${featureName}»، اول باید وارد حسابت بشی رفیق!`);
@@ -872,14 +858,13 @@
         renderAll();
     };
 
-    /* پاکسازی کامل کش هنگام خروج یا تعویض اکانت */
     window.fullLogoutAndClearCache = () => {
         const currentTheme = state.theme;
         try {
             localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem('bodymod_app_v12');
             localStorage.removeItem('bodymod_app_v11');
             localStorage.removeItem('bodymod_app_fixed_v10');
-            localStorage.removeItem('bodymod_app_fixed_v9');
         } catch (e) {}
         state = getFreshDefaultState();
         state.theme = currentTheme;
@@ -887,7 +872,7 @@
         closeDrawer();
         switchTab('trackerTab');
         renderAll();
-        showToast('از حساب خارج شدی و کش برنامه کامل پاک شد! 🧹👋');
+        showToast('از حساب خارج شدی 👋');
     };
 
     const resetAuthModalUI = () => {
@@ -907,7 +892,6 @@
         document.getElementById('obTermsAccept').checked = false;
     };
 
-    /* بازیابی خودکار اطلاعات کاربر قدیمی از کلودفلر یا باز کردن فرم برای کاربر جدید */
     const applyServerUserSession = (authInfo, serverUser) => {
         const currentTheme = state.theme;
         state = getFreshDefaultState();
@@ -1004,9 +988,6 @@
         } catch {} finally { netRadarState.busySyncing = false; if (showLoader) hidePushupLoader(); }
     };
 
-    /* ==========================================================================
-       ورود مستقیم گوگل بدون پاپ‌آپ واسطه (مستقیم به انتخاب اکانت گوگل در مرورگر پیش‌فرض)
-       ========================================================================== */
     window.launchDirectGoogleAuth = () => {
         window.open(`${WORKER_BASE_URL}/auth/google-direct`, '_system');
     };
@@ -1029,9 +1010,6 @@
         }
     };
 
-    /* ==========================================================================
-       👑 دریافت آمار کلان دیتابیس برای پنل مدیرعامل
-       ========================================================================== */
     window.fetchCeoStats = async () => {
         const userKey = getActiveUserKey();
         if (!isCeoUser()) { showToast('این بخش فقط مخصوص مدیرعامل (متین محمدی) است! 🛑'); return; }
@@ -1077,7 +1055,34 @@
         }
     };
 
-    /* تحلیل هوشمند خوراکی با AI */
+    /* درخواست حذف دائمی حساب با مهلت ۳ روزه و تایید امنیتی */
+    window.requestAccountDeletion = async () => {
+        const userKey = getActiveUserKey();
+        if (!userKey) { showToast('ابتدا باید وارد حساب خود شوید!'); openAuthModal(); return; }
+        const phrase = document.getElementById('deleteConfirmInput').value.trim();
+        if (phrase !== 'حذف حساب') {
+            showToast('⚠️ برای تایید امنیتی باید عبارت «حذف حساب» را دقیقاً تایپ کنید!');
+            return;
+        }
+
+        showPushupLoader('درحال ارسال درخواست دینامیت به سرور...');
+        try {
+            const res = await fetch(`${WORKER_BASE_URL}/api/user/delete`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userKey, confirmPhrase: phrase })
+            });
+            const data = await res.json();
+            hidePushupLoader(() => {
+                if (!res.ok || !data.ok) { showToast(data.error || 'خطا در ثبت درخواست'); return; }
+                showToast('💣 درخواست حذف ثبت شد. ۳ روز مهلت پشیمانی دارید!');
+                fullLogoutAndClearCache();
+            });
+        } catch {
+            showOfflineModal('خطا در ارتباط با سرور برای حذف حساب!', requestAccountDeletion);
+        }
+    };
+
+    /* تحلیل هوشمند غذا با AI */
     let lastAiParsedFood = null;
     const handleAiFoodResponse = (replyText, coinCost, remainingCoins) => {
         state.bodyCoins = remainingCoins ?? state.bodyCoins;
@@ -1170,7 +1175,6 @@
         reader.readAsDataURL(file);
     });
 
-    /* چت و برنامه ورزشی (قفل در صورت عدم ثبت‌نام) */
     const sendAiChatMessage = async () => {
         if (!requireCompletedAccount('چت با مربی هوشمند')) return;
         const inp = document.getElementById('aiChatInput'), prompt = inp.value.trim();
@@ -1228,7 +1232,6 @@
         } catch { showOfflineModal(`خطا در فعال‌سازی «${title}»!`, () => purchaseMarketSku(sku, title)); }
     };
 
-    /* ثبت و ویرایش پروفایل */
     window.openOnboardingModal = () => openModalById('onboardingModal');
 
     const saveProfileFromInputs = async (prefix, isModal) => {
@@ -1266,7 +1269,6 @@
     document.getElementById('submitOnboardingBtn').addEventListener('click', () => saveProfileFromInputs('ob', true));
     document.getElementById('saveDirectProfileBtn').addEventListener('click', () => saveProfileFromInputs('profEdit', false));
 
-    /* کد ۴ رقمی بله و تایمر ۳۰ ثانیه */
     window.openAuthModal = () => {
         resetAuthModalUI();
         openModalById('authModal');
@@ -1325,7 +1327,6 @@
                 if (!data.ok) { showToast(data.error || 'کد اشتباهه!'); return; }
                 clearInterval(otpTimer);
                 closeModalById('authModal');
-                // پاکسازی کش اکانت قبلی و اعمال هوشمند اطلاعات سرور (ادامه برای قدیمی‌ها / فرم برای جدیدها)
                 applyServerUserSession({ email: '', phone: fullPhone }, data.user);
             });
         } catch { netRadarState.busySyncing = false; showOfflineModal('ارتباط با سرور برقرار نشد!', () => document.getElementById('verifyBaleOtpBtn').click()); }
