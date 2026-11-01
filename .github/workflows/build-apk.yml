@@ -149,8 +149,8 @@ jobs:
       - name: 🔐 امضای دیجیتال APK با کلید ثابت
         run: |
           cd bodymod_native/platforms/android/app/build/outputs/apk/release
-          # کپی کردن فایل keystore که در پروژه ساختیم
-          cp ../../../../../bodymod-release.keystore .
+          # کپی کردن فایل keystore که در پروژه ساختیم با آدرس داینامیک
+          cp ${{ github.workspace }}/bodymod-release.keystore .
           $ANDROID_HOME/build-tools/34.0.0/zipalign -v -p 4 app-release-unsigned.apk BodyMod-Aligned.apk
           $ANDROID_HOME/build-tools/34.0.0/apksigner sign --ks bodymod-release.keystore --ks-key-alias bodymod_key --ks-pass pass:MatinBodyMod2026 --key-pass pass:MatinBodyMod2026 --out BodyMod-Official-Market.apk BodyMod-Aligned.apk
 
@@ -159,4 +159,3 @@ jobs:
         with:
           name: BodyMod-Android-Package
           path: bodymod_native/platforms/android/app/build/outputs/apk/release/BodyMod-Official-Market.apk
- # trigger build
