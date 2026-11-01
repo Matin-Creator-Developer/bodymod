@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 دریافت کدهای پروژه از ریپازیتوری
+      - name: 📥 دریافت کدهای پروژه
         uses: actions/checkout@v4
 
       - name: ☕ نصب جاوا (JDK 17)
@@ -19,19 +19,18 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: 🛠️ آماده‌سازی Android SDK داخلی گیت‌هاب (پلتفرم ۳۴)
+      - name: 🛠️ آماده‌سازی Android SDK
         run: |
           export ANDROID_SDK_ROOT=$ANDROID_HOME
-          export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
-      - name: 🟢 نصب Node.js و Apache Cordova
+      - name: 🟢 نصب Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: 📦 ساخت پروژه نیتیو اندروید BodyMod با آیکون و ویدیوی کره زمین
+      - name: 📦 ساخت APK با آیکون اختصاصی، ویدیوی زمین و برگشت خودکار از کروم
         run: |
           export ANDROID_SDK_ROOT=$ANDROID_HOME
           npm install -g cordova
@@ -39,68 +38,123 @@ jobs:
           cd bodymod_native
 
           rm -rf www/*
-          if [ -f "../app.html" ]; then
-            cp ../app.html www/index.html
-          else
-            cp ../index.html www/index.html
-          fi
+          cp ../app.html www/index.html
+          [ -f "../earth_burn.mp4" ] && cp ../earth_burn.mp4 www/earth_burn.mp4
+          [ -f "../icon.png" ] && cp ../icon.png ./icon.png && cp ../icon.png www/icon.png
 
-          # کپی کردن ویدیوی کره زمین در حال سوختن به داخل پکیج اندروید
-          if [ -f "../earth_burn.mp4" ]; then
-            cp ../earth_burn.mp4 www/earth_burn.mp4
-          fi
-
-          # کپی کردن آیکون اختصاصی برنامه
-          if [ -f "../icon.png" ]; then
-            cp ../icon.png ./icon.png
-            cp ../icon.png www/icon.png
-            ICON_TAG='<icon src="icon.png" />'
-          else
-            ICON_TAG=''
-          fi
-
-          cat << EOF > config.xml
+          cat << 'EOF' > config.xml
           <?xml version='1.0' encoding='utf-8'?>
-          <widget id="ir.matinmohammadi.bodymod" version="1.0.5" android-versionCode="6" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android">
+          <widget id="ir.matinmohammadi.bodymod" version="1.0.7" android-versionCode="8" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android">
               <name>BodyMod</name>
-              <description>سوپراپلیکیشن کالری‌شمار و تناسب اندام هوشمند بادی‌مود</description>
+              <description>سوپراپلیکیشن هوشمند بادی‌مود</description>
               <author email="diaperloveradultbaby5@gmail.com" href="https://bodymod.matin-mohammadi.ir">Matin Mohammadi</author>
               <content src="index.html" />
               <access origin="*" />
               <allow-intent href="http://*/*" />
               <allow-intent href="https://*/*" />
+              <allow-intent href="bodymod://*/*" />
               <allow-navigation href="*" />
+              <preference name="AndroidLaunchMode" value="singleTask" />
               <preference name="Scheme" value="https" />
               <preference name="Hostname" value="localhost" />
               <preference name="MixedContentMode" value="0" />
               <preference name="MediaPlaybackRequiresUserAction" value="false" />
               <preference name="DisallowOverscroll" value="true" />
-              <preference name="AndroidPersistentFileLocation" value="Compatibility" />
-              \$ICON_TAG
+              <icon src="icon.png" />
               <platform name="android">
                   <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
                       <application android:usesCleartextTraffic="true" />
                   </edit-config>
+                  <config-file target="AndroidManifest.xml" parent="/manifest/application/activity[@android:name='MainActivity']">
+                      <intent-filter>
+                          <action android:name="android.intent.action.VIEW" />
+                          <category android:name="android.intent.category.DEFAULT" />
+                          <category android:name="android.intent.category.BROWSABLE" />
+                          <data android:scheme="bodymod" android:host="auth" />
+                      </intent-filter>
+                  </config-file>
               </platform>
           </widget>
           EOF
 
           cordova platform add android@13.0.0
+
+          # ۱. تزریق دریافت‌کننده اتوماتیک لاگین گوگل از کروم به داخل MainActivity.java
+          MAIN_ACT="platforms/android/app/src/main/java/ir/matinmohammadi/bodymod/MainActivity.java"
+          cat << 'EOF' > "$MAIN_ACT"
+          package ir.matinmohammadi.bodymod;
+          import android.os.Bundle;
+          import android.content.Intent;
+          import android.net.Uri;
+          import org.apache.cordova.*;
+
+          public class MainActivity extends CordovaActivity {
+              @Override
+              public void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  Bundle extras = getIntent().getExtras();
+                  if (extras != null && extras.getBoolean("cdvStartInBackground", false)) {
+                      moveTaskToBack(true);
+                  }
+                  loadUrl(launchUrl);
+                  handleGoogleDeepLink(getIntent());
+              }
+
+              @Override
+              protected void onNewIntent(Intent intent) {
+                  super.onNewIntent(intent);
+                  setIntent(intent);
+                  handleGoogleDeepLink(intent);
+              }
+
+              private void handleGoogleDeepLink(Intent intent) {
+                  if (intent == null) return;
+                  Uri data = intent.getData();
+                  if (data != null && "bodymod".equals(data.getScheme())) {
+                      final String email = data.getQueryParameter("email") != null ? data.getQueryParameter("email") : "";
+                      final String name = data.getQueryParameter("name") != null ? data.getQueryParameter("name") : "";
+                      if (!email.isEmpty() && appView != null) {
+                          appView.getView().postDelayed(new Runnable() {
+                              @Override
+                              public void run() {
+                                  String js = "if(window.onGoogleChromeAuthSuccess){window.onGoogleChromeAuthSuccess('" + email.replace("'", "") + "','" + name.replace("'", "") + "');}";
+                                  appView.loadUrl("javascript:" + js);
+                              }
+                          }, 600);
+                      }
+                  }
+              }
+          }
+          EOF
+
+          # ۲. حذف ۱۰۰٪ آیکون ربات کوردووا و جایگزینی اجباری با icon.png در تمام پوشه‌ها
+          if [ -f "../icon.png" ]; then
+            RES_DIR="platforms/android/app/src/main/res"
+            rm -rf $RES_DIR/mipmap-anydpi-v26
+            rm -rf $RES_DIR/drawable-v24
+            find "$RES_DIR" -name "ic_launcher*.xml" -delete
+            find "$RES_DIR" -name "ic_launcher*.webp" -delete
+            for dir in $RES_DIR/mipmap-*; do
+              if [ -d "$dir" ]; then
+                rm -f "$dir"/*.png "$dir"/*.webp "$dir"/*.xml
+                cp ../icon.png "$dir/ic_launcher.png"
+                cp ../icon.png "$dir/ic_launcher_round.png"
+                cp ../icon.png "$dir/ic_launcher_foreground.png"
+              fi
+            done
+          fi
+
           cordova build android --release -- --packageType=apk
 
-      - name: 🔐 ساخت کلید امضای دیجیتال رسمی (Keystore) و امضای APK
+      - name: 🔐 امضای دیجیتال رسمی APK
         run: |
           cd bodymod_native/platforms/android/app/build/outputs/apk/release
-          
           keytool -genkey -v -keystore bodymod-release.keystore -alias bodymod_key -keyalg RSA -keysize 2048 -validity 10000 -storepass MatinBodyMod2026 -keypass MatinBodyMod2026 -dname "CN=Matin Mohammadi, OU=BodyMod, O=MatinCreator, L=Urmia, S=WestAzerbaijan, C=IR"
-          
-          $ANDROID_HOME/build-tools/34.0.0/zipalign -v -p 4 app-release-unsigned.apk BodyMod-v1.0.5-Aligned.apk
-          $ANDROID_HOME/build-tools/34.0.0/apksigner sign --ks bodymod-release.keystore --ks-key-alias bodymod_key --ks-pass pass:MatinBodyMod2026 --key-pass pass:MatinBodyMod2026 --out BodyMod-Official-Market.apk BodyMod-v1.0.5-Aligned.apk
+          $ANDROID_HOME/build-tools/34.0.0/zipalign -v -p 4 app-release-unsigned.apk BodyMod-Aligned.apk
+          $ANDROID_HOME/build-tools/34.0.0/apksigner sign --ks bodymod-release.keystore --ks-key-alias bodymod_key --ks-pass pass:MatinBodyMod2026 --key-pass pass:MatinBodyMod2026 --out BodyMod-Official-Market.apk BodyMod-Aligned.apk
 
-      - name: 🎁 خروجی گرفتن فایل APK آماده نصب
+      - name: 🎁 آپلود فایل APK
         uses: actions/upload-artifact@v4
         with:
           name: BodyMod-Android-Package
-          path: |
-            bodymod_native/platforms/android/app/build/outputs/apk/release/BodyMod-Official-Market.apk
-            bodymod_native/platforms/android/app/build/outputs/apk/release/bodymod-release.keystore
+          path: bodymod_native/platforms/android/app/build/outputs/apk/release/BodyMod-Official-Market.apk
