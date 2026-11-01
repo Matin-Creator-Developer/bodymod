@@ -30,7 +30,7 @@ jobs:
         with:
           node-version: '20'
 
-      - name: 📦 ساخت APK با آیکون اختصاصی، ویدیوی زمین و برگشت خودکار از کروم
+      - name: 📦 ساخت APK با آیکون و تنظیمات بومی
         run: |
           export ANDROID_SDK_ROOT=$ANDROID_HOME
           npm install -g cordova
@@ -44,7 +44,7 @@ jobs:
 
           cat << 'EOF' > config.xml
           <?xml version='1.0' encoding='utf-8'?>
-          <widget id="ir.matinmohammadi.bodymod" version="1.0.7" android-versionCode="8" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android">
+          <widget id="ir.matinmohammadi.bodymod" version="1.0.8" android-versionCode="9" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android">
               <name>BodyMod</name>
               <description>سوپراپلیکیشن هوشمند بادی‌مود</description>
               <author email="diaperloveradultbaby5@gmail.com" href="https://bodymod.matin-mohammadi.ir">Matin Mohammadi</author>
@@ -79,7 +79,7 @@ jobs:
 
           cordova platform add android@13.0.0
 
-          # ۱. تزریق دریافت‌کننده اتوماتیک لاگین گوگل از کروم به داخل MainActivity.java
+          # تزریق جاوا برای لغو اینتنت گوگل و برگشت خودکار
           MAIN_ACT="platforms/android/app/src/main/java/ir/matinmohammadi/bodymod/MainActivity.java"
           cat << 'EOF' > "$MAIN_ACT"
           package ir.matinmohammadi.bodymod;
@@ -127,7 +127,7 @@ jobs:
           }
           EOF
 
-          # ۲. حذف ۱۰۰٪ آیکون ربات کوردووا و جایگزینی اجباری با icon.png در تمام پوشه‌ها
+          # جایگزینی کامل آیکون‌ها
           if [ -f "../icon.png" ]; then
             RES_DIR="platforms/android/app/src/main/res"
             rm -rf $RES_DIR/mipmap-anydpi-v26
@@ -146,10 +146,11 @@ jobs:
 
           cordova build android --release -- --packageType=apk
 
-      - name: 🔐 امضای دیجیتال رسمی APK
+      - name: 🔐 امضای دیجیتال APK با کلید ثابت
         run: |
           cd bodymod_native/platforms/android/app/build/outputs/apk/release
-          keytool -genkey -v -keystore bodymod-release.keystore -alias bodymod_key -keyalg RSA -keysize 2048 -validity 10000 -storepass MatinBodyMod2026 -keypass MatinBodyMod2026 -dname "CN=Matin Mohammadi, OU=BodyMod, O=MatinCreator, L=Urmia, S=WestAzerbaijan, C=IR"
+          # کپی کردن فایل keystore که در پروژه ساختیم
+          cp ../../../../../bodymod-release.keystore .
           $ANDROID_HOME/build-tools/34.0.0/zipalign -v -p 4 app-release-unsigned.apk BodyMod-Aligned.apk
           $ANDROID_HOME/build-tools/34.0.0/apksigner sign --ks bodymod-release.keystore --ks-key-alias bodymod_key --ks-pass pass:MatinBodyMod2026 --key-pass pass:MatinBodyMod2026 --out BodyMod-Official-Market.apk BodyMod-Aligned.apk
 
