@@ -96,7 +96,7 @@
         .drawer-nav-list { display: flex; flex-direction: column; gap: 6px; }
         .drawer-item { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 11px 12px; border-radius: 12px; border: 1px solid transparent; background: transparent; color: var(--text-main); font-size: 13px; font-weight: 800; cursor: pointer; text-align: right; }
         .drawer-item.active { background: var(--primary-glow); color: var(--primary); border-color: var(--primary); }
-        .drawer-footer { margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--border-color); }
+        .drawer-footer { margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--border-color); display: flex; flex-direction: column; gap: 6px; }
 
         .compact-beta-bar { background: var(--bg-card); border: 1px solid var(--border-color); border-right: 4px solid var(--accent); border-radius: 14px; padding: 10px 12px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 11px; }
         .date-navigator { background: var(--bg-card); border-radius: var(--radius-lg); padding: 12px; margin-bottom: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color); }
@@ -179,6 +179,24 @@
         .vip-trigger-btn { background: linear-gradient(135deg, var(--accent), #7209b7); color: #fff; border: none; padding: 7px 12px; border-radius: 999px; font-size: 11px; font-weight: 800; cursor: pointer; }
         .icon-btn { background: var(--bg-muted); border: 1px solid var(--border-color); color: var(--text-main); width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 15px; }
 
+        /* استایل دکمه رسمی ورود با گوگل */
+        .google-official-btn {
+            width: 100%;
+            background: #ffffff;
+            color: #1f2937;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 11px 14px;
+            font-size: 13px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
         .modal-backdrop { position: fixed; inset: 0; background: rgba(7, 10, 18, 0.88); backdrop-filter: blur(7px); display: none; align-items: flex-start; justify-content: center; z-index: 2000; padding: 16px 12px 150px 12px; overflow-y: auto; }
         .modal-backdrop.open { display: flex; }
         .modal-box { background: var(--bg-card); width: 100%; max-width: 460px; margin: auto 0; border-radius: 20px; padding: 18px 16px; border: 1px solid var(--primary); box-shadow: 0 0 30px var(--primary-glow); }
@@ -208,7 +226,7 @@
     <div style="font-size:11px; color:#94a3b8; margin-top:4px;">موتور سایبرنتیک BodyMod</div>
 </div>
 
-<!-- ۲. پاپ‌آپ آفلاین با ویدیوی کره زمین (فقط وقتی باز است پخش و تکرار می‌شود و با خروج کامل قطع می‌شود) -->
+<!-- ۲. پاپ‌آپ آفلاین با ویدیوی کره زمین (وابسته به باز بودن پاپ‌آپ) -->
 <div class="offline-cyber-modal" id="offlineModal">
     <div class="offline-cyber-box">
         <div class="earth-video-container">
@@ -226,7 +244,7 @@
 
 <div class="cyber-toast" id="cyberToast"></div>
 
-<!-- منوی همبرگری کشویی -->
+<!-- منوی همبرگری کشویی (به همراه دکمه خروج و پاکسازی کش) -->
 <div class="drawer-backdrop" id="drawerBackdrop" onclick="closeDrawer()"></div>
 <aside class="side-drawer" id="sideDrawer">
     <div>
@@ -239,18 +257,18 @@
             <div style="font-size:11px; color:var(--text-muted); margin-top:2px;" id="drawerUserSub">برای ذخیره ابری وارد حساب شو</div>
             <div style="font-size:11px; font-weight:800; color:var(--carbs); margin-top:4px;" id="drawerVipStatus">وضعیت: نسخه پایه (آفلاین)</div>
             <div style="display:flex; gap:6px; margin-top:8px;">
-                <button class="btn-primary" style="flex:1; padding:8px; font-size:11px;" onclick="closeDrawer(); openAuthModal();">🔐 حساب کاربری</button>
+                <button class="btn-primary" style="flex:1; padding:8px; font-size:11px;" onclick="closeDrawer(); openAuthModal();">🔐 ورود / تغییر حساب</button>
                 <button class="nav-arrow-btn" style="flex:1; padding:8px; font-size:11px; border-color:var(--primary); color:var(--primary);" onclick="switchTab('settingsTab')">👤 پروفایل من</button>
             </div>
         </div>
         <nav class="drawer-nav-list">
             <button class="drawer-item active" data-tab="trackerTab" onclick="switchTab('trackerTab')"><span>🍽️ داشبورد کالری و آب</span><span>◀</span></button>
-            <button class="drawer-item" data-tab="settingsTab" onclick="switchTab('settingsTab')"><span>👤 پروفایل و پرونده سلامتی</span><span style="background:var(--primary-glow); color:var(--primary); font-size:10px; padding:1px 7px; border-radius:99px;">ویرایش</span></button>
+            <button class="drawer-item" data-tab="settingsTab" onclick="switchTab('settingsTab')"><span>👤 پروفایل و پرونده سلامتی</span><span id="profileLockBadge" style="background:var(--primary-glow); color:var(--primary); font-size:10px; padding:1px 7px; border-radius:99px;">ویرایش</span></button>
             <button class="drawer-item" data-tab="workoutTab" onclick="switchTab('workoutTab')"><span>💪 برنامه‌ساز تمرین و آتیش</span><span>🔥</span></button>
             <button class="drawer-item" data-tab="aiChatTab" onclick="switchTab('aiChatTab')"><span>🤖 مربی هوش مصنوعی</span><span>⚡</span></button>
             <button class="drawer-item" data-tab="marketVipTab" onclick="switchTab('marketVipTab')"><span>💎 اشتراک بتا و فروشگاه</span><span style="background:var(--accent); color:#fff; font-size:10px; padding:1px 7px; border-radius:99px;">VIP</span></button>
             <button class="drawer-item" data-tab="historyTab" onclick="switchTab('historyTab')"><span>📊 تاریخچه روزها و ماه‌ها</span><span>◀</span></button>
-            <!-- دکمه مخفی پنل مدیرعامل (فقط برای متین نمایش داده می‌شود) -->
+            <!-- دکمه مخفی پنل مدیرعامل -->
             <button class="drawer-item" id="ceoDrawerBtn" data-tab="ceoAdminTab" onclick="switchTab('ceoAdminTab')" style="display:none; border:1.5px solid var(--carbs); background:rgba(245,158,11,0.12); color:var(--carbs);">
                 <span>👑 پنل مدیرعامل (آمار کلان)</span>
                 <span>📊</span>
@@ -258,6 +276,11 @@
         </nav>
     </div>
     <div class="drawer-footer">
+        <!-- دکمه مستقیم خروج از حساب و پاکسازی کامل کش در منوی همبرگری -->
+        <button class="drawer-item" id="drawerLogoutBtn" onclick="fullLogoutAndClearCache()" style="display:none; background:rgba(239, 68, 68, 0.14); color:var(--danger); border-color:var(--danger);">
+            <span>🚪 خروج از حساب (پاکسازی کش)</span>
+            <span>✕</span>
+        </button>
         <button class="drawer-item" onclick="toggleTheme()" style="background:var(--bg-muted);"><span>🌓 تغییر تم (تیره / روشن)</span><span id="drawerThemeIcon">☀️</span></button>
     </div>
 </aside>
@@ -382,7 +405,7 @@
             </div>
         </div>
 
-        <!-- تحلیل هوشمند غذا با AI (هم اسم خوراکی و هم عکس غذا با مصرف سکه متفاوت) -->
+        <!-- تحلیل هوشمند غذا با AI (نیازمند ثبت‌نام و تکمیل پرونده) -->
         <div class="card" style="border:1.5px solid var(--primary);">
             <div class="card-header">
                 <div class="card-title">🤖 تحلیل هوشمند خوراکی با هوش مصنوعی</div>
@@ -507,7 +530,7 @@
         <div class="card" style="border:1.5px solid var(--primary);">
             <div class="card-header">
                 <div class="card-title">👤 کارت پرونده سلامتی و بدنی تو</div>
-                <button class="nav-arrow-btn" onclick="openAuthModal()" style="color:var(--primary); border-color:var(--primary);">🔐 مدیریت حساب</button>
+                <button class="nav-arrow-btn" onclick="openAuthModal()" style="color:var(--primary); border-color:var(--primary);">🔐 تغییر حساب</button>
             </div>
             <div id="profileSummaryBox" style="font-size:12px; color:var(--text-muted);">هنوز پرونده بدنی‌ت رو کامل نکردی رفیق! از فرم زیر مشخصاتت رو وارد و ذخیره کن.</div>
             <div class="profile-stats-grid" id="profileStatsGrid" style="display:none;"></div>
@@ -537,17 +560,6 @@
             </div>
             <button class="btn-primary" id="saveDirectProfileBtn" style="width:100%; padding:12px;">💾 ذخیره تغییرات پروفایل و بروزرسانی هوشمند کالری</button>
         </div>
-
-        <div class="card">
-            <div class="card-header"><div class="card-title">🎯 تنظیم دستی کالری و ماکروها (دلخواه)</div></div>
-            <div class="form-grid">
-                <div class="form-group full"><label class="form-label">هدف کالری روزانه</label><input type="tel" inputmode="numeric" id="manualCalInput" class="form-control" value="2000"></div>
-                <div class="form-group"><label class="form-label">پروتئین (g)</label><input type="tel" inputmode="numeric" id="manualProtInput" class="form-control" value="140"></div>
-                <div class="form-group"><label class="form-label">کربوهیدرات (g)</label><input type="tel" inputmode="numeric" id="manualCarbInput" class="form-control" value="220"></div>
-                <div class="form-group full"><label class="form-label">چربی (g)</label><input type="tel" inputmode="numeric" id="manualFatInput" class="form-control" value="65"></div>
-            </div>
-            <button class="btn-primary" id="saveManualGoalsBtn" style="width:100%; background:var(--bg-muted); color:var(--text-main); border:1px solid var(--primary);">✍️ ثبت دستی مقادیر بالا</button>
-        </div>
     </div>
 
     <!-- TAB 7: CEO ADMIN PANEL (مخصوص مدیرعامل - متین محمدی) -->
@@ -557,7 +569,7 @@
                 <div class="card-title" style="color:var(--carbs);">👑 داشبورد آمار کلان مدیرعامل (CEO Edition)</div>
                 <button class="btn-primary" onclick="fetchCeoStats()" style="background:var(--carbs); padding:6px 12px; font-size:11px;">🔄 بروزرسانی زنده آمار</button>
             </div>
-            <p style="font-size:11px; color:var(--text-muted); margin-bottom:10px;">تحلیل زنده جامعه آماری کاربران ثبت‌شده در دیتابیس کلودفلر (شهرها، میانگین سن، جنسیت و اهداف بدنی):</p>
+            <p style="font-size:11px; color:var(--text-muted); margin-bottom:10px;">تحلیل زنده جامعه آماری کاربران ثبت‌شده در دیتابیس کلودفلر (کل ثبت‌نامی‌ها، شهرها، میانگین سن، جنسیت و اهداف بدنی):</p>
             <div id="ceoStatsSummaryCards" class="profile-stats-grid" style="margin-bottom:14px;"></div>
             <div id="ceoDetailedBreakdown" style="font-size:12px; line-height:1.9;">برای مشاهده آمار، روی دکمه «🔄 بروزرسانی زنده آمار» بزنید.</div>
         </div>
@@ -569,18 +581,19 @@
     </footer>
 </div>
 
-<!-- مودال ورود (کد ۴ رقمی بله + تایمر ۳۰ ثانیه + هدایت به کروم برای انتخاب اکانت گوگل) -->
+<!-- مودال یکپارچه ورود (شماره موبایل بله و اکانت رسمی گوگل کنار هم) -->
 <div class="modal-backdrop" id="authModal">
     <div class="modal-box">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h3 style="font-size:15px; font-weight:900; color:var(--primary);">🔐 ورود به حساب BodyMod</h3>
+            <h3 style="font-size:15px; font-weight:900; color:var(--primary);">🔐 ورود یا ثبت‌نام در BodyMod</h3>
             <button class="icon-btn" onclick="closeModalById('authModal')">✕</button>
         </div>
 
         <div style="background:var(--bg-muted); border-right:3px solid var(--primary); padding:8px 10px; border-radius:10px; font-size:11px; margin-bottom:12px; color:var(--text-main);">
-            💡 <strong>توجه:</strong> برای دریافت کد تایید، حتماً لازمه که از قبل در پیام‌رسان <strong>«بله»</strong> ثبت‌نام کرده باشی؛ در غیر این صورت خیلی راحت از دکمه <strong>«ورود با حساب گوگل»</strong> پایین استفاده کن!
+            💡 <strong>توجه:</strong> برای دریافت کد تایید، حتماً لازمه که در پیام‌رسان <strong>«بله»</strong> ثبت‌نام کرده باشی یا از دکمه <strong>Google</strong> پایین استفاده کنی! (اگر قبلاً ثبت‌نام کردی، اطلاعاتت خودکار بازیابی میشه).
         </div>
 
+        <!-- بخش ۱: شماره موبایل بله -->
         <div style="margin-bottom:14px;">
             <div class="form-grid">
                 <div class="form-group full">
@@ -602,27 +615,31 @@
             <div style="display:flex; gap:8px;">
                 <button class="btn-primary" id="sendBaleOtpBtn" style="flex:1;">📲 ارسال کد ۴ رقمی در بله</button>
                 <button class="btn-primary" id="verifyBaleOtpBtn" style="flex:1; display:none; background:var(--success);">✅ تایید و ادامه</button>
-                <button class="nav-arrow-btn" id="logoutBtn" style="display:none; color:var(--danger);">خروج از حساب</button>
             </div>
         </div>
 
-        <!-- ورود با گوگل از طریق کروم با بازگشت خودکار به برنامه -->
-        <div style="border-top:1px dashed var(--border-color); padding-top:12px; text-align:center;">
-            <div style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">یا انتخاب سریع اکانت‌های گوگل داخل گوشیت:</div>
-            <button type="button" class="btn-primary" onclick="launchGoogleAuthViaChrome()" style="width:100%; background:#ffffff; color:#0f172a; border:1.5px solid #cbd5e1; display:flex; align-items:center; justify-content:center; gap:8px; padding:11px;">
-                <strong style="color:#4285F4; font-size:16px;">G</strong>
-                <span>ورود با حساب گوگل (انتخاب اکانت در کروم)</span>
+        <!-- بخش ۲: دکمه استاندارد با لوگوی ۴ رنگ رسمی گوگل -->
+        <div style="border-top:1px dashed var(--border-color); padding-top:14px; text-align:center;">
+            <div style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">یا ورود مستقیم با حساب گوگل:</div>
+            <button type="button" class="google-official-btn" onclick="launchDirectGoogleAuth()">
+                <svg width="20" height="20" viewBox="0 0 48 48">
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                </svg>
+                <span>ورود به سیستم با Google</span>
             </button>
         </div>
     </div>
 </div>
 
-<!-- مودال تکمیل مشخصات بدنی اولیه + قوانین فاز آزمایشی -->
+<!-- مودال تکمیل مشخصات بدنی (برای کاربران جدید — اگر با ضربدر بسته شود، امکانات آنلاین قفل می‌شوند) -->
 <div class="modal-backdrop" id="onboardingModal">
     <div class="modal-box">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h3 style="font-size:15px; font-weight:900; color:var(--primary);">🧬 تکمیل پرونده بدنی تو (اجباری)</h3>
-            <button class="icon-btn" id="closeOnboardingBtn" style="display:none;" onclick="closeModalById('onboardingModal')">✕</button>
+            <h3 style="font-size:15px; font-weight:900; color:var(--primary);">🧬 تکمیل پرونده سلامتی (برای باز شدن قفل‌ها)</h3>
+            <button class="icon-btn" onclick="dismissOnboardingAndLockFeatures()">✕</button>
         </div>
         <div class="form-grid">
             <div class="form-group"><label class="form-label">اسم کوچیکت *</label><input type="text" id="obName" class="form-control" placeholder="حداقل دو حرف"></div>
@@ -654,7 +671,7 @@
             </label>
         </div>
 
-        <button class="btn-primary" id="submitOnboardingBtn" style="width:100%; padding:12px;">🚀 ثبت اطلاعات و شروع</button>
+        <button class="btn-primary" id="submitOnboardingBtn" style="width:100%; padding:12px;">🚀 ثبت اطلاعات و باز کردن قفل امکانات</button>
     </div>
 </div>
 
@@ -691,7 +708,6 @@
     const getShamsiMonth = (iso) => { try { return new Intl.DateTimeFormat('fa-IR-u-ca-persian', { month: 'long', year: 'numeric' }).format(parseISO(iso)); } catch { return iso.slice(0, 7); } };
     const getRelLabel = (iso) => { const diff = Math.round((parseISO(iso) - parseISO(getLocalISODate(new Date()))) / 86400000); return diff === 0 ? 'امروز' : diff === -1 ? 'دیروز' : diff === 1 ? 'فردا' : diff < -1 ? `${toFa(Math.abs(diff))} روز قبل` : `${toFa(diff)} روز بعد`; };
 
-    // تولید داینامیک دکمه‌های حمایت مالی درون‌برنامه‌ای
     const SUPPORT_SKUS = [
         ['support_10k', '🌱 ۱۰,۰۰۰ تومان'], ['support_20k', '☕ ۲۰,۰۰۰ تومان'],
         ['support_50k', '⚡ ۵۰,۰۰۰ تومان'], ['support_100k', '🔥 ۱۰۰,۰۰۰ تومان'],
@@ -715,7 +731,7 @@
     window.closeModalById = (id) => { document.getElementById(id).classList.remove('open'); if (!document.querySelector('.modal-backdrop.open')) document.body.classList.remove('modal-open'); };
 
     let toastTimer = null;
-    window.showToast = (msg) => { const el = document.getElementById('cyberToast'); el.textContent = msg; el.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 3800); };
+    window.showToast = (msg) => { const el = document.getElementById('cyberToast'); el.textContent = msg; el.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 4000); };
 
     /* رادار پینگ هوشمند */
     let netRadarState = { status: 'online', checking: false, busySyncing: false, failStreak: 0 };
@@ -755,9 +771,7 @@
     window.showPushupLoader = (text = "درحال تمرین... (لودینگ)") => { clearTimeout(loaderHideTimeout); loaderShownAt = Date.now(); document.getElementById('pushupLoaderText').textContent = text; document.getElementById('pushupLoader').classList.add('active'); };
     window.hidePushupLoader = (cb) => { const rem = Math.max(0, 2500 - (Date.now() - loaderShownAt)); clearTimeout(loaderHideTimeout); loaderHideTimeout = setTimeout(() => { document.getElementById('pushupLoader').classList.remove('active'); if (cb) cb(); }, rem); };
 
-    /* ==========================================================================
-       سینک ۱۰۰٪ صدا و تصویر ویدیوی کره زمین با پاپ‌آپ قطعی اینترنت
-       ========================================================================== */
+    /* سینک ۱۰۰٪ صدا و تصویر ویدیوی کره زمین با پاپ‌آپ قطعی اینترنت */
     let lastRetryCallback = null;
     window.showOfflineModal = async (reasonText, retryFn = null) => {
         clearTimeout(loaderHideTimeout);
@@ -771,7 +785,6 @@
 
         document.getElementById('offlineModal').classList.add('open');
 
-        // فقط در لحظه باز شدن پاپ‌آپ، ویدیو لود و با صدا در حالت لوپ پخش می‌شود
         const vid = document.getElementById('earthBurnVideo');
         if (vid) {
             if (!vid.getAttribute('src')) vid.setAttribute('src', 'earth_burn.mp4');
@@ -817,21 +830,113 @@
     ];
     const DEFAULT_FOODS = RAW_FOODS.map(([id, name, cat, cal100, prot100, carb100, fat100, units]) => ({ id, name, cat, cal100, prot100, carb100, fat100, units }));
 
-    const STORAGE_KEY = 'bodymod_app_v11';
-    let state = {
+    const STORAGE_KEY = 'bodymod_app_v12';
+    const getFreshDefaultState = () => ({
         theme: document.documentElement.getAttribute('data-theme') || 'dark',
         selectedDate: todayISO, selectedMeal: 'breakfast', selectedCat: 'none',
         bodyCoins: 30, vipExpiresAt: 0, streakCount: 0, lastWorkoutDate: '', savedWorkoutPlan: '',
         authUser: { email: '', phone: '', loggedIn: false },
-        userProfile: { profileCompleted: false, nickname: '', birthDate: '', age: 0, gender: 'male', city: '', height: '', weight: '', activity: 1.55, goalMode: 'maintain', termsAccepted: false },
+        userProfile: { profileCompleted: false, nickname: '', birthDate: '', age: 0, gender: '', city: '', height: '', weight: '', activity: 1.55, goalMode: '', termsAccepted: false },
         goals: { cal: 2000, prot: 140, carb: 220, fat: 65, waterGlasses: 10, waterAuto: true },
         customFoods: [], daysLog: {}
-    };
+    });
+
+    let state = getFreshDefaultState();
 
     const getActiveUserKey = () => (state.authUser.email || state.authUser.phone || "").toLowerCase().trim();
     const isCeoUser = () => {
         const k = getActiveUserKey();
         return k && (k === CEO_GMAIL.toLowerCase().trim() || k === CEO_PHONE.trim() || k.endsWith("9058586834"));
+    };
+
+    /* ==========================================================================
+       گارد قفل امکانات: اگر کاربر وارد نشده یا فرم پرونده را با ضربدر بسته باشد، همه چیز قفل است!
+       ========================================================================== */
+    const requireCompletedAccount = (featureName) => {
+        if (!state.authUser.loggedIn || !getActiveUserKey()) {
+            showToast(`🔒 برای استفاده از «${featureName}»، اول باید وارد حسابت بشی رفیق!`);
+            openAuthModal();
+            return false;
+        }
+        if (!state.userProfile || !state.userProfile.profileCompleted) {
+            showToast(`🔒 تا پرونده سلامتیت رو کامل نکنی، بخش «${featureName}» قفله رفیق!`);
+            openOnboardingModal();
+            return false;
+        }
+        return true;
+    };
+
+    window.dismissOnboardingAndLockFeatures = () => {
+        closeModalById('onboardingModal');
+        showToast('⚠️ فرم ثبت‌نام رو بستی! هوش مصنوعی و فروشگاه تا تکمیل فرم قفل هستن 🔒');
+        renderAll();
+    };
+
+    /* پاکسازی کامل کش هنگام خروج یا تعویض اکانت */
+    window.fullLogoutAndClearCache = () => {
+        const currentTheme = state.theme;
+        try {
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem('bodymod_app_v11');
+            localStorage.removeItem('bodymod_app_fixed_v10');
+            localStorage.removeItem('bodymod_app_fixed_v9');
+        } catch (e) {}
+        state = getFreshDefaultState();
+        state.theme = currentTheme;
+        resetAuthModalUI();
+        closeDrawer();
+        switchTab('trackerTab');
+        renderAll();
+        showToast('از حساب خارج شدی و کش برنامه کامل پاک شد! 🧹👋');
+    };
+
+    const resetAuthModalUI = () => {
+        clearInterval(otpTimer);
+        document.getElementById('balePhoneInput').value = '';
+        document.getElementById('baleOtpInput').value = '';
+        document.getElementById('baleOtpGroup').style.display = 'none';
+        document.getElementById('sendBaleOtpBtn').style.display = 'inline-block';
+        document.getElementById('verifyBaleOtpBtn').style.display = 'none';
+    };
+
+    const clearOnboardingInputs = () => {
+        ['obName', 'obCity', 'obBirthDay', 'obBirthMonth', 'obBirthYear', 'obGender', 'obHeight', 'obWeight', 'obGoalMode'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        document.getElementById('obTermsAccept').checked = false;
+    };
+
+    /* بازیابی خودکار اطلاعات کاربر قدیمی از کلودفلر یا باز کردن فرم برای کاربر جدید */
+    const applyServerUserSession = (authInfo, serverUser) => {
+        const currentTheme = state.theme;
+        state = getFreshDefaultState();
+        state.theme = currentTheme;
+        state.authUser = { ...authInfo, loggedIn: true };
+
+        if (serverUser) {
+            state.bodyCoins = serverUser.bodyCoins ?? 30;
+            state.vipExpiresAt = serverUser.vipExpiresAt ?? 0;
+            if (serverUser.daysLog && Object.keys(serverUser.daysLog).length > 0) state.daysLog = serverUser.daysLog;
+            if (serverUser.customFoods) state.customFoods = serverUser.customFoods;
+            if (serverUser.goals) state.goals = { ...state.goals, ...serverUser.goals };
+            if (serverUser.userProfile && serverUser.userProfile.profileCompleted) {
+                state.userProfile = { ...state.userProfile, ...serverUser.userProfile, profileCompleted: true };
+            }
+        }
+
+        saveState();
+        populateDirectProfileForm();
+        renderAll();
+
+        if (state.userProfile && state.userProfile.profileCompleted) {
+            showToast(`خوش برگشتی ${state.userProfile.nickname} جان! اطلاعاتت از سرور بازیابی شد ☁️🔥`);
+        } else {
+            clearOnboardingInputs();
+            if (authInfo.suggestedName) document.getElementById('obName').value = authInfo.suggestedName;
+            openOnboardingModal();
+            showToast('حساب جدید! لطفاً پرونده سلامتیت رو کامل کن تا قفل امکانات باز بشه 🧬');
+        }
     };
 
     const computeAutoWaterGlasses = (cal, w, g) => Math.max(6, Math.min(22, Math.round(((cal * 0.6) + ((w || 75) * 18) + ((g === 'muscle' || g === 'gain_weight') ? 300 : 0)) / 200)));
@@ -860,7 +965,11 @@
         closeDrawer(); renderAll();
     };
     window.toggleTheme = () => { state.theme = state.theme === 'dark' ? 'light' : 'dark'; localStorage.setItem('bodymod_user_theme', state.theme); renderAll(); };
-    window.handleHeaderAuthClick = () => (state.authUser.loggedIn && state.userProfile.profileCompleted) ? switchTab('settingsTab') : openAuthModal();
+    window.handleHeaderAuthClick = () => {
+        if (!state.authUser.loggedIn) openAuthModal();
+        else if (!state.userProfile.profileCompleted) openOnboardingModal();
+        else switchTab('settingsTab');
+    };
 
     const populateDirectProfileForm = () => {
         const p = state.userProfile;
@@ -896,24 +1005,32 @@
     };
 
     /* ==========================================================================
-       ورود گوگل از طریق کروم و برگشت خودکار به برنامه (Deep Link: bodymod://auth)
+       ورود مستقیم گوگل بدون پاپ‌آپ واسطه (مستقیم به انتخاب اکانت گوگل در مرورگر پیش‌فرض)
        ========================================================================== */
-    window.launchGoogleAuthViaChrome = () => {
-        window.open(`${WORKER_BASE_URL}/auth/google-chrome`, '_system');
+    window.launchDirectGoogleAuth = () => {
+        window.open(`${WORKER_BASE_URL}/auth/google-direct`, '_system');
     };
 
     window.onGoogleChromeAuthSuccess = async (email, givenName) => {
         if (!email) return;
-        state.authUser = { email: email.toLowerCase().trim(), phone: '', loggedIn: true };
-        if (!state.userProfile.nickname && givenName) state.userProfile.nickname = givenName;
+        const cleanEmail = email.toLowerCase().trim();
         closeModalById('authModal');
-        showToast(`خوش اومدی ${givenName || email}! حساب گوگل متصل شد 🎉`);
-        if (!state.userProfile.profileCompleted) openOnboardingModal(false);
-        else { populateDirectProfileForm(); await syncToCloudflare(true); renderAll(); }
+        showPushupLoader('درحال بررسی پرونده تو در کلودفلر...');
+        try {
+            const res = await fetch(`${WORKER_BASE_URL}/api/user/profile?userKey=${encodeURIComponent(cleanEmail)}`);
+            const data = await res.json();
+            hidePushupLoader(() => {
+                applyServerUserSession({ email: cleanEmail, phone: '', suggestedName: givenName || '' }, data.found ? data.user : null);
+            });
+        } catch {
+            hidePushupLoader(() => {
+                applyServerUserSession({ email: cleanEmail, phone: '', suggestedName: givenName || '' }, null);
+            });
+        }
     };
 
     /* ==========================================================================
-       👑 دریافت آمار کلان دیتابیس برای پنل مدیرعامل (شهرها، سن، جنسیت، اهداف)
+       👑 دریافت آمار کلان دیتابیس برای پنل مدیرعامل
        ========================================================================== */
     window.fetchCeoStats = async () => {
         const userKey = getActiveUserKey();
@@ -927,23 +1044,23 @@
             const data = await res.json();
             hidePushupLoader(() => {
                 if (!res.ok || !data.ok) { showToast(data.error || 'خطا در دریافت آمار'); return; }
-                const total = Math.max(1, data.totalUsers || 0);
-                const mPct = Math.round(((data.genders?.male || 0) / total) * 100);
-                const fPct = Math.round(((data.genders?.female || 0) / total) * 100);
+                const totalCompleted = Math.max(1, data.totalUsers || 0);
+                const mPct = Math.round(((data.genders?.male || 0) / totalCompleted) * 100);
+                const fPct = Math.round(((data.genders?.female || 0) / totalCompleted) * 100);
 
                 document.getElementById('ceoStatsSummaryCards').innerHTML = `
-                    <div class="profile-stat-box"><div class="profile-stat-label">👥 کل پرونده‌ها</div><div class="profile-stat-val">${toFa(data.totalUsers)} نفر</div></div>
-                    <div class="profile-stat-box"><div class="profile-stat-label">🎂 میانگین سن</div><div class="profile-stat-val">${toFa(data.avgAge)} سال</div></div>
+                    <div class="profile-stat-box"><div class="profile-stat-label">📱 کل ثبت‌نامی‌ها</div><div class="profile-stat-val">${toFa(data.totalRegistered ?? data.totalUsers)} نفر</div></div>
+                    <div class="profile-stat-box"><div class="profile-stat-label">🧬 پرونده کامل</div><div class="profile-stat-val">${toFa(data.totalUsers)} نفر (میانگین ${toFa(data.avgAge)} سال)</div></div>
                     <div class="profile-stat-box"><div class="profile-stat-label">🚻 جنسیت</div><div class="profile-stat-val">مرد: ${toFa(mPct)}٪ | زن: ${toFa(fPct)}٪</div></div>
                 `;
 
                 const cityRows = Object.entries(data.cities || {}).sort((a, b) => b[1] - a[1]).map(([c, cnt]) =>
-                    `<div>📍 <strong>${c}:</strong> ${toFa(cnt)} نفر (${toFa(Math.round((cnt / total) * 100))}٪)</div>`
+                    `<div>📍 <strong>${c}:</strong> ${toFa(cnt)} نفر (${toFa(Math.round((cnt / totalCompleted) * 100))}٪)</div>`
                 ).join('') || '<div>هنوز شهری ثبت نشده</div>';
 
                 const goalMap = { lose: 'کات و کاهش وزن', maintain: 'تثبیت وزن', gain_weight: 'افزایش وزن عمومی', muscle: 'عضله‌سازی ورزشی' };
                 const goalRows = Object.entries(data.goals || {}).map(([g, cnt]) =>
-                    `<div>🎯 <strong>${goalMap[g] || g}:</strong> ${toFa(cnt)} نفر (${toFa(Math.round((cnt / total) * 100))}٪)</div>`
+                    `<div>🎯 <strong>${goalMap[g] || g}:</strong> ${toFa(cnt)} نفر (${toFa(Math.round((cnt / totalCompleted) * 100))}٪)</div>`
                 ).join('');
 
                 document.getElementById('ceoDetailedBreakdown').innerHTML = `
@@ -960,9 +1077,7 @@
         }
     };
 
-    /* ==========================================================================
-       تحلیل هوشمند خوراکی با AI (هم اسم خوراکی و هم عکس غذا) و ثبت خودکار در وعده
-       ========================================================================== */
+    /* تحلیل هوشمند خوراکی با AI */
     let lastAiParsedFood = null;
     const handleAiFoodResponse = (replyText, coinCost, remainingCoins) => {
         state.bodyCoins = remainingCoins ?? state.bodyCoins;
@@ -998,15 +1113,15 @@
     };
 
     const analyzeFoodByName = async () => {
+        if (!requireCompletedAccount('تحلیل هوشمند اسم غذا')) return;
         const txt = document.getElementById('aiFoodTextInput').value.trim();
         if (!txt) { showToast('رفیق اول اسم و مقدار خوراکی رو بنویس! ✍️'); return; }
-        if (!state.userProfile.profileCompleted) { openOnboardingModal(true); return; }
 
         showPushupLoader('درحال تمرین... (تحلیل هوشمند خوراکی با AI)');
         try {
             const res = await fetch(`${WORKER_BASE_URL}/api/ai/chat`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userKey: getActiveUserKey() || 'guest', prompt: `این خوراکی را تحلیل کن و کالری و ماکروهایش را بگو: ${txt}`, requestType: 'food_text', modelType: 'lite' })
+                body: JSON.stringify({ userKey: getActiveUserKey(), prompt: `این خوراکی را تحلیل کن و کالری و ماکروهایش را بگو: ${txt}`, requestType: 'food_text', modelType: 'lite' })
             });
             const data = await res.json();
             hidePushupLoader(() => {
@@ -1019,11 +1134,14 @@
     };
     document.getElementById('analyzeFoodTextBtn').addEventListener('click', analyzeFoodByName);
 
-    document.getElementById('triggerFoodCameraBtn').addEventListener('click', () => document.getElementById('foodImageInput').click());
+    document.getElementById('triggerFoodCameraBtn').addEventListener('click', () => {
+        if (!requireCompletedAccount('اسکن عکس غذا با هوش مصنوعی')) return;
+        document.getElementById('foodImageInput').click();
+    });
     document.getElementById('foodImageInput').addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        if (!state.userProfile.profileCompleted) { openOnboardingModal(true); return; }
+        if (!requireCompletedAccount('اسکن عکس غذا با هوش مصنوعی')) return;
 
         showPushupLoader('درحال تمرین... (اسکن عکس غذا با AI — ۶ بادی‌کوین)');
         const reader = new FileReader();
@@ -1038,7 +1156,7 @@
                 try {
                     const res = await fetch(`${WORKER_BASE_URL}/api/ai/chat`, {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ userKey: getActiveUserKey() || 'guest', prompt: 'این عکس غذای من است. دقیق بگو چیست و چقدر کالری و ماکرو دارد؟', imageBase64: base64Data, requestType: 'food_image', modelType: 'flash' })
+                        body: JSON.stringify({ userKey: getActiveUserKey(), prompt: 'این عکس غذای من است. دقیق بگو چیست و چقدر کالری و ماکرو دارد؟', imageBase64: base64Data, requestType: 'food_image', modelType: 'flash' })
                     });
                     const data = await res.json();
                     hidePushupLoader(() => {
@@ -1052,18 +1170,18 @@
         reader.readAsDataURL(file);
     });
 
-    /* چت و برنامه ورزشی */
+    /* چت و برنامه ورزشی (قفل در صورت عدم ثبت‌نام) */
     const sendAiChatMessage = async () => {
+        if (!requireCompletedAccount('چت با مربی هوشمند')) return;
         const inp = document.getElementById('aiChatInput'), prompt = inp.value.trim();
         if (!prompt) return;
-        if (!state.userProfile.profileCompleted) { openOnboardingModal(true); return; }
         const box = document.getElementById('aiChatMessagesBox');
         box.innerHTML += `<div class="chat-msg user">${prompt}</div>`; inp.value = '';
         showPushupLoader('درحال تمرین... (مربی هوشمند در حال پاسخ)');
         try {
             const res = await fetch(`${WORKER_BASE_URL}/api/ai/chat`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userKey: getActiveUserKey() || 'guest', prompt, requestType: 'chat', modelType: document.getElementById('aiModelSelector').value })
+                body: JSON.stringify({ userKey: getActiveUserKey(), prompt, requestType: 'chat', modelType: document.getElementById('aiModelSelector').value })
             });
             const data = await res.json();
             hidePushupLoader(() => {
@@ -1076,13 +1194,13 @@
     document.getElementById('sendAiChatBtn').addEventListener('click', sendAiChatMessage);
 
     const generateWorkoutPlanAction = async () => {
-        if (!state.userProfile.profileCompleted) { openOnboardingModal(true); return; }
+        if (!requireCompletedAccount('طراحی برنامه تمرینی با AI')) return;
         const prompt = `برنامه تمرینی هفتگی برای محل:${document.getElementById('wkLocation').value} | مربی:${document.getElementById('wkCoach').value} | مدت:${document.getElementById('wkMonths').value} ماهه | تجهیزات:${document.getElementById('wkEquipment').value || 'وزن بدن'}`;
         showPushupLoader('درحال تمرین... (طراحی برنامه ورزشی)');
         try {
             const res = await fetch(`${WORKER_BASE_URL}/api/ai/chat`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userKey: getActiveUserKey() || 'guest', prompt, requestType: 'workout_plan', modelType: 'flash' })
+                body: JSON.stringify({ userKey: getActiveUserKey(), prompt, requestType: 'workout_plan', modelType: 'flash' })
             });
             const data = await res.json();
             hidePushupLoader(() => {
@@ -1095,8 +1213,8 @@
     document.getElementById('generateWorkoutPlanBtn').addEventListener('click', generateWorkoutPlanAction);
 
     window.purchaseMarketSku = async (sku, title) => {
+        if (!requireCompletedAccount('خرید اشتراک و فروشگاه')) return;
         const userKey = getActiveUserKey();
-        if (!userKey || !state.userProfile.profileCompleted) { showToast('اول وارد حسابت شو رفیق! 🔐'); openAuthModal(); return; }
         showPushupLoader('درحال تمرین... (اتصال به درگاه مارکت)');
         try {
             const res = await fetch(`${WORKER_BASE_URL}/api/payment/market/verify`, {
@@ -1111,12 +1229,14 @@
     };
 
     /* ثبت و ویرایش پروفایل */
-    window.openOnboardingModal = (allowClose = false) => {
-        document.getElementById('closeOnboardingBtn').style.display = allowClose ? 'inline-flex' : 'none';
-        openModalById('onboardingModal');
-    };
+    window.openOnboardingModal = () => openModalById('onboardingModal');
 
     const saveProfileFromInputs = async (prefix, isModal) => {
+        if (!state.authUser.loggedIn || !getActiveUserKey()) {
+            showToast('رفیق اول با شماره بله یا گوگل وارد حسابت شو! 🔐');
+            openAuthModal();
+            return;
+        }
         const nickname = document.getElementById(`${prefix}Name`).value.trim();
         const city = document.getElementById(`${prefix}City`).value.trim();
         const bDay = parseInt(toEnDigits(document.getElementById(`${prefix}BirthDay`).value));
@@ -1140,14 +1260,17 @@
         if (isModal) closeModalById('onboardingModal');
         populateDirectProfileForm(); renderAll();
         await syncToCloudflare(true);
-        showToast(`پرونده سلامتی آپدیت شد! هدف: ${toFa(state.goals.cal)} کالری 🔥`);
+        showToast(`ایول ${nickname} جان! قفل همه امکانات باز شد (هدف: ${toFa(state.goals.cal)} کالری) 🔥`);
     };
 
     document.getElementById('submitOnboardingBtn').addEventListener('click', () => saveProfileFromInputs('ob', true));
     document.getElementById('saveDirectProfileBtn').addEventListener('click', () => saveProfileFromInputs('profEdit', false));
 
     /* کد ۴ رقمی بله و تایمر ۳۰ ثانیه */
-    window.openAuthModal = () => openModalById('authModal');
+    window.openAuthModal = () => {
+        resetAuthModalUI();
+        openModalById('authModal');
+    };
     let otpTimer = null;
     const startOtpCountdown = () => {
         clearInterval(otpTimer); let sec = 30;
@@ -1190,7 +1313,7 @@
         const fullPhone = getFormattedFullPhone(), code = toEnDigits(document.getElementById('baleOtpInput').value).trim();
         if (!fullPhone || code.length !== 4) { showToast('کد ۴ رقمی رو کامل وارد کن رفیق!'); return; }
         netRadarState.busySyncing = true;
-        showPushupLoader('درحال تمرین... (بررسی کد ۴ رقمی)');
+        showPushupLoader('درحال تمرین... (بررسی کد ۴ رقمی و پرونده تو)');
         try {
             const res = await fetch(`${WORKER_BASE_URL}/api/auth/bale/verify-otp`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1198,23 +1321,15 @@
             });
             const data = await res.json();
             netRadarState.busySyncing = false;
-            hidePushupLoader(async () => {
+            hidePushupLoader(() => {
                 if (!data.ok) { showToast(data.error || 'کد اشتباهه!'); return; }
                 clearInterval(otpTimer);
-                if (data.user) {
-                    state.bodyCoins = data.user.bodyCoins ?? state.bodyCoins;
-                    state.vipExpiresAt = data.user.vipExpiresAt ?? state.vipExpiresAt;
-                    if (data.user.userProfile) state.userProfile = { ...state.userProfile, ...data.user.userProfile };
-                }
-                state.authUser = { email: '', phone: fullPhone, loggedIn: true };
                 closeModalById('authModal');
-                if (!state.userProfile.profileCompleted) openOnboardingModal(false);
-                else { populateDirectProfileForm(); await syncToCloudflare(false); renderAll(); }
+                // پاکسازی کش اکانت قبلی و اعمال هوشمند اطلاعات سرور (ادامه برای قدیمی‌ها / فرم برای جدیدها)
+                applyServerUserSession({ email: '', phone: fullPhone }, data.user);
             });
         } catch { netRadarState.busySyncing = false; showOfflineModal('ارتباط با سرور برقرار نشد!', () => document.getElementById('verifyBaleOtpBtn').click()); }
     });
-
-    document.getElementById('logoutBtn').addEventListener('click', () => { state.authUser = { email: '', phone: '', loggedIn: false }; closeModalById('authModal'); renderAll(); showToast('از حساب خارج شدی 👋'); });
 
     const ensureDay = (iso) => {
         if (!state.daysLog[iso]) state.daysLog[iso] = { targetCal: state.goals.cal, waterGlasses: 0, meals: { breakfast: [], lunch: [], dinner: [], snack: [] } };
@@ -1244,25 +1359,25 @@
 
         const p = state.userProfile, nick = (p.nickname || '').trim(), userKey = getActiveUserKey(), ceo = isCeoUser();
         const isVip = ceo || (state.vipExpiresAt && state.vipExpiresAt > Date.now());
+        const isProfileDone = !!(p && p.profileCompleted);
 
-        // نمایش دکمه پنل مدیرعامل در منوی همبرگری فقط برای متین
         document.getElementById('ceoDrawerBtn').style.display = ceo ? 'flex' : 'none';
+        document.getElementById('drawerLogoutBtn').style.display = (state.authUser.loggedIn || isProfileDone) ? 'flex' : 'none';
 
         document.getElementById('headerCoinsCount').textContent = toFa(ceo ? 9999 : (state.bodyCoins || 0));
         document.getElementById('streakFireCount').textContent = `${toFa(state.streakCount || 0)} روز`;
-        document.getElementById('userGreetingText').textContent = nick ? `سلام ${nick} عزیز (${p.city || 'ایران'}) 🔥` : 'بدن و متابولیسم خودت رو هک کن!';
-        document.getElementById('headerAuthText').textContent = (state.authUser.loggedIn || p.profileCompleted) ? `👤 ${nick || 'پروفایل'}` : '🔐 ورود';
-        document.getElementById('drawerUserName').textContent = nick ? `${nick} (${p.city || ''})` : 'کاربر مهمان 👋';
+        document.getElementById('userGreetingText').textContent = (isProfileDone && nick) ? `سلام ${nick} عزیز (${p.city || 'ایران'}) 🔥` : (state.authUser.loggedIn ? '⚠️ پرونده سلامتیت رو تکمیل کن تا قفل‌ها باز بشه!' : 'بدن و متابولیسم خودت رو هک کن!');
+        document.getElementById('headerAuthText').textContent = !state.authUser.loggedIn ? '🔐 ورود' : (!isProfileDone ? '⚠️ تکمیل ثبت‌نام' : `👤 ${nick}`);
+        document.getElementById('drawerUserName').textContent = (isProfileDone && nick) ? `${nick} (${p.city || ''})` : (state.authUser.loggedIn ? 'کاربر (پرونده ناقص 🔒)' : 'کاربر مهمان 👋');
         document.getElementById('drawerUserSub').textContent = userKey ? `حساب: ${userKey}` : 'حالت آفلاین فعال است';
-        document.getElementById('drawerVipStatus').textContent = ceo ? '👑 مدیرعامل (آنلاک دائمی)' : (isVip ? '💎 اشتراک VIP بتا: فعال' : '🔓 نسخه پایه آفلاین');
-        document.getElementById('logoutBtn').style.display = state.authUser.loggedIn ? 'inline-block' : 'none';
+        document.getElementById('drawerVipStatus').textContent = ceo ? '👑 مدیرعامل (آنلاک دائمی)' : (!isProfileDone ? '🔒 امکانات هوش مصنوعی قفل است' : (isVip ? '💎 اشتراک VIP بتا: فعال' : '🔓 نسخه پایه آفلاین'));
 
         if (state.savedWorkoutPlan) document.getElementById('savedWorkoutPlanBox').textContent = state.savedWorkoutPlan;
 
         const statsGridEl = document.getElementById('profileStatsGrid');
-        if (p.profileCompleted) {
+        if (isProfileDone) {
             const bmi = +((p.weight || 75) / Math.pow((p.height || 175) / 100, 2)).toFixed(1);
-            document.getElementById('profileSummaryBox').innerHTML = `<strong style="color:var(--success);">✅ پرونده سلامتی تو فعال است</strong>`;
+            document.getElementById('profileSummaryBox').innerHTML = `<strong style="color:var(--success);">✅ پرونده سلامتی تو فعال و سینک شده است (${userKey})</strong>`;
             statsGridEl.style.display = 'grid';
             statsGridEl.innerHTML = `
                 <div class="profile-stat-box"><div class="profile-stat-label">👤 نام و شهر</div><div class="profile-stat-val">${p.nickname} (${p.city})</div></div>
@@ -1272,7 +1387,10 @@
                 <div class="profile-stat-box"><div class="profile-stat-label">🎯 هدف</div><div class="profile-stat-val">${goalLabels[p.goalMode] || p.goalMode}</div></div>
                 <div class="profile-stat-box"><div class="profile-stat-label">🔥 سهمیه</div><div class="profile-stat-val">${toFa(state.goals.cal)} کالری</div></div>
             `;
-        } else statsGridEl.style.display = 'none';
+        } else {
+            document.getElementById('profileSummaryBox').innerHTML = `<strong style="color:var(--warning);">🔒 پرونده بدنی تو هنوز کامل نیست! فرم زیر رو پر کن تا قفل هوش مصنوعی و فروشگاه باز بشه.</strong>`;
+            statsGridEl.style.display = 'none';
+        }
 
         document.getElementById('shamsiDateDisplay').textContent = getShamsiFull(state.selectedDate);
         document.getElementById('relativeDayDisplay').textContent = getRelLabel(state.selectedDate);
