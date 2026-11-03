@@ -8,7 +8,8 @@
     :root {
       --bg-dark: #070a12;
       --card-bg: #0f1626;
-      --card-border: rgba(0, 245, 212, 0.18);
+      --inner-bg: #080d18;
+      --card-border: rgba(0, 245, 212, 0.2);
       --neon-cyan: #00f5d4;
       --neon-purple: #9b5de5;
       --neon-pink: #f15bb5;
@@ -18,7 +19,28 @@
       --neon-gold: #fbbf24;
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
+      --header-bg: rgba(7, 10, 18, 0.93);
+      --drawer-bg: #0b1120;
     }
+
+    /* تم روشن (Light Mode) */
+    body.light-mode {
+      --bg-dark: #f1f5f9;
+      --card-bg: #ffffff;
+      --inner-bg: #f8fafc;
+      --card-border: rgba(13, 148, 136, 0.28);
+      --neon-cyan: #0d9488;
+      --neon-purple: #7c3aed;
+      --neon-pink: #db2777;
+      --neon-blue: #0284c7;
+      --neon-gold: #d97706;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --header-bg: rgba(255, 255, 255, 0.94);
+      --drawer-bg: #ffffff;
+      background-image: radial-gradient(circle at 50% 0%, rgba(13,148,136,0.1), transparent 60%);
+    }
+
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body {
       margin: 0; padding: 0;
@@ -29,47 +51,50 @@
       display: flex;
       flex-direction: column;
       overflow-x: hidden;
+      transition: background-color 0.25s, color 0.25s;
     }
 
     /* هدر بالای ثابت */
     .top-sticky-shell {
       position: sticky; top: 0; z-index: 900;
-      background: rgba(7, 10, 18, 0.93); backdrop-filter: blur(14px);
-      border-bottom: 1px solid rgba(0, 245, 212, 0.16);
+      background: var(--header-bg); backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--card-border);
       padding: 10px 14px 8px 14px;
     }
     .bale-top-banner {
       display: flex; align-items: center; justify-content: space-between;
       background: linear-gradient(90deg, rgba(0,245,212,0.14), rgba(155,93,229,0.18));
-      border: 1px solid rgba(0,245,212,0.35); border-radius: 12px;
+      border: 1px solid var(--card-border); border-radius: 12px;
       padding: 7px 12px; margin-bottom: 8px;
       text-decoration: none; color: var(--text-main); font-size: 11.5px; font-weight: 800;
     }
     .bale-top-banner span.join-btn {
-      background: var(--neon-cyan); color: #070a12; padding: 3px 9px; border-radius: 8px; font-weight: 900; font-size: 11px;
+      background: var(--neon-cyan); color: #fff; padding: 3px 9px; border-radius: 8px; font-weight: 900; font-size: 11px;
     }
+    body:not(.light-mode) .bale-top-banner span.join-btn { color: #070a12; }
+
     .app-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
     .header-right { display: flex; align-items: center; gap: 8px; }
     .menu-btn {
-      background: #131c31; border: 1px solid rgba(0,245,212,0.35); color: var(--neon-cyan);
+      background: var(--inner-bg); border: 1px solid var(--card-border); color: var(--neon-cyan);
       width: 38px; height: 38px; border-radius: 11px; font-size: 19px; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
     }
     .brand-title {
       font-size: 17px; font-weight: 900;
-      background: linear-gradient(90deg, var(--neon-cyan), #a855f7);
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
     .header-left { display: flex; align-items: center; gap: 6px; }
-    .coin-pill {
-      background: rgba(251, 191, 36, 0.12); border: 1px solid rgba(251, 191, 36, 0.45);
-      color: var(--neon-gold); padding: 5px 9px; border-radius: 10px; font-size: 11.5px; font-weight: 900;
-      cursor: pointer; display: flex; align-items: center; gap: 4px;
+    .vip-status-pill {
+      background: rgba(155, 93, 229, 0.14); border: 1px solid var(--neon-purple);
+      color: var(--neon-purple); padding: 5px 9px; border-radius: 10px; font-size: 11px; font-weight: 900;
+      cursor: pointer;
     }
     .profile-pill {
-      background: rgba(0, 245, 212, 0.1); border: 1px solid rgba(0, 245, 212, 0.35);
+      background: rgba(0, 245, 212, 0.1); border: 1px solid var(--card-border);
       color: var(--text-main); padding: 5px 10px; border-radius: 10px; font-size: 11.5px; font-weight: 800;
-      cursor: pointer; max-width: 125px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      cursor: pointer; max-width: 130px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
 
     /* محتوای اصلی */
@@ -83,19 +108,19 @@
 
     .fullpage-bar {
       display: flex; align-items: center; justify-content: space-between;
-      background: rgba(15, 22, 38, 0.9); border: 1px solid rgba(0, 245, 212, 0.25);
+      background: var(--card-bg); border: 1px solid var(--card-border);
       border-radius: 14px; padding: 10px 14px; margin-bottom: 12px;
     }
-    .fullpage-title { font-size: 14px; font-weight: 900; color: var(--neon-cyan); display: flex; align-items: center; gap: 6px; }
+    .fullpage-title { font-size: 13.5px; font-weight: 900; color: var(--neon-cyan); display: flex; align-items: center; gap: 6px; }
     .back-home-btn {
-      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15);
+      background: var(--inner-bg); border: 1px solid var(--card-border);
       color: var(--text-main); border-radius: 9px; padding: 5px 10px; font-size: 11.5px; font-weight: 800; cursor: pointer;
     }
 
     .card {
       background: var(--card-bg); border: 1px solid var(--card-border);
       border-radius: 18px; padding: 15px; margin-bottom: 12px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.35);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.18);
     }
     .card-full-grow { flex: 1; display: flex; flex-direction: column; }
 
@@ -105,25 +130,27 @@
       font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.15s;
       display: inline-flex; align-items: center; justify-content: center; gap: 6px;
     }
+    body.light-mode .btn { color: #ffffff; }
     .btn:active { transform: scale(0.97); }
-    .btn-purple { background: linear-gradient(135deg, #9b5de5, #f15bb5); color: #fff; }
-    .btn-outline { background: rgba(0,245,212,0.08); border: 1px solid var(--neon-cyan); color: var(--neon-cyan); }
-    .btn-danger { background: rgba(239,68,68,0.15); border: 1px solid var(--neon-red); color: #fca5a5; }
+    .btn-purple { background: linear-gradient(135deg, #9b5de5, #f15bb5); color: #fff !important; }
+    .btn-outline { background: rgba(0,245,212,0.08); border: 1px solid var(--neon-cyan); color: var(--neon-cyan) !important; }
+    .btn-danger { background: rgba(239,68,68,0.15); border: 1px solid var(--neon-red); color: #ef4444 !important; }
 
     input, select, textarea {
-      width: 100%; background: #080d18; border: 1px solid rgba(148,163,184,0.28);
+      width: 100%; background: var(--inner-bg); border: 1px solid rgba(148,163,184,0.32);
       color: var(--text-main); border-radius: 11px; padding: 10px 12px; font-size: 13px; outline: none;
     }
     input:focus, select:focus, textarea:focus { border-color: var(--neon-cyan); }
 
-    /* لودینگ انیمیشنی حرف B */
+    /* لودینگ انیمیشنی حرف B + کاراکتر سه‌بعدی در حال شنا */
     .b-inline-loader {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: 18px 14px; margin: 8px 0;
-      background: rgba(7, 10, 18, 0.75); border: 1px dashed rgba(0, 245, 212, 0.35);
+      padding: 16px 14px; margin: 8px 0;
+      background: var(--inner-bg); border: 1px dashed var(--neon-cyan);
       border-radius: 16px; text-align: center;
     }
-    .b-svg-logo { width: 54px; height: 54px; filter: drop-shadow(0 0 8px rgba(0, 245, 212, 0.55)); }
+    .loader-row-3d { display: flex; align-items: center; justify-content: center; gap: 14px; }
+    .b-svg-logo { width: 48px; height: 48px; filter: drop-shadow(0 0 8px rgba(0, 245, 212, 0.5)); }
     .b-svg-path {
       fill: none; stroke: url(#bGrad); stroke-width: 7; stroke-linecap: round; stroke-linejoin: round;
       stroke-dasharray: 240; stroke-dashoffset: 240; animation: drawBLogo 1.7s ease-in-out infinite;
@@ -136,112 +163,85 @@
     }
     .b-loader-text { margin-top: 8px; font-size: 12px; font-weight: 800; color: var(--neon-cyan); }
 
-    /* سیستم آتیش قرمز، آبی و خاموش + تقویم هفتگی */
+    /* سیستم آتیش قرمز، آبی و خاموش */
     .flame-box {
       display: flex; align-items: center; justify-content: space-between;
       padding: 12px 14px; border-radius: 16px; margin-bottom: 10px;
       border: 1px solid rgba(255,255,255,0.1);
     }
-    .flame-red {
-      background: linear-gradient(135deg, rgba(249,115,22,0.18), rgba(239,68,68,0.08));
-      border-color: rgba(249,115,22,0.5);
-      box-shadow: 0 0 20px rgba(249,115,22,0.15);
-    }
-    .flame-blue {
-      background: linear-gradient(135deg, rgba(56,189,248,0.2), rgba(59,130,246,0.08));
-      border-color: rgba(56,189,248,0.55);
-      box-shadow: 0 0 20px rgba(56,189,248,0.2);
-    }
-    .flame-dead {
-      background: rgba(15,23,42,0.8);
-      border-color: rgba(148,163,184,0.2);
-    }
-    .flame-icon-anim {
-      font-size: 28px; display: inline-block;
-      animation: flamePulse 1.4s ease-in-out infinite alternate;
-    }
-    @keyframes flamePulse {
-      from { transform: scale(0.94) rotate(-3deg); filter: brightness(0.95); }
-      to { transform: scale(1.08) rotate(3deg); filter: brightness(1.2); }
-    }
+    .flame-red { background: linear-gradient(135deg, rgba(249,115,22,0.18), rgba(239,68,68,0.08)); border-color: rgba(249,115,22,0.5); }
+    .flame-blue { background: linear-gradient(135deg, rgba(56,189,248,0.2), rgba(59,130,246,0.08)); border-color: rgba(56,189,248,0.55); }
+    .flame-dead { background: var(--inner-bg); border-color: rgba(148,163,184,0.25); }
+    .flame-icon-anim { font-size: 28px; display: inline-block; animation: flamePulse 1.4s ease-in-out infinite alternate; }
+    @keyframes flamePulse { from { transform: scale(0.94) rotate(-3deg); } to { transform: scale(1.08) rotate(3deg); } }
 
-    .week-calendar-strip {
-      display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 8px;
-    }
+    .week-calendar-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 8px; }
     .week-day-pill {
-      background: #080d18; border: 1px solid rgba(255,255,255,0.08);
+      background: var(--inner-bg); border: 1px solid rgba(148,163,184,0.18);
       border-radius: 10px; padding: 6px 2px; text-align: center; font-size: 10.5px;
     }
-    .week-day-pill.day-done { border-color: var(--neon-orange); background: rgba(249,115,22,0.12); color: #fed7aa; }
-    .week-day-pill.day-blue { border-color: var(--neon-blue); background: rgba(56,189,248,0.14); color: #bae6fd; }
-    .week-day-pill.day-today { box-shadow: 0 0 10px rgba(0,245,212,0.3); border-color: var(--neon-cyan); }
+    .week-day-pill.day-done { border-color: var(--neon-orange); background: rgba(249,115,22,0.14); }
+    .week-day-pill.day-blue { border-color: var(--neon-blue); background: rgba(56,189,248,0.14); }
+    .week-day-pill.day-today { border: 2px solid var(--neon-cyan); }
 
-    /* انتخاب روزهای تمرین هفته */
     .weekday-selector { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
     .weekday-chip {
       padding: 6px 10px; border-radius: 10px; font-size: 11px; font-weight: 800;
-      background: #080d18; border: 1px solid rgba(255,255,255,0.14); color: var(--text-muted); cursor: pointer;
+      background: var(--inner-bg); border: 1px solid rgba(148,163,184,0.25); color: var(--text-muted); cursor: pointer;
     }
-    .weekday-chip.selected {
-      background: rgba(0,245,212,0.16); border-color: var(--neon-cyan); color: var(--neon-cyan);
-    }
+    .weekday-chip.selected { background: rgba(0,245,212,0.16); border-color: var(--neon-cyan); color: var(--neon-cyan); }
 
-    /* کارت‌های روزهای برنامه ورزشی (باز و قفل) */
-    .plan-days-grid {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 10px 0;
-    }
+    .plan-days-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 10px 0; }
     .plan-day-card {
-      background: #080d18; border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 12px; padding: 10px 6px; text-align: center; cursor: pointer; position: relative;
+      background: var(--inner-bg); border: 1px solid rgba(148,163,184,0.2);
+      border-radius: 12px; padding: 10px 6px; text-align: center; cursor: pointer;
     }
     .plan-day-card.unlocked-today {
       background: linear-gradient(135deg, rgba(0,245,212,0.18), rgba(155,93,229,0.18));
-      border: 2px solid var(--neon-cyan); box-shadow: 0 0 15px rgba(0,245,212,0.25);
+      border: 2px solid var(--neon-cyan);
     }
-    .plan-day-card.completed-day {
-      background: rgba(249,115,22,0.14); border-color: var(--neon-orange);
-    }
-    .plan-day-card.locked-day {
-      opacity: 0.48; cursor: not-allowed;
-    }
+    .plan-day-card.completed-day { background: rgba(249,115,22,0.14); border-color: var(--neon-orange); }
+    .plan-day-card.locked-day { opacity: 0.48; cursor: not-allowed; }
 
-    /* لیست حرکات روز */
     .exercise-item-row {
       display: flex; align-items: center; justify-content: space-between;
-      background: #080d18; border: 1px solid rgba(0,245,212,0.16);
+      background: var(--inner-bg); border: 1px solid var(--card-border);
       border-radius: 14px; padding: 10px 12px; margin-bottom: 8px;
     }
 
-    /* استیج آدمک متحرک و پلیر تمرین */
+    /* استیج کاراکتر سه‌بعدی (3D Character Stage) */
     .avatar-stage-box {
-      background: radial-gradient(circle at 50% 60%, rgba(0,245,212,0.16), #060911 75%);
-      border: 2px solid rgba(0,245,212,0.35); border-radius: 22px;
-      height: 230px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: radial-gradient(circle at 50% 65%, rgba(0,245,212,0.22), #060911 78%);
+      border: 2px solid var(--card-border); border-radius: 22px;
+      height: 245px; display: flex; flex-direction: column; align-items: center; justify-content: center;
       position: relative; overflow: hidden; margin-bottom: 12px;
+      perspective: 600px;
     }
-    .avatar-svg { width: 155px; height: 185px; filter: drop-shadow(0 0 10px rgba(0,245,212,0.45)); }
+    .avatar-3d-svg {
+      width: 175px; height: 205px;
+      filter: drop-shadow(0 12px 14px rgba(0,0,0,0.65));
+      transform-style: preserve-3d;
+    }
 
-    /* انیمیشن‌های ورزشی آدمک (آقا و خانم) */
-    .anim-jumping .av-arms { transform-origin: 50px 58px; animation: armsJump 0.65s ease-in-out infinite alternate; }
-    .anim-jumping .av-legs { transform-origin: 50px 110px; animation: legsJump 0.65s ease-in-out infinite alternate; }
-    .anim-squat .av-whole { transform-origin: 50px 155px; animation: bodySquat 1.1s ease-in-out infinite alternate; }
-    .anim-pushup .av-whole { transform-origin: 50px 100px; animation: bodyPushup 1.0s ease-in-out infinite alternate; }
-    .anim-armcircle .av-arms { transform-origin: 50px 58px; animation: armsCircle 0.8s linear infinite; }
+    /* انیمیشن‌های سه‌بعدی کاراکتر */
+    .anim-jumping .av3d-arms { transform-origin: 60px 62px; animation: arms3DJump 0.6s ease-in-out infinite alternate; }
+    .anim-jumping .av3d-legs { transform-origin: 60px 115px; animation: legs3DJump 0.6s ease-in-out infinite alternate; }
+    .anim-squat .av3d-body { transform-origin: 60px 168px; animation: body3DSquat 1.05s ease-in-out infinite alternate; }
+    .anim-pushup .av3d-body { transform-origin: 60px 110px; animation: body3DPushup 0.95s ease-in-out infinite alternate; }
+    .anim-armcircle .av3d-arms { transform-origin: 60px 62px; animation: arms3DCircle 0.75s linear infinite; }
 
-    @keyframes armsJump { from { transform: rotate(-15deg); } to { transform: rotate(35deg) translateY(-8px); } }
-    @keyframes legsJump { from { transform: scaleX(0.95); } to { transform: scaleX(1.22); } }
-    @keyframes bodySquat { from { transform: translateY(0) scaleY(1); } to { transform: translateY(18px) scaleY(0.84); } }
-    @keyframes bodyPushup { from { transform: rotate(65deg) translateY(-6px); } to { transform: rotate(65deg) translateY(10px); } }
-    @keyframes armsCircle { 0% { transform: scaleY(1); } 50% { transform: scaleY(-0.4); } 100% { transform: scaleY(1); } }
+    @keyframes arms3DJump { from { transform: rotateX(0deg) translateY(2px); } to { transform: rotateX(25deg) translateY(-14px) scaleX(1.08); } }
+    @keyframes legs3DJump { from { transform: scaleX(0.96); } to { transform: scaleX(1.18); } }
+    @keyframes body3DSquat { from { transform: translateY(0) scaleY(1); } to { transform: translateY(20px) scaleY(0.83); } }
+    @keyframes body3DPushup { from { transform: rotate(64deg) translateY(-8px); } to { transform: rotate(64deg) translateY(12px); } }
+    @keyframes arms3DCircle { 0% { transform: scaleY(1); } 50% { transform: scaleY(-0.35); } 100% { transform: scaleY(1); } }
 
-    /* صفحه استراحت بین حرکت (طراحی نئونی اختصاصی) */
     .rest-screen-box {
       background: linear-gradient(160deg, #0b132b, #1e1b4b);
-      border: 2px solid var(--neon-blue); border-radius: 22px; padding: 18px; text-align: center;
+      color: #fff; border: 2px solid var(--neon-blue); border-radius: 22px; padding: 18px; text-align: center;
     }
     .rest-warning-banner {
-      margin-top: 10px; padding: 9px 12px; border-radius: 12px; font-size: 11.5px; font-weight: 800; line-height: 1.5;
-      display: none;
+      margin-top: 10px; padding: 9px 12px; border-radius: 12px; font-size: 11.5px; font-weight: 800; line-height: 1.5; display: none;
     }
 
     /* منوی همبرگری */
@@ -250,58 +250,82 @@
       z-index: 2000; display: none;
     }
     .drawer-panel {
-      position: fixed; top: 0; right: -290px; width: 275px; height: 100vh;
-      background: #0b1120; border-left: 1px solid rgba(0,245,212,0.28);
+      position: fixed; top: 0; right: -295px; width: 280px; height: 100vh;
+      background: var(--drawer-bg); border-left: 1px solid var(--card-border);
       z-index: 2001; padding: 18px 14px; transition: right 0.25s ease;
       display: flex; flex-direction: column; justify-content: space-between; overflow-y: auto;
     }
     .drawer-panel.open { right: 0; }
     .drawer-item {
       display: flex; align-items: center; gap: 10px; width: 100%;
-      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+      background: var(--inner-bg); border: 1px solid rgba(148,163,184,0.16);
       color: var(--text-main); padding: 11px 12px; border-radius: 12px; margin-bottom: 8px;
-      font-size: 13px; font-weight: 800; cursor: pointer; text-align: right;
+      font-size: 12.8px; font-weight: 800; cursor: pointer; text-align: right;
     }
     .drawer-item.active-nav { background: rgba(0,245,212,0.14); border-color: var(--neon-cyan); color: var(--neon-cyan); }
 
-    /* کالری و چت */
     .cal-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center; margin-top: 8px; }
-    .cal-circle-box { background: #080d18; border: 2px solid rgba(0,245,212,0.3); border-radius: 16px; padding: 12px; text-align: center; }
+    .cal-circle-box { background: var(--inner-bg); border: 2px solid var(--card-border); border-radius: 16px; padding: 12px; text-align: center; }
     .macro-bar-row { margin-bottom: 7px; font-size: 11.5px; }
-    .progress-track { width: 100%; height: 7px; background: #1e293b; border-radius: 6px; overflow: hidden; margin-top: 3px; }
+    .progress-track { width: 100%; height: 7px; background: rgba(148,163,184,0.25); border-radius: 6px; overflow: hidden; margin-top: 3px; }
     .progress-fill { height: 100%; border-radius: 6px; transition: width 0.3s; }
 
     .chat-messages-box {
       flex: 1; min-height: 290px; max-height: 55vh; overflow-y: auto;
-      background: #080c17; border: 1px solid rgba(255,255,255,0.07);
+      background: var(--inner-bg); border: 1px solid var(--card-border);
       border-radius: 14px; padding: 12px; margin-bottom: 10px;
       display: flex; flex-direction: column; gap: 10px;
     }
     .msg-bubble { max-width: 88%; padding: 10px 13px; border-radius: 14px; font-size: 12.8px; line-height: 1.65; word-wrap: break-word; }
-    .msg-ai { background: #131c31; border: 1px solid rgba(0,245,212,0.22); color: #f1f5f9; align-self: flex-start; }
+    .msg-ai { background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-main); align-self: flex-start; }
     .msg-user { background: var(--neon-cyan); color: #070a12; font-weight: 800; align-self: flex-end; }
+
+    /* قفل اشتراک ماهانه */
+    .sub-lock-banner {
+      background: linear-gradient(135deg, rgba(239,68,68,0.16), rgba(155,93,229,0.16));
+      border: 2px dashed var(--neon-red); border-radius: 18px; padding: 18px; text-align: center; margin-bottom: 12px;
+    }
 
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(4,7,14,0.86); backdrop-filter: blur(8px);
       z-index: 3000; display: none; align-items: center; justify-content: center; padding: 16px;
     }
     .modal-card {
-      background: #0f1626; border: 2px solid var(--neon-cyan); border-radius: 22px;
+      background: var(--card-bg); border: 2px solid var(--neon-cyan); border-radius: 22px;
       padding: 20px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto;
     }
 
     .app-footer { width: 100%; max-width: 540px; margin: 0 auto 14px auto; padding: 0 14px; }
-    .footer-inner { background: #0b111e; border: 1px solid rgba(0,245,212,0.22); border-radius: 16px; padding: 12px; text-align: center; }
+    .footer-inner { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 12px; text-align: center; }
   </style>
 </head>
 <body>
 
-  <!-- گرادینت جهانی برای لودینگ حرف B و آدمک ورزشی -->
+  <!-- گرادینت‌های سه‌بعدی جهانی برای کاراکتر 3D و لوگوی B -->
   <svg width="0" height="0" style="position:absolute;">
     <defs>
       <linearGradient id="bGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stop-color="#00f5d4" />
         <stop offset="100%" stop-color="#9b5de5" />
+      </linearGradient>
+      <radialGradient id="skin3D" cx="35%" cy="30%" r="70%">
+        <stop offset="0%" stop-color="#fde68a" />
+        <stop offset="55%" stop-color="#f59e0b" />
+        <stop offset="100%" stop-color="#b45309" />
+      </radialGradient>
+      <linearGradient id="maleSuit3D" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#38bdf8" />
+        <stop offset="50%" stop-color="#0284c7" />
+        <stop offset="100%" stop-color="#1e3a8a" />
+      </linearGradient>
+      <linearGradient id="femaleSuit3D" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#f472b6" />
+        <stop offset="50%" stop-color="#db2777" />
+        <stop offset="100%" stop-color="#701a75" />
+      </linearGradient>
+      <linearGradient id="shorts3D" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#334155" />
+        <stop offset="100%" stop-color="#0f172a" />
       </linearGradient>
     </defs>
   </svg>
@@ -318,9 +342,8 @@
         <div class="brand-title" onclick="switchSection('dashboard')" style="cursor:pointer;">⚡ BodyMod</div>
       </div>
       <div class="header-left">
-        <div class="coin-pill" onclick="switchSection('market')">
-          <span>🪙</span>
-          <span id="headerCoinCount">30</span>
+        <div class="vip-status-pill" id="headerSubBadge" onclick="switchSection('market')">
+          💎 فاز بتا
         </div>
         <div class="profile-pill" id="headerUserBtn" onclick="handleHeaderProfileClick()">
           👤 ورود / ثبت‌نام
@@ -329,36 +352,45 @@
     </div>
   </header>
 
-  <!-- ==================== منوی همبرگری ==================== -->
+  <!-- ==================== منوی همبرگری (دارای دکمه ۳ حالته: سیستم / دارک / لایت) ==================== -->
   <div class="drawer-backdrop" id="drawerBackdrop" onclick="toggleDrawer(false)"></div>
   <aside class="drawer-panel" id="drawerPanel">
     <div>
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px;">
-        <span style="font-weight:900; font-size:15px; color:var(--neon-cyan);">⚡ منوی سوپراپلیکیشن</span>
-        <button onclick="toggleDrawer(false)" style="background:none; border:none; color:#94a3b8; font-size:18px; cursor:pointer;">✕</button>
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; border-bottom:1px solid var(--card-border); padding-bottom:10px;">
+        <span style="font-weight:900; font-size:14.5px; color:var(--neon-cyan);">⚡ منوی سوپراپلیکیشن</span>
+        <button onclick="toggleDrawer(false)" style="background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer;">✕</button>
       </div>
 
+      <!-- دکمه تغییر تم ۳ حالته: پیش‌فرض بر اساس سیستم گوشی + قابلیت تغییر دستی -->
+      <button class="drawer-item" onclick="cycleThemeMode()" id="themeToggleBtn" style="justify-content:space-between; border-color:var(--neon-purple);">
+        <span>🌓 تم برنامه:</span>
+        <b id="themeStatusLabel" style="color:var(--neon-cyan); font-size:11.5px;">📱 سیستم (خودکار)</b>
+      </button>
+
       <button class="drawer-item active-nav" id="nav-dashboard" onclick="switchSection('dashboard')">
-        📊 داشبورد، تقویم و کالری‌شمار
+        📊 داشبورد و خلاصه روزانه
+      </button>
+      <button class="drawer-item" id="nav-diet" onclick="switchSection('diet')">
+        🍱 برنامه غذایی هوشمند و ثبت خوراکی
       </button>
       <button class="drawer-item" id="nav-workout" onclick="switchSection('workout')">
-        🏋️ باشگاه هوشمند و پلیر تمرین
+        🏋️ باشگاه سه‌بعدی و پلیر تمرین
       </button>
       <button class="drawer-item" id="nav-coach" onclick="switchSection('coach')">
-        🤖 چت با مربی هوشمند (AI)
+        🤖 چت با مربی صمیمی (AI)
       </button>
       <button class="drawer-item" id="nav-profile" onclick="switchSection('profile')">
-        👤 پرونده بدنی و حافظه مربی
+        👤 پرونده بدنی و هدف اشتراک
       </button>
       <button class="drawer-item" id="nav-market" onclick="switchSection('market')">
-        💎 فروشگاه اشتراک بتا و کوین
+        💎 تمدید اشتراک و پلن‌های هدف
       </button>
       <button class="drawer-item" id="nav-ceo" onclick="switchSection('ceo')" style="display:none; border-color:var(--neon-gold); color:var(--neon-gold);">
         👑 پنل آمار کلان مدیرعامل
       </button>
     </div>
 
-    <div style="border-top:1px solid rgba(255,255,255,0.08); padding-top:12px;">
+    <div style="border-top:1px solid var(--card-border); padding-top:12px;">
       <div id="drawerSyncBadge" style="font-size:11px; color:var(--text-muted); margin-bottom:8px; text-align:center;">💾 وضعیت: حافظه گوشی</div>
       <button class="btn btn-outline" style="width:100%; font-size:12px;" onclick="toggleDrawer(false); openAuthModal();">🔑 حساب کاربری / تغییر اکانت</button>
     </div>
@@ -370,28 +402,25 @@
     <!-- 🟢 صفحه ۱: داشبورد + سیستم آتیش قرمز و آبی + تقویم -->
     <section id="sec-dashboard" class="app-section active-section">
 
-      <!-- کارت وضعیت آتیش (قرمز / آبی / خاموش) و تقویم هفتگی -->
       <div class="card" style="padding:13px;">
         <div id="flameBannerBox" class="flame-box flame-red">
           <div style="display:flex; align-items:center; gap:10px;">
             <span id="flameBigIcon" class="flame-icon-anim">🔥</span>
             <div>
-              <div id="flameTitleText" style="font-weight:900; font-size:13.5px;">آتیش قرمز: ۵ روز استریک فعال!</div>
-              <div id="flameSubText" style="font-size:11px; color:#cbd5e1; margin-top:2px;">دمت گرم! امروز هم تمرین کن تا آتیشت آبی و سرد نشه!</div>
+              <div id="flameTitleText" style="font-weight:900; font-size:13.5px;">آتیش استریک</div>
+              <div id="flameSubText" style="font-size:11px; color:var(--text-muted); margin-top:2px;">در حال بررسی وضعیت امروز...</div>
             </div>
           </div>
-          <button class="btn" style="padding:6px 10px; font-size:11px;" onclick="switchSection('workout')">🏋️ شروع ورزش</button>
+          <button class="btn" style="padding:6px 10px; font-size:11px;" onclick="switchSection('diet')">🍱 تغذیه</button>
         </div>
 
-        <!-- نوار تقویم ۷ روز هفته -->
         <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--text-muted); margin-bottom:4px;">
-          <span>📅 تقویم استریک و تمرین این هفته:</span>
+          <span>📅 تقویم پیگیری ۷ روز اخیر:</span>
           <span id="syncStatusLabel">💾 آفلاین</span>
         </div>
         <div class="week-calendar-strip" id="weekCalendarStrip"></div>
 
-        <!-- ناوبری روزها -->
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-top:10px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.06);">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-top:10px; padding-top:8px; border-top:1px solid rgba(148,163,184,0.12);">
           <button class="back-home-btn" onclick="changeDay(-1)">◀ روز قبل</button>
           <span id="currentDateLabel" style="font-weight:900; font-size:12.5px; color:var(--neon-cyan);">امروز</span>
           <button class="back-home-btn" onclick="changeDay(1)">روز بعد ▶</button>
@@ -401,12 +430,12 @@
       <!-- خلاصه کالری و ماکروها -->
       <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-weight:900; font-size:14px;">🎯 وضعیت تغذیه و کالری</span>
+          <span style="font-weight:900; font-size:14px;">🎯 وضعیت کالری و درشت‌مغذی‌ها</span>
           <span id="goalModeBadge" style="font-size:11px; color:var(--neon-cyan); font-weight:800;">تناسب اندام</span>
         </div>
         <div class="cal-summary-grid">
           <div class="cal-circle-box">
-            <div style="font-size:11px; color:var(--text-muted);">کالری مصرفی امروز</div>
+            <div style="font-size:11px; color:var(--text-muted);">کالری مصرفی</div>
             <div style="font-size:22px; font-weight:900; color:var(--neon-cyan); margin:4px 0;" id="calEatenNum">0</div>
             <div style="font-size:11px; color:var(--text-muted);">از هدف <span id="calTargetNum">2200</span> kcal</div>
           </div>
@@ -426,8 +455,8 @@
           </div>
         </div>
 
-        <div style="margin-top:12px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.07); display:flex; align-items:center; justify-content:space-between;">
-          <span style="font-size:12px; font-weight:800;">💧 آب مصرفی: <b id="waterCountText" style="color:#38bdf8;">0</b> از 8 لیوان</span>
+        <div style="margin-top:12px; padding-top:10px; border-top:1px solid rgba(148,163,184,0.12); display:flex; align-items:center; justify-content:space-between;">
+          <span style="font-size:12px; font-weight:800;">💧 آب مصرفی: <b id="waterCountText" style="color:var(--neon-blue);">0</b> از 8 لیوان</span>
           <div style="display:flex; gap:6px;">
             <button class="back-home-btn" onclick="addWater(-1)">➖</button>
             <button class="btn" style="padding:5px 12px; font-size:11.5px;" onclick="addWater(1)">➕ لیوان آب</button>
@@ -435,53 +464,158 @@
         </div>
       </div>
 
-      <!-- افزودن خوراکی -->
-      <div class="card">
-        <div style="font-weight:900; font-size:13.5px; margin-bottom:10px; color:var(--neon-cyan);">🍽️ افزودن خوراکی و اسکنر هوش مصنوعی</div>
-        <div style="display:flex; gap:6px; margin-bottom:8px;">
-          <input type="text" id="aiFoodInput" placeholder="مثلاً: یک بشقاب عدسی یا ۲ عدد تخم‌مرغ...">
-          <button class="btn" onclick="analyzeFoodByText()" style="white-space:nowrap;">✨ تحلیل (۲🪙)</button>
-        </div>
-        <div style="display:flex; gap:8px; margin-bottom:8px;">
-          <label class="btn btn-purple" style="flex:1; cursor:pointer; font-size:12px;">
-            📸 اسکن عکس غذا با AI (۶🪙)
-            <input type="file" accept="image/*" style="display:none;" onchange="analyzeFoodByImage(event)">
-          </label>
-          <button class="btn btn-outline" style="font-size:12px;" onclick="switchSection('coach')">🤖 چت مربی</button>
-        </div>
-        <div id="foodAiInlineLoader" style="display:none;"></div>
-        <div id="todayFoodsList" style="margin-top:10px; display:flex; flex-direction:column; gap:6px;"></div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+        <button class="btn" style="padding:13px;" onclick="switchSection('diet')">🍱 برنامه غذایی و ثبت خوراکی</button>
+        <button class="btn btn-purple" style="padding:13px;" onclick="switchSection('workout')">🏋️ باشگاه سه‌بعدی</button>
       </div>
 
-      <!-- ظرفیت بتا -->
       <div class="card" style="padding:10px 14px; font-size:11.5px; display:flex; justify-content:space-between;">
-        <span style="color:var(--text-muted);">🔥 ظرفیت اشتراک بتا:</span>
+        <span style="color:var(--text-muted);">🔥 ظرفیت اشتراک فاز آزمایشی (بتا):</span>
         <span id="betaCapText" style="color:var(--neon-gold); font-weight:800;">در حال بررسی...</span>
       </div>
     </section>
 
-    <!-- 🟢 صفحه ۲: باشگاه هوشمند، برنامه قفل‌دار، آدمک آقا/خانم و پلیر زنده تمرین -->
-    <section id="sec-workout" class="app-section">
+    <!-- 🟢 صفحه ۲: برنامه غذایی هوشمند، ثبت خوراکی، بانک غذاهای سفارشی و تحلیل ماهانه -->
+    <section id="sec-diet" class="app-section">
       <div class="fullpage-bar">
-        <div class="fullpage-title">🏋️ باشگاه هوشمند و پلیر زنده تمرین</div>
+        <div class="fullpage-title">🍱 برنامه غذایی هوشمند و ثبت خوراکی</div>
         <button class="back-home-btn" onclick="switchSection('dashboard')">🏠 داشبورد</button>
       </div>
 
-      <!-- بخش ۱: تنظیمات مربی آقا/خانم، روزهای تمرین و نوتیفیکیشن -->
+      <div id="dietSubLockBanner" class="sub-lock-banner" style="display:none;">
+        <div style="font-size:32px;">🔒</div>
+        <div style="font-weight:900; font-size:14px; color:var(--neon-red); margin:4px 0;">اشتراک ماهانه شما فعال نیست یا منقضی شده!</div>
+        <p style="font-size:11.5px; color:var(--text-muted); margin:0 0 10px 0;">
+          برای باز شدن برنامه غذایی پیشنهادی هوش مصنوعی و تحلیل ماهانه، اشتراک ماهانه خود را تمدید کنید. (ثبت دستی آفلاین همیشه رایگان و باز است!)
+        </p>
+        <button class="btn btn-purple" onclick="switchSection('market')">💎 تمدید اشتراک ماهانه</button>
+      </div>
+
+      <div class="card" id="aiMonthlyDietPlanCard">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <span style="font-weight:900; font-size:13.5px; color:var(--neon-cyan);">🗓️ خوراکی‌های پیشنهادی روزانه شما (تنظیم اول ماه)</span>
+          <span style="font-size:10.5px; color:var(--neon-gold); font-weight:800;">سهمیه: ماهی ۱ بار</span>
+        </div>
+        <p style="font-size:11.5px; color:var(--text-muted); margin:0 0 10px 0;">
+          بر اساس هدف بدنی و دوره هدفت، هوش مصنوعی لیست خوراکی‌های روزانه‌ت رو می‌چینه تا هر روز با یک کلیک بخوری و ثبت کنی:
+        </p>
+        <button class="btn" style="width:100%; margin-bottom:10px;" onclick="generateMonthlyAiDietMenu()">
+          ✨ دریافت / بروزرسانی منوی غذایی پیشنهادی این ماه (سهمیه ماهانه)
+        </button>
+        <div id="dietMenuInlineLoader" style="display:none;"></div>
+        <div id="suggestedDailyMealsBox" style="display:flex; flex-direction:column; gap:7px;"></div>
+      </div>
+
+      <div class="card" id="aiFoodScannerCard">
+        <div style="font-weight:900; font-size:13.5px; margin-bottom:8px; color:var(--neon-purple);">🤖 تحلیل هوشمند خوراکی (ذخیره خودکار در بانک شما)</div>
+        <div style="display:flex; gap:6px; margin-bottom:8px;">
+          <input type="text" id="aiFoodInput" placeholder="مثلاً: یک بشقاب قورمه‌سبزی یا معجون موز و گردو...">
+          <button class="btn" onclick="analyzeFoodByText()" style="white-space:nowrap;">✨ تحلیل (هفته‌ای ۳ بار)</button>
+        </div>
+        <label class="btn btn-purple" style="width:100%; cursor:pointer; font-size:12px;">
+          📸 اسکن عکس غذا با AI (سهمیه: هفته‌ای ۱ بار)
+          <input type="file" accept="image/*" style="display:none;" onchange="analyzeFoodByImage(event)">
+        </label>
+        <div id="foodAiInlineLoader" style="display:none;"></div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:900; font-size:13.5px; color:var(--neon-cyan); margin-bottom:6px;">
+          🆓 ثبت دستی و آفلاین خوراکی سفارشی (همیشه رایگان و بدون محدودیت)
+        </div>
+        <div style="display:grid; grid-template-columns:2fr 1fr; gap:6px; margin-bottom:6px;">
+          <input type="text" id="manualFoodName" placeholder="نام خوراکی (مثلاً: املت مخصوص من)">
+          <input type="number" id="manualFoodCal" placeholder="کالری (kcal)">
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-bottom:8px;">
+          <input type="number" id="manualFoodProt" placeholder="پروتئین (g)">
+          <input type="number" id="manualFoodCarb" placeholder="کربوهیدرات (g)">
+          <input type="number" id="manualFoodFat" placeholder="چربی (g)">
+        </div>
+        <button class="btn btn-outline" style="width:100%;" onclick="addManualCustomFood()">
+          ➕ ثبت در وعده امروز + ذخیره دائمی در بانک غذاهای من
+        </button>
+
+        <div style="margin-top:12px; padding-top:10px; border-top:1px solid rgba(148,163,184,0.15);">
+          <div style="font-size:12px; font-weight:900; margin-bottom:6px;">📚 بانک غذاهای ذخیره‌شده من (ثبت مجدد با ۱ کلیک):</div>
+          <div id="savedCustomFoodsList" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+        </div>
+
+        <div style="margin-top:12px; padding-top:10px; border-top:1px solid rgba(148,163,184,0.15);">
+          <div style="font-size:12px; font-weight:900; margin-bottom:6px; color:var(--neon-cyan);">🍽️ خوراکی‌های ثبت‌شده در این روز:</div>
+          <div id="todayFoodsList" style="display:flex; flex-direction:column; gap:6px;"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <span style="font-weight:900; font-size:13px;">🔔 یادآور اختیاری ثبت صبحانه، ناهار و شام</span>
+          <label style="display:flex; align-items:center; gap:5px; font-size:11.5px; cursor:pointer;">
+            <input type="checkbox" id="mealNotifToggle" style="width:16px; height:16px;" onchange="toggleOptionalMealReminders()">
+            <span>فعالسازی به انتخاب من</span>
+          </label>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; font-size:11px;">
+          <div><span>🍳 صبحانه:</span><input type="time" id="timeBreakfast" value="08:30" onchange="saveMealReminderTimes()"></div>
+          <div><span>🍛 ناهار:</span><input type="time" id="timeLunch" value="13:30" onchange="saveMealReminderTimes()"></div>
+          <div><span>🥗 شام:</span><input type="time" id="timeDinner" value="20:30" onchange="saveMealReminderTimes()"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <span style="font-weight:900; font-size:13.5px; color:var(--neon-gold);">📊 کارنامه و تحلیل هوش مصنوعی از تغذیه ۱ ماه گذشته</span>
+          <span style="font-size:10.5px; color:var(--neon-gold);">سهمیه: ماهی ۱ بار</span>
+        </div>
+        <p style="font-size:11.5px; color:var(--text-muted); margin:0 0 10px 0;">
+          در پایان ماه، کل اطلاعات غذاها و کالری‌های ۳۰ روز گذشته‌ت به مربی هوشمند فرستاده می‌شه تا عملکردت رو تحلیل کنه:
+        </p>
+        <button class="btn btn-purple" style="width:100%;" onclick="runMonthlyDietAnalysis()">
+          📈 ارسال لاگ ۳۰ روز گذشته و دریافت تحلیل ماهانه
+        </button>
+        <div id="monthlyReviewLoader" style="display:none;"></div>
+        <div id="monthlyReviewResultBox" style="display:none; margin-top:10px; background:var(--inner-bg); border:1px solid var(--card-border); border-radius:12px; padding:12px; font-size:12.5px; line-height:1.7; white-space:pre-wrap;"></div>
+      </div>
+    </section>
+
+    <!-- 🟢 صفحه ۳: باشگاه سه‌بعدی -->
+    <section id="sec-workout" class="app-section">
+      <div class="fullpage-bar">
+        <div class="fullpage-title">🏋️ باشگاه سه‌بعدی و پلیر زنده تمرین</div>
+        <button class="back-home-btn" onclick="switchSection('dashboard')">🏠 داشبورد</button>
+      </div>
+
+      <div id="workoutSubLockBanner" class="sub-lock-banner" style="display:none;">
+        <div style="font-size:32px;">🔒</div>
+        <div style="font-weight:900; font-size:14px; color:var(--neon-red);">بخش تمرین به دلیل عدم تمدید اشتراک ماهانه قفل است!</div>
+        <p style="font-size:11.5px; color:var(--text-muted); margin:6px 0 10px 0;">برای دسترسی به برنامه تمرینی و پلیر سه‌بعدی، اشتراک ماهانه خود را تمدید کنید.</p>
+        <button class="btn btn-purple" onclick="switchSection('market')">💎 تمدید اشتراک</button>
+      </div>
+
+      <div id="gainWeightNoWorkoutCard" class="card" style="display:none; border-color:var(--neon-gold);">
+        <div style="font-weight:900; font-size:14px; color:var(--neon-gold); margin-bottom:6px;">💡 پیام مربی هوشمند درباره هدف «افزایش وزن عمومی» شما:</div>
+        <p style="font-size:12px; line-height:1.7; margin:0 0 10px 0;">
+          رفیق گلم! از اونجایی که هدفت <b>«افزایش وزن عمومی»</b> هست، اصولاً نیازی به تمرین ورزشی و سوزوندن کالری نداری! تمام تمرکزت باید روی خوردن خوراکی‌های مقوی و پرکالری روزانه باشه.
+        </p>
+        <div style="display:flex; gap:8px;">
+          <button class="btn" style="flex:1;" onclick="switchSection('diet')">🍱 رفتن به برنامه غذایی پرکالری</button>
+          <button class="btn btn-outline" style="flex:1; font-size:11.5px;" onclick="document.getElementById('gainWeightNoWorkoutCard').style.display='none'; document.getElementById('workoutSetupCard').style.display='block';">🏋️ با این حال تمرین می‌خوام</button>
+        </div>
+      </div>
+
       <div class="card" id="workoutSetupCard">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-          <span style="font-weight:900; font-size:13.5px; color:var(--neon-cyan);">🧍 انتخاب آواتار مربی و زمان‌بندی</span>
+          <span style="font-weight:900; font-size:13.5px; color:var(--neon-cyan);">🧍 کاراکتر سه‌بعدی مربی (آقا / خانم)</span>
           <div style="display:flex; gap:6px;">
-            <button id="avatarBtnMale" class="back-home-btn" style="border-color:var(--neon-cyan); color:var(--neon-cyan);" onclick="setWorkoutAvatar('male')">👨 آقا</button>
-            <button id="avatarBtnFemale" class="back-home-btn" onclick="setWorkoutAvatar('female')">👩 خانم</button>
+            <button id="avatarBtnMale" class="back-home-btn" onclick="setWorkoutAvatar('male')">👨 آقا (3D)</button>
+            <button id="avatarBtnFemale" class="back-home-btn" onclick="setWorkoutAvatar('female')">👩 خانم (3D)</button>
           </div>
         </div>
 
-        <!-- انتخاب روزهای تمرین برای جلوگیری از آبی/خاموش شدن آتیش + نوتیفیکیشن -->
-        <div style="background:#080d18; border:1px solid rgba(255,255,255,0.07); border-radius:13px; padding:10px; margin-bottom:10px;">
+        <div style="background:var(--inner-bg); border:1px solid rgba(148,163,184,0.18); border-radius:13px; padding:10px; margin-bottom:10px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <span style="font-size:11.5px; font-weight:800;">🔔 روزهای تمرین من (برای یادآوری و حفظ آتیش 🔥):</span>
-            <button class="btn" style="padding:4px 9px; font-size:10.5px;" onclick="enableWorkoutNotifications()">فعال‌سازی اعلان 🔔</button>
+            <span style="font-size:11.5px; font-weight:800;">🔔 روزهای تمرین و اعلان اختیاری (حفظ آتیش 🔥):</span>
+            <button class="btn" style="padding:4px 9px; font-size:10.5px;" onclick="enableWorkoutNotifications()">فعالسازی اختیاری اعلان 🔔</button>
           </div>
           <div class="weekday-selector" id="weekdaySelectorBox">
             <span class="weekday-chip" data-day="6" onclick="toggleScheduleDay(6)">شنبه</span>
@@ -492,16 +626,11 @@
             <span class="weekday-chip" data-day="4" onclick="toggleScheduleDay(4)">پنجشنبه</span>
             <span class="weekday-chip" data-day="5" onclick="toggleScheduleDay(5)">جمعه</span>
           </div>
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-top:8px; font-size:11px; color:var(--text-muted);">
-            <span>ساعت یادآوری تمرین:</span>
-            <input type="time" id="notifTimeInput" value="18:00" style="width:110px; padding:4px 8px; font-size:11.5px;" onchange="saveScheduleSettings()">
-          </div>
         </div>
 
-        <!-- تنظیم هوشمند زمان استراحت بین حرکات با سیستم هشدار علمی -->
-        <div style="background:#080d18; border:1px solid rgba(0,245,212,0.18); border-radius:13px; padding:10px; margin-bottom:10px;">
+        <div style="background:var(--inner-bg); border:1px solid var(--card-border); border-radius:13px; padding:10px; margin-bottom:12px;">
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-size:11.5px; font-weight:800;">⏱️ زمان استراحت بین هر حرکت: <b id="restDurationLabel" style="color:var(--neon-cyan);">30 ثانیه (بهینه هوشمند)</b></span>
+            <span style="font-size:11.5px; font-weight:800;">⏱️ استراحت بین حرکت: <b id="restDurationLabel" style="color:var(--neon-cyan);">30 ثانیه</b></span>
             <div style="display:flex; gap:4px;">
               <button class="back-home-btn" onclick="adjustPreferredRest(-10)">-10s</button>
               <button class="back-home-btn" onclick="adjustPreferredRest(10)">+10s</button>
@@ -510,62 +639,60 @@
           <div id="restSmartWarning" class="rest-warning-banner"></div>
         </div>
 
-        <!-- نقشه روزهای برنامه (فقط روز فعلی باز است، بقیه قفل 🔒) -->
-        <div style="font-weight:900; font-size:13px; margin-bottom:6px; display:flex; justify-content:space-between;">
-          <span>🗓️ مسیر برنامه تمرینی (فقط تمرین امروز باز است):</span>
-          <span id="unlockedDayBadge" style="color:var(--neon-cyan); font-size:11.5px;">روز ۱</span>
+        <div id="noWorkoutPlanYetBox" style="text-align:center; padding:14px; background:var(--inner-bg); border:1px dashed var(--neon-purple); border-radius:14px; margin-bottom:12px;">
+          <div style="font-size:28px; margin-bottom:4px;">🏋️‍♂️</div>
+          <div style="font-weight:900; font-size:13px; color:var(--neon-cyan);">هنوز برنامه ورزشی فعالی نداری رفیق!</div>
+          <p style="font-size:11.5px; color:var(--text-muted); margin:4px 0 0 0;">
+            از کادر پایین محل تمرین و عضله هدفت رو انتخاب کن تا هوش مصنوعی برنامه اختصاصیت رو بسازه (سهمیه: ماهی ۱ بار).
+          </p>
         </div>
-        <div class="plan-days-grid" id="planDaysGrid"></div>
 
-        <!-- لیست حرکات روز فعلی + دکمه شروع پلیر -->
-        <div id="todayExercisesPreviewBox" style="margin-top:10px;"></div>
+        <div id="activeWorkoutPlanContainer" style="display:none;">
+          <div style="font-weight:900; font-size:13px; margin-bottom:6px; display:flex; justify-content:space-between;">
+            <span>🗓️ روزهای برنامه (فقط تمرین امروز باز است):</span>
+            <span id="unlockedDayBadge" style="color:var(--neon-cyan); font-size:11.5px;">روز ۱</span>
+          </div>
+          <div class="plan-days-grid" id="planDaysGrid"></div>
+          <div id="todayExercisesPreviewBox" style="margin-top:10px;"></div>
+          <button class="btn" style="width:100%; padding:13px; font-size:14px; margin-top:8px;" onclick="startLiveWorkoutPlayer()">
+            ▶️ شروع تمرین امروز با کاراکتر سه‌بعدی
+          </button>
+        </div>
 
-        <button class="btn" style="width:100%; padding:13px; font-size:14px; margin-top:8px;" onclick="startLiveWorkoutPlayer()">
-          ▶️ شروع تعاملی تمرین امروز (همراه با مربی و تایمر)
-        </button>
-
-        <!-- بخش دریافت برنامه جدید از هوش مصنوعی -->
-        <div style="margin-top:16px; padding-top:12px; border-top:1px dashed rgba(255,255,255,0.12);">
-          <div style="font-size:12px; font-weight:900; color:var(--neon-purple); margin-bottom:8px;">✨ طراحی چالش جدید با هوش مصنوعی (تغییر برنامه):</div>
+        <div style="margin-top:14px; padding-top:12px; border-top:1px dashed rgba(148,163,184,0.2);">
+          <div style="font-size:12px; font-weight:900; color:var(--neon-purple); margin-bottom:8px;">✨ درخواست طراحی برنامه ورزشی از هوش مصنوعی (سهمیه: ماهی ۱ بار):</div>
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
             <select id="woPlace">
               <option value="در منزل (بدون تجهیزات)">🏠 ورزش در خانه</option>
               <option value="باشگاه بدنسازی">🏋️ باشگاه بدنسازی</option>
             </select>
             <select id="woFocusMuscle">
-              <option value="کل بدن و چربی‌سوزی">⚖️ کل بدن متوازن</option>
+              <option value="کل بدن متوازن">⚖️ کل بدن متوازن</option>
               <option value="فرم‌دهی تخصصی باسن و سینه">🍑 باسن و سینه</option>
               <option value="حجم سینه، سرشانه و بازو">💪 سینه و بازو</option>
               <option value="شکم، پهلو و زیربغل">🔥 شکم و زیربغل</option>
             </select>
           </div>
           <button class="btn btn-purple" style="width:100%; font-size:12px;" onclick="generateAiCustomWorkout()">
-            🤖 ساخت برنامه اختصاصی جدید با هوش مصنوعی (۱۵ 🪙)
+            🤖 ساخت برنامه تمرینی اختصاصی این ماه
           </button>
           <div id="workoutInlineLoader" style="display:none;"></div>
         </div>
       </div>
 
-      <!-- بخش ۲: پلیر زنده تمرین و صفحه استراحت هوشمند (مخفی تا زمان زدن دکمه شروع) -->
       <div class="card card-full-grow" id="liveWorkoutPlayerCard" style="display:none;">
-        <!-- هدر پلیر -->
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-          <span id="playerStepBadge" style="font-size:12px; font-weight:900; color:var(--neon-cyan);">حرکت ۱ از ۶</span>
-          <button class="back-home-btn" onclick="exitLiveWorkoutPlayer()">✕ پایان / خروج</button>
+          <span id="playerStepBadge" style="font-size:12px; font-weight:900; color:var(--neon-cyan);">حرکت ۱</span>
+          <button class="back-home-btn" onclick="exitLiveWorkoutPlayer()">✕ خروج</button>
         </div>
 
-        <!-- نمای در حال حرکت (Active Exercise View) -->
         <div id="playerActiveExerciseView">
-          <div class="avatar-stage-box" id="avatarAnimationStage">
-            <!-- SVG آدمک آقا یا خانم اینجا رندر می‌شود -->
-          </div>
-
+          <div class="avatar-stage-box" id="avatarAnimationStage"></div>
           <div style="text-align:center; margin-bottom:12px;">
-            <div id="liveExTitle" style="font-size:18px; font-weight:900; color:var(--text-main);">چرخش از بازو</div>
-            <div id="liveExSub" style="font-size:12px; color:var(--text-muted); margin-top:3px;">تنفس منظم را فراموش نکن قهرمان!</div>
-            <div id="liveExTimer" style="font-size:44px; font-weight:900; color:var(--neon-cyan); margin:10px 0; font-variant-numeric:tabular-nums;">00:30</div>
+            <div id="liveExTitle" style="font-size:18px; font-weight:900;">حرکت</div>
+            <div id="liveExSub" style="font-size:12px; color:var(--text-muted); margin-top:3px;">فرم صحیح را حفظ کن قهرمان!</div>
+            <div id="liveExTimer" style="font-size:44px; font-weight:900; color:var(--neon-cyan); margin:10px 0;">00:30</div>
           </div>
-
           <div style="display:flex; gap:8px;">
             <button class="btn btn-outline" style="flex:1;" onclick="prevExerciseStep()">⏮ قبلی</button>
             <button class="btn" style="flex:2; font-size:15px;" id="pauseResumeBtn" onclick="togglePauseExercise()">⏸ توقف</button>
@@ -573,60 +700,55 @@
           </div>
         </div>
 
-        <!-- نمای استراحت بین حرکت (Smart Rest Screen) -->
         <div id="playerRestView" style="display:none;">
           <div class="rest-screen-box">
             <div style="font-size:12px; color:#93c5fd; font-weight:800;">💧 نفس عمیق بکش و استراحت کن</div>
             <div id="restCountdownNum" style="font-size:48px; font-weight:900; color:#fff; margin:8px 0;">00:30</div>
-
             <div style="display:flex; justify-content:center; gap:8px; margin-bottom:10px;">
               <button class="back-home-btn" onclick="changeActiveRestTimer(-10)">-10s</button>
-              <button class="btn btn-outline" style="padding:6px 14px; font-size:12px;" onclick="changeActiveRestTimer(20)">+20s زمان بیشتر</button>
+              <button class="btn btn-outline" style="padding:6px 14px; font-size:12px;" onclick="changeActiveRestTimer(20)">+20s</button>
               <button class="btn" style="padding:6px 18px; font-size:12px;" onclick="skipRestAndStartNext()">رد شدن ⏭</button>
             </div>
-
-            <!-- هشدار زنده کم یا زیاد بودن استراحت -->
             <div id="liveRestWarningBox" class="rest-warning-banner" style="display:block;"></div>
-
-            <div style="margin-top:14px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.12); text-align:right;">
+            <div style="margin-top:14px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.15); text-align:right;">
               <div style="font-size:11px; color:#93c5fd;">حرکت بعدی:</div>
-              <div id="nextExPreviewTitle" style="font-size:14.5px; font-weight:900; color:var(--neon-cyan); margin-top:2px;">سینه پویا (۳۰ ثانیه)</div>
+              <div id="nextExPreviewTitle" style="font-size:14.5px; font-weight:900; color:var(--neon-cyan); margin-top:2px;">حرکت بعدی</div>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 🟢 صفحه ۳: چت با مربی هوشمند -->
+    <!-- 🟢 صفحه ۴: چت صمیمی با مربی هوشمند -->
     <section id="sec-coach" class="app-section">
       <div class="fullpage-bar">
-        <div class="fullpage-title">🤖 مربی هوشمند BodyMod AI</div>
+        <div class="fullpage-title">🤖 چت صمیمی با مربی هوشمند BodyMod</div>
         <button class="back-home-btn" onclick="switchSection('dashboard')">🏠 داشبورد</button>
       </div>
       <div class="card card-full-grow">
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-          <span style="font-size:11.5px; color:var(--text-muted);">مجهز به حافظه پرونده بدنی و اهداف تخصصی شما</span>
+          <span style="font-size:11.5px; color:var(--text-muted);">سهمیه فاز بتا: روزی ۳ پیام (بدون نیاز به سکه)</span>
           <select id="aiModelSelect" style="width:auto; padding:6px 10px; font-size:11.5px; font-weight:800;">
-            <option value="lite">⚡ موتور سریع 3.5 (۲ 🪙)</option>
-            <option value="flash">🧠 موتور عمیق 3.8 (۴ 🪙)</option>
+            <option value="lite">⚡ موتور سریع 3.5</option>
+            <option value="flash">🧠 موتور عمیق 3.8</option>
           </select>
         </div>
         <div class="chat-messages-box" id="chatMessagesBox">
           <div class="msg-bubble msg-ai">
-            سلام رفیق! من مربی هوشمند بادی‌مود هستم و به کل پرونده بدنی، هدفت و حافظه اختصاصیت دسترسی دارم. سوالت رو بپرس! 🔥
+            سلام رفیق گلم! من مربی صمیمی بادی‌مودم و کل پرونده بدنی و هدفت رو بلدم. هر سوالی درباره تغذیه، خوراکی‌های روزانه یا فرم بدنت داری بپرس! 🔥😉
           </div>
         </div>
         <div style="display:flex; gap:8px; margin-top:auto;">
-          <input type="text" id="chatPromptInput" placeholder="پیامت رو بنویس..." onkeydown="if(event.key==='Enter') sendCoachMessage()">
+          <input type="text" id="chatPromptInput" placeholder="پیامت رو صمیمی بنویس (روزی ۳ پیام)..." onkeydown="if(event.key==='Enter') sendCoachMessage()">
           <button class="btn" onclick="sendCoachMessage()" style="white-space:nowrap;">ارسال 🚀</button>
         </div>
       </div>
     </section>
 
-    <!-- 🟢 صفحه ۴: پرونده بدنی و حافظه مربی -->
+    <!-- 🟢 صفحه ۵: پرونده بدنی و دوره هدف -->
     <section id="sec-profile" class="app-section">
       <div class="fullpage-bar">
-        <div class="fullpage-title">👤 پرونده بدنی و حافظه بلندمدت مربی</div>
+        <div class="fullpage-title">👤 پرونده بدنی و دوره هدف</div>
         <button class="back-home-btn" onclick="switchSection('dashboard')">🏠 داشبورد</button>
       </div>
       <div class="card card-full-grow">
@@ -644,10 +766,11 @@
           <div><label style="font-size:11px; color:var(--text-muted);">قد (cm):</label><input type="number" id="profHeight" placeholder="172"></div>
           <div><label style="font-size:11px; color:var(--text-muted);">وزن (kg):</label><input type="number" id="profWeight" placeholder="60"></div>
         </div>
+
         <div style="margin-bottom:10px;">
           <label style="font-size:11px; color:var(--text-muted);">🎯 هدف اصلی اندام شما:</label>
           <select id="profGoalMode">
-            <option value="gain_weight">📈 افزایش وزن و حجم عضلانی اصولی</option>
+            <option value="gain_weight">📈 افزایش وزن عمومی (تمرکز روی خوراکی پرکالری - بدون نیاز به تمرین)</option>
             <option value="muscle">💪 عضله‌سازی خشک و فرم‌دهی ورزشی</option>
             <option value="lose">🔥 کاهش وزن و چربی‌سوزی شکم و پهلو</option>
             <option value="tone_glutes">🍑 فرم‌دهی و تقویت تخصصی باسن و سینه</option>
@@ -655,9 +778,20 @@
             <option value="maintain">⚖️ حفظ وزن و تناسب اندام فعلی</option>
           </select>
         </div>
+
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; color:var(--neon-gold); font-weight:800;">⏳ دوره زمانی هدف (وابسته به نوع اشتراک):</label>
+          <select id="profTargetDuration" onchange="checkDurationPlanEligibility()">
+            <option value="1m">🗓️ برنامه هدف ۱ ماهه (فعال در فاز آزمایشی بتا - نیازمند تمدید ماهانه)</option>
+            <option value="3m">🔒 برنامه هدف ۳ ماهه (نیازمند اشتراک ۳ ماهه - پس از فاز بتا)</option>
+            <option value="6m">🔒 برنامه هدف ۶ ماهه (نیازمند اشتراک ۶ ماهه - پس از فاز بتا)</option>
+            <option value="12m">🔒 برنامه هدف ۱ ساله (نیازمند اشتراک ۱ ساله - پس از فاز بتا)</option>
+          </select>
+        </div>
+
         <div style="margin-bottom:14px;">
           <label style="font-size:11.5px; color:var(--neon-cyan); font-weight:800;">🧠 حافظه بلندمدت مربی هوش مصنوعی:</label>
-          <textarea id="profCoachMemory" rows="3" placeholder="نکات خاص بدنی، عضله هدف یا آسیب‌دیدگی که مربی باید همیشه به یاد داشته باشد..."></textarea>
+          <textarea id="profCoachMemory" rows="3" placeholder="هر نکته‌ای که می‌خوای مربی همیشه یادش بمونه بنویس..."></textarea>
         </div>
         <button class="btn" style="width:100%; margin-bottom:16px;" onclick="saveUserProfileForm()">💾 ذخیره پرونده و سینک ابری</button>
 
@@ -667,23 +801,38 @@
       </div>
     </section>
 
-    <!-- 🟢 صفحه ۵: فروشگاه -->
+    <!-- 🟢 صفحه ۶: فروشگاه اشتراک ماهانه و پلن‌های هدف -->
     <section id="sec-market" class="app-section">
       <div class="fullpage-bar">
-        <div class="fullpage-title">💎 فروشگاه اشتراک ویژه بتا و کوین</div>
+        <div class="fullpage-title">💎 اشتراک ویژه و پلن‌های زمانی هدف</div>
         <button class="back-home-btn" onclick="switchSection('dashboard')">🏠 داشبورد</button>
       </div>
-      <div class="card">
-        <div style="font-weight:900; font-size:14px; color:var(--neon-gold); margin-bottom:8px;">🔥 اشتراک ۱ ماهه ویژه فاز بتا + ۲۰۰ کوین</div>
-        <button class="btn btn-purple" style="width:100%;" onclick="buyMarketPackage('vip_beta_1m')">🚀 فعال‌سازی اشتراک ویژه بتا</button>
+
+      <div class="card" style="border:2px solid var(--neon-cyan);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <span style="font-weight:900; font-size:14px; color:var(--neon-cyan);">🔥 اشتراک ۱ ماهه فاز آزمایشی (بتا)</span>
+          <span id="marketSubStatusText" style="font-size:11px; font-weight:900; color:var(--neon-gold);">بررسی وضعیت...</span>
+        </div>
+        <ul style="font-size:12px; color:var(--text-muted); line-height:1.8; padding-right:18px; margin:8px 0;">
+          <li>باز شدن قفل <b>برنامه غذایی پیشنهادی اول ماه</b> + <b>تحلیل جامع آخر ماه</b></li>
+          <li>باز شدن قفل <b>طراحی برنامه ورزشی ماهانه</b> و پلیر سه‌بعدی</li>
+          <li>سهمیه چت صمیمی روزانه (روزی ۳ بار) + تحلیل خوراکی هفتگی</li>
+          <li>در فاز بتا باید <b>هر ماه تمدید شود</b> تا بخش‌های هوشمند قفل نشوند!</li>
+        </ul>
+        <button class="btn btn-purple" style="width:100%;" onclick="buyMarketPackage('vip_beta_1m')">
+          🚀 فعال‌سازی / تمدید اشتراک ۱ ماهه بتا
+        </button>
       </div>
-      <div class="card">
-        <div style="font-weight:900; font-size:13.5px; color:var(--neon-cyan); margin-bottom:8px;">🪙 بسته شارژ ۵۰ بادی‌کوین</div>
-        <button class="btn btn-outline" style="width:100%;" onclick="buyMarketPackage('coin_pack_50')">➕ دریافت ۵۰ بادی‌کوین</button>
+
+      <div class="card" style="opacity:0.75;">
+        <div style="font-weight:900; font-size:13.5px; color:var(--neon-gold); margin-bottom:6px;">🏆 اشتراک‌های هدف ۳ ماهه، ۶ ماهه و ۱ ساله (پس از فاز آزمایشی)</div>
+        <p style="font-size:11.5px; color:var(--text-muted); line-height:1.6; margin:0;">
+          پس از پایان فاز آزمایشی، برای انتخاب اهداف بلندمدت (۳ ماهه، ۶ ماهه یا ۱ ساله)، داشتن اشتراک هم‌زمان با همان دوره الزامی خواهد بود.
+        </p>
       </div>
     </section>
 
-    <!-- 🟢 صفحه ۶: پنل مدیرعامل -->
+    <!-- 🟢 صفحه ۷: پنل مدیرعامل -->
     <section id="sec-ceo" class="app-section">
       <div class="fullpage-bar">
         <div class="fullpage-title" style="color:var(--neon-gold);">👑 پنل فرماندهی مدیرعامل</div>
@@ -711,7 +860,7 @@
     <div class="modal-card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
         <h3 style="margin:0; font-size:16px; color:var(--neon-cyan);">🔐 ورود به حساب ابری BodyMod</h3>
-        <button onclick="closeAuthModal()" style="background:none; border:none; color:#94a3b8; font-size:18px; cursor:pointer;">✕</button>
+        <button onclick="closeAuthModal()" style="background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer;">✕</button>
       </div>
       <div style="margin-bottom:10px;">
         <label style="font-size:11px; color:var(--text-muted);">شماره موبایل (ارسال کد ۴ رقمی در بله):</label>
@@ -742,78 +891,41 @@
       </div>
     </div>
   </div>
-
   <script>
     const WORKER_BASE_URL = "https://server.matin-mohammadi.ir";
 
-    // برنامه پیش‌فرض و هوشمند روزها (دارای انیمیشن، زمان و کالری)
-    const DEFAULT_WORKOUT_DAYS = [
-      {
-        dayNumber: 1, title: "روز ۱: بیداری عضلات و چربی‌سوزی پایه",
-        exercises: [
-          { name: "چرخش از بازو (گرم کردن)", duration: 30, anim: "armcircle", tip: "دست‌ها کاملاً کشیده در طرفین، شانه‌ها را نرم بچرخانید." },
-          { name: "سینه پویا و باز کردن قفسه سینه", duration: 30, anim: "jumping", tip: "هنگام باز کردن دست‌ها نفس عمیق بکشید." },
-          { name: "پروانه نئونی (Jumping Jacks)", duration: 35, anim: "jumping", tip: "فرود نرم روی پنجه پا برای محافظت از زانو." },
-          { name: "اسکات استاندارد فرم‌دهنده پا و باسن", duration: 40, anim: "squat", tip: "کمر صاف، وزن روی پاشنه پا، زانو از نوک پا جلو نزند." },
-          { name: "شنا سوئدی تقویت سینه و بازو", duration: 30, anim: "pushup", tip: "بدن در یک راستا، آرنج‌ها با زاویه ۴۵ درجه." },
-          { name: "اسکات نبضی (پمپاژ عضلانی)", duration: 30, anim: "squat", tip: "در پایین‌ترین نقطه دامنه، حرکات کوتاه انجام دهید." }
-        ]
-      },
-      {
-        dayNumber: 2, title: "روز ۲: فرم‌دهی بالاتنه، سینه و شکم",
-        exercises: [
-          { name: "چرخش از بازو و گرم کردن مفاصل", duration: 30, anim: "armcircle", tip: "حرکت کنترل‌شده برای آماده‌سازی سرشانه." },
-          { name: "پروانه سرعتی (افزایش ضربان)", duration: 40, anim: "jumping", tip: "ریتم تند و منظم را حفظ کنید." },
-          { name: "شنا سوئدی دست باز (تمرکز سینه)", duration: 35, anim: "pushup", tip: "انقباض کامل عضلات سینه در بالای حرکت." },
-          { name: "اسکات عمیق + پرش نرم", duration: 35, anim: "squat", tip: "عالی برای فرم‌دهی عضلات سرینی (باسن) و ران." },
-          { name: "شنا الماسی (تمرکز پشت بازو)", duration: 30, anim: "pushup", tip: "دست‌ها نزدیک به هم زیر قفسه سینه." }
-        ]
-      },
-      {
-        dayNumber: 3, title: "روز ۳: تمرکز ویژه پایین‌تنه، باسن و ران",
-        exercises: [
-          { name: "گرم کردن پویا و چرخش کمر", duration: 30, anim: "armcircle", tip: "مفاصل ران و زانو را گرم کنید." },
-          { name: "اسکات سومو (فرم‌دهی تخصصی باسن)", duration: 45, anim: "squat", tip: "پاها بازتر از عرض شانه، پنجه‌ها کمی به بیرون." },
-          { name: "پروانه استقامتی", duration: 35, anim: "jumping", tip: "تنفس عمیق و حفظ ریتم." },
-          { name: "اسکات مکث‌دار ایزومتریک", duration: 40, anim: "squat", tip: "۲ ثانیه مکث در پایین‌ترین نقطه حرکت." },
-          { name: "شنا سوئدی کلاسیک", duration: 30, anim: "pushup", tip: "حفظ انقباض شکم در طول حرکت." }
-        ]
-      },
-      {
-        dayNumber: 4, title: "روز ۴: چالش استقامت کل بدن (Full Body)",
-        exercises: [
-          { name: "چرخش بازو و سرشانه", duration: 30, anim: "armcircle", tip: "آماده‌سازی کامل مفاصل بالاتنه." },
-          { name: "پروانه قدرتی", duration: 45, anim: "jumping", tip: "حداکثر کالری‌سوزی." },
-          { name: "شنا سوئدی استقامتی", duration: 40, anim: "pushup", tip: "فرم صحیح را فدای سرعت نکنید." },
-          { name: "اسکات انفجاری", duration: 45, anim: "squat", tip: "تقویت فوق‌العاده عضلات پا و باسن." }
-        ]
-      }
-    ];
-
     let appState = {
       userKey: localStorage.getItem("bm_user_key") || "",
+      themeMode: localStorage.getItem("bm_theme_mode") || "system", // پیش‌فرض بر اساس سیستم گوشی کاربر
       isCeo: false,
       isVip: false,
-      bodyCoins: 30,
+      vipExpiresAt: 0,
       selectedDateOffset: 0,
       userProfile: {
         nickname: "", city: "", age: 20, gender: "male", height: 172, weight: 60,
-        goalMode: "gain_weight", coachMemory: "", profileCompleted: false
+        goalMode: "gain_weight", targetDuration: "1m", coachMemory: "", profileCompleted: false
       },
+      dietConfig: {
+        monthlyMenuMonth: "",
+        suggestedMeals: [],
+        mealRemindersEnabled: false,
+        timeBreakfast: "08:30",
+        timeLunch: "13:30",
+        timeDinner: "20:30"
+      },
+      customFoods: [],
       workoutConfig: {
         avatarGender: "male",
         preferredRestSec: 30,
-        scheduledWeekdays: [6, 1, 3], // شنبه، دوشنبه، چهارشنبه پیش‌فرض
-        notifTime: "18:00",
+        scheduledWeekdays: [6, 1, 3],
         notifEnabled: false,
-        unlockedDayIndex: 0, // فقط روز اول (اندیس 0) باز است تا وقتی کامل شود
+        unlockedDayIndex: 0,
         completedDays: [],
-        planDays: DEFAULT_WORKOUT_DAYS
+        planDays: [] // خالی در ابتدا تا بدون درخواست کاربر هیچ برنامه‌ای خودسرانه باز نشود
       },
       daysLog: {}
     };
 
-    // متغیرهای پلیر زنده
     let playerState = {
       activeDayIndex: 0,
       currentExIndex: 0,
@@ -823,53 +935,112 @@
       timerInterval: null
     };
 
-    function getBLogoLoaderHtml(customText = "مربی هوشمند در حال پردازش...") {
-      return `
-        <div class="b-inline-loader">
-          <svg class="b-svg-logo" viewBox="0 0 100 100">
-            <path class="b-svg-path" d="M 28 15 L 28 85 L 60 85 C 78 85 82 67 66 52 C 80 42 76 15 56 15 Z M 28 50 L 58 50" />
-          </svg>
-          <div class="b-loader-text">${customText}</div>
-        </div>
-      `;
+    // ==================== سیستم هوشمند تم ۳ حالته (سیستم / دارک / لایت) ====================
+    function getEffectiveTheme() {
+      const mode = appState.themeMode || "system";
+      if (mode === "light") return "light";
+      if (mode === "dark") return "dark";
+      // حالت system: تشخیص خودکار از روی تنظیمات دارک/لایت گوشی کاربر
+      if (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) {
+        return "light";
+      }
+      return "dark";
     }
 
-    // گرافیک برداری (SVG) آدمک متحرک آقا و خانم با انیمیشن ورزشی
-    function getAvatarSvgHtml(gender, animClass) {
+    function applyThemeMode() {
+      const mode = appState.themeMode || "system";
+      const effective = getEffectiveTheme();
+
+      if (effective === "light") {
+        document.body.classList.add("light-mode");
+      } else {
+        document.body.classList.remove("light-mode");
+      }
+
+      const lbl = document.getElementById("themeStatusLabel");
+      if (lbl) {
+        if (mode === "system") {
+          lbl.textContent = `📱 سیستم (${effective === "light" ? "روشن" : "تاریک"})`;
+        } else if (mode === "dark") {
+          lbl.textContent = "🌙 دارک (دستی)";
+        } else {
+          lbl.textContent = "☀️ لایت (دستی)";
+        }
+      }
+    }
+
+    function cycleThemeMode() {
+      const current = appState.themeMode || "system";
+      if (current === "system") appState.themeMode = "dark";
+      else if (current === "dark") appState.themeMode = "light";
+      else appState.themeMode = "system";
+
+      localStorage.setItem("bm_theme_mode", appState.themeMode);
+      applyThemeMode();
+    }
+
+    // اگر کاربر روی حالت «سیستم» باشد و تم گوشی خود را عوض کند، برنامه درجا هماهنگ می‌شود
+    if (window.matchMedia) {
+      try {
+        window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
+          if ((appState.themeMode || "system") === "system") applyThemeMode();
+        });
+      } catch (e) {}
+    }
+
+    // ==================== کاراکتر سه‌بعدی حجم‌دار (3D Volumetric Shaded Character) ====================
+    function get3DAvatarSvgHtml(gender, animClass, compact = false) {
       const isFemale = gender === "female";
-      const mainColor = isFemale ? "#f15bb5" : "#00f5d4";
-      const outfitColor = isFemale ? "#9b5de5" : "#0284c7";
-      const hairPath = isFemale
-        ? `<path d="M36 22 Q50 10 64 22 L70 42 Q62 34 58 28 L42 28 Q38 34 30 42 Z" fill="${mainColor}"/>`
-        : `<path d="M40 18 Q50 12 60 18 Z" fill="${mainColor}"/>`;
-      const torsoShape = isFemale
-        ? `<polygon points="38,48 62,48 56,78 64,102 36,102 44,78" fill="${outfitColor}" stroke="${mainColor}" stroke-width="2"/>`
-        : `<polygon points="33,46 67,46 59,98 41,98" fill="${outfitColor}" stroke="${mainColor}" stroke-width="2"/>`;
+      const suitGrad = isFemale ? "url(#femaleSuit3D)" : "url(#maleSuit3D)";
+      const sizeStyle = compact ? "width:68px; height:76px;" : "";
+
+      const hair3D = isFemale
+        ? `<path d="M40 24 Q60 8 80 24 L88 50 Q76 38 72 30 L48 30 Q44 38 32 50 Z" fill="#db2777"/>`
+        : `<path d="M44 20 Q60 10 76 20 L74 28 L46 28 Z" fill="#1e293b"/>`;
+
+      const torso3D = isFemale
+        ? `<path d="M43 52 C43 48 77 48 77 52 L71 84 L79 112 L41 112 L49 84 Z" fill="${suitGrad}" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>`
+        : `<path d="M36 50 C36 45 84 45 84 50 L74 108 L46 108 Z" fill="${suitGrad}" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>`;
 
       return `
-        <svg class="avatar-svg ${animClass}" viewBox="0 0 100 175">
-          <g class="av-whole">
-            ${hairPath}
-            <!-- سر -->
-            <circle cx="50" cy="28" r="11" fill="#f8fafc" stroke="${mainColor}" stroke-width="2.5"/>
-            <!-- دست‌ها -->
-            <g class="av-arms">
-              <line x1="35" y1="50" x2="14" y2="56" stroke="#f8fafc" stroke-width="6" stroke-linecap="round"/>
-              <line x1="65" y1="50" x2="86" y2="56" stroke="#f8fafc" stroke-width="6" stroke-linecap="round"/>
-              <circle cx="13" cy="56" r="4" fill="${mainColor}"/>
-              <circle cx="87" cy="56" r="4" fill="${mainColor}"/>
+        <svg class="avatar-3d-svg ${animClass}" style="${sizeStyle}" viewBox="0 0 120 190">
+          <ellipse cx="60" cy="176" rx="34" ry="7" fill="rgba(0, 245, 212, 0.28)" />
+          <g class="av3d-body">
+            ${hair3D}
+            <rect x="54" y="40" width="12" height="12" rx="4" fill="url(#skin3D)"/>
+            <circle cx="60" cy="30" r="13.5" fill="url(#skin3D)" />
+            <g class="av3d-arms">
+              <rect x="14" y="50" width="24" height="11" rx="5.5" fill="url(#skin3D)" />
+              <circle cx="14" cy="55.5" r="5.5" fill="#00f5d4" />
+              <rect x="82" y="50" width="24" height="11" rx="5.5" fill="url(#skin3D)" />
+              <circle cx="106" cy="55.5" r="5.5" fill="#00f5d4" />
             </g>
-            <!-- تنه -->
-            ${torsoShape}
-            <!-- پاها -->
-            <g class="av-legs">
-              <line x1="43" y1="100" x2="38" y2="155" stroke="#f8fafc" stroke-width="7" stroke-linecap="round"/>
-              <line x1="57" y1="100" x2="62" y2="155" stroke="#f8fafc" stroke-width="7" stroke-linecap="round"/>
-              <rect x="31" y="153" width="13" height="6" rx="3" fill="${mainColor}"/>
-              <rect x="56" y="153" width="13" height="6" rx="3" fill="${mainColor}"/>
+            ${torso3D}
+            <line x1="48" y1="66" x2="72" y2="66" stroke="rgba(255,255,255,0.28)" stroke-width="2" stroke-linecap="round"/>
+            <path d="M45 106 L75 106 L78 130 L62 130 L60 118 L58 130 L42 130 Z" fill="url(#shorts3D)"/>
+            <g class="av3d-legs">
+              <rect x="44" y="128" width="11" height="40" rx="5.5" fill="url(#skin3D)"/>
+              <rect x="65" y="128" width="11" height="40" rx="5.5" fill="url(#skin3D)"/>
+              <rect x="39" y="165" width="18" height="8" rx="4" fill="#00f5d4"/>
+              <rect x="63" y="165" width="18" height="8" rx="4" fill="#00f5d4"/>
             </g>
           </g>
         </svg>
+      `;
+    }
+
+    function getBLogoLoaderHtml(customText = "مربی هوشمند در حال پردازش...") {
+      const gender = appState.workoutConfig?.avatarGender || appState.userProfile?.gender || "male";
+      return `
+        <div class="b-inline-loader">
+          <div class="loader-row-3d">
+            <svg class="b-svg-logo" viewBox="0 0 100 100">
+              <path class="b-svg-path" d="M 28 15 L 28 85 L 60 85 C 78 85 82 67 66 52 C 80 42 76 15 56 15 Z M 28 50 L 58 50" />
+            </svg>
+            ${get3DAvatarSvgHtml(gender, "anim-pushup", true)}
+          </div>
+          <div class="b-loader-text">${customText}</div>
+        </div>
       `;
     }
 
@@ -881,82 +1052,67 @@
 
     function loadLocalState() {
       try {
-        const saved = localStorage.getItem("bm_app_state_v70");
+        const saved = localStorage.getItem("bm_app_state_v74");
         if (saved) {
           const parsed = JSON.parse(saved);
           appState = {
             ...appState,
             ...parsed,
             userProfile: { ...appState.userProfile, ...(parsed.userProfile || {}) },
-            workoutConfig: { ...appState.workoutConfig, ...(parsed.workoutConfig || {}) }
+            dietConfig: { ...appState.dietConfig, ...(parsed.dietConfig || {}) },
+            workoutConfig: { ...appState.workoutConfig, ...(parsed.workoutConfig || {}) },
+            customFoods: Array.isArray(parsed.customFoods) ? parsed.customFoods : []
           };
-          if (!appState.workoutConfig.planDays || !appState.workoutConfig.planDays.length) {
-            appState.workoutConfig.planDays = DEFAULT_WORKOUT_DAYS;
-          }
         }
+        const savedTheme = localStorage.getItem("bm_theme_mode");
+        if (savedTheme) appState.themeMode = savedTheme;
       } catch (e) {}
     }
 
     function saveLocalState() {
       try {
-        localStorage.setItem("bm_app_state_v70", JSON.stringify(appState));
+        localStorage.setItem("bm_app_state_v74", JSON.stringify(appState));
         if (appState.userKey) localStorage.setItem("bm_user_key", appState.userKey);
       } catch (e) {}
     }
 
-    // محاسبه وضعیت آتیش: قرمز (🔥 فعال)، آبی (💙 در خطر یخ‌زدگی امروز)، خاموش (💀 سوخته)
+    function isSubscriptionActive() {
+      return appState.isCeo || appState.isVip || (appState.vipExpiresAt && appState.vipExpiresAt > Date.now());
+    }
+
     function evaluateFlameStatus() {
       const todayKey = getDateKey(0);
       const yesterdayKey = getDateKey(-1);
       const todayLog = appState.daysLog[todayKey] || {};
       const yesterdayLog = appState.daysLog[yesterdayKey] || {};
 
-      // شمارش کل روزهای تمرین‌شده
-      let totalWorkoutDays = 0;
+      let totalActiveDays = 0;
       Object.keys(appState.daysLog).forEach(k => {
-        if (appState.daysLog[k] && appState.daysLog[k].workoutDone) totalWorkoutDays++;
+        const dl = appState.daysLog[k];
+        if (dl && (dl.workoutDone || (dl.foods && dl.foods.length > 0))) totalActiveDays++;
       });
 
-      const todayJsDay = new Date().getDay(); // 0=Sun ... 6=Sat
-      const scheduled = appState.workoutConfig.scheduledWeekdays || [];
-      const isTodayScheduled = scheduled.length === 0 || scheduled.includes(todayJsDay);
+      const todayDone = todayLog.workoutDone || (todayLog.foods && todayLog.foods.length > 0);
+      const yesterdayDone = yesterdayLog.workoutDone || (yesterdayLog.foods && yesterdayLog.foods.length > 0);
 
-      if (todayLog.workoutDone) {
+      if (todayDone) {
         return {
-          mode: "red",
-          icon: "🔥",
-          streak: Math.max(1, totalWorkoutDays),
-          title: `آتیش قرمز شعله‌ور: ${Math.max(1, totalWorkoutDays)} روز استریک!`,
-          sub: "ایول قهرمان! تمرین امروزت رو انجام دادی و آتیشت داغِ داغه!"
+          mode: "red", icon: "🔥", streak: Math.max(1, totalActiveDays),
+          title: `آتیش قرمز شعله‌ور: ${Math.max(1, totalActiveDays)} روز استریک!`,
+          sub: "دمت گرم قهرمان! امروز برنامهت رو ثبت کردی و آتیشت داغه!"
         };
       }
-
-      if (isTodayScheduled || yesterdayLog.workoutDone) {
+      if (yesterdayDone || totalActiveDays > 0) {
         return {
-          mode: "blue",
-          icon: "💙",
-          streak: totalWorkoutDays,
-          title: `آتیش آبی (هشدار یخ‌زدگی!): ${totalWorkoutDays} روز استریک`,
-          sub: "امروز نوبت تمرینته! اگه امروز تمرین نکنی، آتیش آبی خاموش می‌شه!"
+          mode: "blue", icon: "💙", streak: totalActiveDays,
+          title: `آتیش آبی (در خطر خاموشی!): ${totalActiveDays} روز استریک`,
+          sub: "امروز هنوز خوراکی یا تمرینت رو ثبت نکردی! نذار آتیشت خاموش بشه!"
         };
       }
-
-      if (totalWorkoutDays === 0) {
-        return {
-          mode: "dead",
-          icon: "💀",
-          streak: 0,
-          title: "آتیش خاموشه! (۰ روز استریک)",
-          sub: "اولین تمرین امروزت رو شروع کن تا آتیش قرمزت روشن بشه!"
-        };
-      }
-
       return {
-        mode: "red",
-        icon: "🔥",
-        streak: totalWorkoutDays,
-        title: `آتیش قرمز فعال: ${totalWorkoutDays} روز استریک`,
-        sub: "برنامه‌ت منظمه! طبق روزهای انتخابیت پیش برو تا آتیشت همیشه روشن بمونه."
+        mode: "dead", icon: "💀", streak: 0,
+        title: "آتیش خاموشه! (۰ روز استریک)",
+        sub: "اولین وعده غذایی یا تمرین امروزت رو ثبت کن تا آتیش قرمز روشن بشه!"
       };
     }
 
@@ -968,7 +1124,6 @@
       document.getElementById("flameTitleText").textContent = st.title;
       document.getElementById("flameSubText").textContent = st.sub;
 
-      // رندر نوار ۷ روز اخیر
       const strip = document.getElementById("weekCalendarStrip");
       strip.innerHTML = "";
       const dayNames = ["یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه", "شنبه"];
@@ -977,20 +1132,15 @@
         d.setDate(d.getDate() + offset);
         const k = d.toISOString().split("T")[0];
         const log = appState.daysLog[k] || {};
+        const done = log.workoutDone || (log.foods && log.foods.length > 0);
         const name = dayNames[d.getDay()];
 
         let cls = "week-day-pill";
         let sym = "⚪";
         if (offset === 0) cls += " day-today";
-        if (log.workoutDone) {
-          cls += " day-done";
-          sym = "🔥";
-        } else if (offset === 0 && st.mode === "blue") {
-          cls += " day-blue";
-          sym = "💙";
-        } else if (offset > 0) {
-          sym = "🔒";
-        }
+        if (done) { cls += " day-done"; sym = "🔥"; }
+        else if (offset === 0 && st.mode === "blue") { cls += " day-blue"; sym = "💙"; }
+        else if (offset > 0) sym = "🔒";
 
         const pill = document.createElement("div");
         pill.className = cls;
@@ -999,40 +1149,261 @@
       }
     }
 
-    // رندر بخش باشگاه، قفل روزها و هشدار استراحت
-    function renderWorkoutHub() {
-      const cfg = appState.workoutConfig;
+    // ==================== بخش برنامه غذایی هوشمند و بانک غذاهای سفارشی ====================
+    function renderDietSection() {
+      const subOk = isSubscriptionActive();
+      document.getElementById("dietSubLockBanner").style.display = subOk ? "none" : "block";
+      document.getElementById("aiMonthlyDietPlanCard").style.opacity = subOk ? "1" : "0.45";
+      document.getElementById("aiFoodScannerCard").style.opacity = subOk ? "1" : "0.45";
 
-      // دکمه‌های آقا / خانم
+      document.getElementById("mealNotifToggle").checked = !!appState.dietConfig.mealRemindersEnabled;
+      document.getElementById("timeBreakfast").value = appState.dietConfig.timeBreakfast || "08:30";
+      document.getElementById("timeLunch").value = appState.dietConfig.timeLunch || "13:30";
+      document.getElementById("timeDinner").value = appState.dietConfig.timeDinner || "20:30";
+
+      const sugBox = document.getElementById("suggestedDailyMealsBox");
+      sugBox.innerHTML = "";
+      const meals = appState.dietConfig.suggestedMeals || [];
+      if (meals.length === 0) {
+        sugBox.innerHTML = `<div style="font-size:11.5px; color:var(--text-muted); text-align:center; padding:8px;">هنوز منوی غذایی پیشنهادی این ماهت رو نگرفتی! روی دکمه بالا بزن تا هوش مصنوعی برات بچینه.</div>`;
+      } else {
+        meals.forEach((m, idx) => {
+          const row = document.createElement("div");
+          row.className = "exercise-item-row";
+          row.innerHTML = `
+            <div>
+              <div style="font-weight:900; font-size:12.5px; color:var(--neon-cyan);">${m.mealType || "وعده"}: ${m.name}</div>
+              <div style="font-size:11px; color:var(--text-muted);">${m.cal} kcal | P:${m.prot}g | C:${m.carb}g | F:${m.fat}g</div>
+            </div>
+            <button class="btn" style="padding:6px 10px; font-size:11px;" onclick="logSuggestedMeal(${idx})">➕ خوردم</button>
+          `;
+          sugBox.appendChild(row);
+        });
+      }
+
+      const customBox = document.getElementById("savedCustomFoodsList");
+      customBox.innerHTML = "";
+      if (!appState.customFoods || appState.customFoods.length === 0) {
+        customBox.innerHTML = `<span style="font-size:11px; color:var(--text-muted);">هر خوراکی که با AI تحلیل کنی یا دستی ثبت کنی، اینجا برای همیشه ذخیره می‌شه.</span>`;
+      } else {
+        appState.customFoods.forEach((cf) => {
+          const chip = document.createElement("button");
+          chip.className = "back-home-btn";
+          chip.style.borderColor = "var(--neon-cyan)";
+          chip.innerHTML = `🍽️ ${cf.name} (${cf.cal} kcal) ➕`;
+          chip.onclick = () => addFoodToTodayLog(cf);
+          customBox.appendChild(chip);
+        });
+      }
+    }
+
+    function saveToCustomFoodsBank(foodObj) {
+      if (!appState.customFoods) appState.customFoods = [];
+      const exists = appState.customFoods.some(f => f.name.trim() === foodObj.name.trim());
+      if (!exists) {
+        appState.customFoods.unshift({
+          name: foodObj.name,
+          cal: Number(foodObj.cal) || 200,
+          prot: Number(foodObj.prot) || 10,
+          carb: Number(foodObj.carb) || 25,
+          fat: Number(foodObj.fat) || 7
+        });
+        if (appState.customFoods.length > 40) appState.customFoods.pop();
+      }
+    }
+
+    function addFoodToTodayLog(foodObj) {
+      const dKey = getDateKey(appState.selectedDateOffset);
+      if (!appState.daysLog[dKey]) appState.daysLog[dKey] = { foods: [], water: 0, workoutDone: false };
+      appState.daysLog[dKey].foods.push({ ...foodObj });
+      saveToCustomFoodsBank(foodObj);
+      saveLocalState();
+      renderAllUI();
+      renderDietSection();
+      syncWithCloud();
+    }
+
+    function logSuggestedMeal(idx) {
+      const m = (appState.dietConfig.suggestedMeals || [])[idx];
+      if (!m) return;
+      addFoodToTodayLog(m);
+      alert(`✅ «${m.name}» به وعده‌های امروزت اضافه شد!`);
+    }
+
+    function addManualCustomFood() {
+      const name = document.getElementById("manualFoodName").value.trim();
+      const cal = Number(document.getElementById("manualFoodCal").value) || 0;
+      const prot = Number(document.getElementById("manualFoodProt").value) || 0;
+      const carb = Number(document.getElementById("manualFoodCarb").value) || 0;
+      const fat = Number(document.getElementById("manualFoodFat").value) || 0;
+
+      if (!name || cal <= 0) {
+        alert("رفیق لطفاً نام خوراکی و میزان کالری رو وارد کن!");
+        return;
+      }
+
+      const foodObj = { name, cal, prot, carb, fat };
+      addFoodToTodayLog(foodObj);
+
+      document.getElementById("manualFoodName").value = "";
+      document.getElementById("manualFoodCal").value = "";
+      document.getElementById("manualFoodProt").value = "";
+      document.getElementById("manualFoodCarb").value = "";
+      document.getElementById("manualFoodFat").value = "";
+      alert(`✅ خوراکی «${name}» ثبت شد و توی بانک غذاهای سفارشیت هم ذخیره شد!`);
+    }
+
+    async function generateMonthlyAiDietMenu() {
+      if (!appState.userKey) { openAuthModal(); return; }
+      if (!isSubscriptionActive()) { switchSection("market"); return; }
+
+      const loader = document.getElementById("dietMenuInlineLoader");
+      loader.style.display = "block";
+      loader.innerHTML = getBLogoLoaderHtml("مربی هوشمند در حال چیدن منوی غذایی روزانه این ماهت...");
+
+      const targets = calculateTargetMacros();
+      const prompt = buildEnrichedPrompt(`بر اساس هدف من و نیاز روزانه ${targets.cal} کالری، یک منوی خوراکی پیشنهادی روزانه (شامل صبحانه، میان‌وعده، ناهار و شام) بده که هر روز بتوانم بخورم. حتماً در انتهای پاسخت یک خط دقیقاً با این فرمت JSON قرار بده:\nDIET_PLAN_JSON:[{"mealType":"صبحانه","name":"نام خوراکی","cal":450,"prot":22,"carb":50,"fat":15}]`);
+
+      try {
+        const res = await fetch(`${WORKER_BASE_URL}/api/ai/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userKey: appState.userKey, prompt, requestType: "chat", modelType: "flash" })
+        });
+        const data = await res.json();
+        loader.style.display = "none";
+        if (res.ok && data.ok) {
+          const match = data.reply.match(/DIET_PLAN_JSON:\s*(\[[\s\S]*\])/);
+          if (match && match[1]) {
+            try {
+              const parsed = JSON.parse(match[1]);
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                appState.dietConfig.suggestedMeals = parsed;
+              }
+            } catch (e) {}
+          }
+          saveLocalState();
+          renderDietSection();
+          syncWithCloud();
+          alert("🍱 منوی خوراکی‌های پیشنهادی این ماهت آماده شد!");
+        } else {
+          alert("⛔ " + (data.error || "خطا"));
+        }
+      } catch (e) { loader.style.display = "none"; }
+    }
+
+    async function runMonthlyDietAnalysis() {
+      if (!appState.userKey) { openAuthModal(); return; }
+      if (!isSubscriptionActive()) { switchSection("market"); return; }
+
+      const loader = document.getElementById("monthlyReviewLoader");
+      const resBox = document.getElementById("monthlyReviewResultBox");
+      resBox.style.display = "none";
+      loader.style.display = "block";
+      loader.innerHTML = getBLogoLoaderHtml("در حال جمع‌آوری و تحلیل خوراکی‌های ۳۰ روز گذشته شما...");
+
+      let summaryLines = [];
+      for (let i = -29; i <= 0; i++) {
+        const k = getDateKey(i);
+        const dl = appState.daysLog[k];
+        if (dl && dl.foods && dl.foods.length > 0) {
+          const names = dl.foods.map(f => `${f.name}(${f.cal}kcal)`).join("، ");
+          summaryLines.push(`${k}: ${names}`);
+        }
+      }
+      const logSummary = summaryLines.length > 0
+        ? summaryLines.join("\n")
+        : "کاربر در این ماه تنها چند وعده محدود ثبت کرده است؛ بر اساس هدفش راهنمایی‌اش کن.";
+
+      try {
+        const res = await fetch(`${WORKER_BASE_URL}/api/ai/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userKey: appState.userKey,
+            prompt: buildEnrichedPrompt(`این لیست تمام خوراکی‌های ثبت‌شده من در ۱ ماه گذشته است:\n${logSummary}\nلطفاً عملکرد تغذیه‌ای من را تحلیل کن و بگو برای ماه آینده چه تغییراتی بدهم.`),
+            requestType: "monthly_diet_review",
+            modelType: "flash"
+          })
+        });
+        const data = await res.json();
+        loader.style.display = "none";
+        if (res.ok && data.ok) {
+          resBox.style.display = "block";
+          resBox.textContent = data.reply;
+        } else {
+          alert("⛔ " + (data.error || "خطا در تحلیل ماهانه"));
+        }
+      } catch (e) { loader.style.display = "none"; }
+    }
+
+    function saveMealReminderTimes() {
+      appState.dietConfig.timeBreakfast = document.getElementById("timeBreakfast").value || "08:30";
+      appState.dietConfig.timeLunch = document.getElementById("timeLunch").value || "13:30";
+      appState.dietConfig.timeDinner = document.getElementById("timeDinner").value || "20:30";
+      saveLocalState();
+    }
+
+    function toggleOptionalMealReminders() {
+      const checked = document.getElementById("mealNotifToggle").checked;
+      appState.dietConfig.mealRemindersEnabled = checked;
+      saveMealReminderTimes();
+      if (checked) {
+        const title = "🍱 یادآور وعده‌های غذایی BodyMod فعال شد!";
+        const msg = `صبحانه (${appState.dietConfig.timeBreakfast})، ناهار (${appState.dietConfig.timeLunch}) و شام (${appState.dietConfig.timeDinner}) بهت یادآوری می‌شه رفیق!`;
+        if (window.AndroidNative && window.AndroidNative.requestNotificationPermission) {
+          window.AndroidNative.requestNotificationPermission(title, msg);
+        } else if ("Notification" in window) {
+          Notification.requestPermission();
+        }
+      }
+    }
+
+    // ==================== بخش باشگاه سه‌بعدی ====================
+    function renderWorkoutHub() {
+      const subOk = isSubscriptionActive();
+      document.getElementById("workoutSubLockBanner").style.display = subOk ? "none" : "block";
+
+      const isGainGeneral = appState.userProfile.goalMode === "gain_weight";
+      const hasPlan = Array.isArray(appState.workoutConfig.planDays) && appState.workoutConfig.planDays.length > 0;
+
+      if (isGainGeneral && !hasPlan) {
+        document.getElementById("gainWeightNoWorkoutCard").style.display = "block";
+      } else {
+        document.getElementById("gainWeightNoWorkoutCard").style.display = "none";
+      }
+
+      const cfg = appState.workoutConfig;
       const btnM = document.getElementById("avatarBtnMale");
       const btnF = document.getElementById("avatarBtnFemale");
       if (cfg.avatarGender === "female") {
-        btnF.style.borderColor = "var(--neon-pink)";
-        btnF.style.color = "var(--neon-pink)";
-        btnM.style.borderColor = "rgba(255,255,255,0.15)";
-        btnM.style.color = "var(--text-main)";
+        btnF.style.borderColor = "var(--neon-pink)"; btnF.style.color = "var(--neon-pink)";
+        btnM.style.borderColor = "var(--card-border)"; btnM.style.color = "var(--text-main)";
       } else {
-        btnM.style.borderColor = "var(--neon-cyan)";
-        btnM.style.color = "var(--neon-cyan)";
-        btnF.style.borderColor = "rgba(255,255,255,0.15)";
-        btnF.style.color = "var(--text-main)";
+        btnM.style.borderColor = "var(--neon-cyan)"; btnM.style.color = "var(--neon-cyan)";
+        btnF.style.borderColor = "var(--card-border)"; btnF.style.color = "var(--text-main)";
       }
 
-      // روزهای هفته انتخاب‌شده
       document.querySelectorAll("#weekdaySelectorBox .weekday-chip").forEach(el => {
         const dNum = Number(el.getAttribute("data-day"));
         if ((cfg.scheduledWeekdays || []).includes(dNum)) el.classList.add("selected");
         else el.classList.remove("selected");
       });
-      document.getElementById("notifTimeInput").value = cfg.notifTime || "18:00";
 
-      // زمان استراحت و هشدار هوشمند
       updateRestWarningUI(cfg.preferredRestSec || 30, "restSmartWarning", "restDurationLabel");
 
-      // نقشه روزها (فقط روز unlockedDayIndex باز است، روزهای بعدی قفل 🔒)
+      if (!hasPlan) {
+        document.getElementById("noWorkoutPlanYetBox").style.display = "block";
+        document.getElementById("activeWorkoutPlanContainer").style.display = "none";
+        return;
+      }
+
+      document.getElementById("noWorkoutPlanYetBox").style.display = "none";
+      document.getElementById("activeWorkoutPlanContainer").style.display = "block";
+
       const grid = document.getElementById("planDaysGrid");
       grid.innerHTML = "";
-      const plan = cfg.planDays || DEFAULT_WORKOUT_DAYS;
+      const plan = cfg.planDays;
       const unlockedIdx = Math.min(cfg.unlockedDayIndex || 0, plan.length - 1);
       document.getElementById("unlockedDayBadge").textContent = `روز فعال: روز ${unlockedIdx + 1}`;
 
@@ -1046,11 +1417,11 @@
         card.innerHTML = `
           <div style="font-size:15px;">${isCompleted ? "✅" : isUnlockedToday ? "🔥" : "🔒"}</div>
           <div style="font-weight:900; font-size:12px; margin-top:3px;">روز ${idx + 1}</div>
-          <div style="font-size:9.5px; color:var(--text-muted);">${isLocked ? "قفل است" : isCompleted ? "انجام شده" : "تمرین امروز"}</div>
+          <div style="font-size:9.5px; color:var(--text-muted);">${isLocked ? "قفل" : isCompleted ? "انجام شد" : "امروز"}</div>
         `;
         card.onclick = () => {
           if (isLocked) {
-            alert("🔒 این روز هنوز قفله رفیق! اول باید تمرین امروزت رو کامل انجام بدی تا روز بعدی باز بشه.");
+            alert("🔒 رفیق این روز هنوز قفله! اول تمرین روز فعلیت رو کامل کن تا باز بشه.");
             return;
           }
           playerState.activeDayIndex = idx;
@@ -1064,32 +1435,20 @@
     }
 
     function renderSelectedDayPreview(dayIdx) {
-      const plan = appState.workoutConfig.planDays || DEFAULT_WORKOUT_DAYS;
-      const dayObj = plan[dayIdx] || plan[0];
+      const plan = appState.workoutConfig.planDays || [];
+      const dayObj = plan[dayIdx];
+      if (!dayObj) return;
       const box = document.getElementById("todayExercisesPreviewBox");
 
-      let totalSec = 0;
-      (dayObj.exercises || []).forEach(ex => (totalSec += Number(ex.duration) || 30));
-      const totalMin = Math.max(4, Math.round((totalSec + dayObj.exercises.length * appState.workoutConfig.preferredRestSec) / 60));
-
-      let html = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-          <b style="font-size:13px; color:var(--neon-cyan);">${dayObj.title}</b>
-          <span style="font-size:11px; color:var(--neon-gold);">⏱️ حدود ${totalMin} دقیقه (${dayObj.exercises.length} حرکت)</span>
-        </div>
-      `;
-
+      let html = `<div style="font-weight:900; font-size:13px; color:var(--neon-cyan); margin-bottom:8px;">${dayObj.title}</div>`;
       (dayObj.exercises || []).forEach((ex, i) => {
         html += `
           <div class="exercise-item-row">
-            <div style="display:flex; align-items:center; gap:10px;">
-              <span style="background:rgba(0,245,212,0.14); color:var(--neon-cyan); width:26px; height:26px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:12px;">${i + 1}</span>
-              <div>
-                <div style="font-weight:800; font-size:12.5px;">${ex.name}</div>
-                <div style="font-size:10.5px; color:var(--text-muted);">${ex.tip || ""}</div>
-              </div>
+            <div>
+              <div style="font-weight:800; font-size:12.5px;">${i + 1}. ${ex.name}</div>
+              <div style="font-size:10.5px; color:var(--text-muted);">${ex.tip || ""}</div>
             </div>
-            <span style="font-weight:900; font-size:12px; color:var(--neon-cyan);">00:${String(ex.duration).padStart(2, "0")}</span>
+            <span style="font-weight:900; font-size:12px; color:var(--neon-cyan);">00:${String(ex.duration || 30).padStart(2, "0")}</span>
           </div>
         `;
       });
@@ -1100,56 +1459,34 @@
       appState.workoutConfig.avatarGender = gender;
       saveLocalState();
       renderWorkoutHub();
-      syncWithCloud();
     }
 
-    // سیستم هوشمند ارزیابی زمان استراحت (بهینه: ۳۰ تا ۴۵ ثانیه)
     function getSmartRestEvaluation(sec) {
       if (sec < 20) {
-        return {
-          level: "short",
-          color: "#f97316",
-          bg: "rgba(249,115,22,0.15)",
-          msg: `⚠️ هشدار مربی (${sec} ثانیه خیلی کمه!): استراحت کمتر از ۲۰ ثانیه باعث تجمع اسیدلاکتیک، کمبود اکسیژن عضله و افت شدید توان در حرکت بعدی می‌شه! زمان بهینه ۳۰ ثانیه است.`
-        };
+        return { level: "short", color: "#f97316", bg: "rgba(249,115,22,0.15)", msg: `⚠️ هشدار (${sec} ثانیه کمه!): استراحت کمتر از ۲۰ ثانیه باعث تجمع اسیدلاکتیک و افت توان در حرکت بعدی می‌شه! تایم بهینه ۳۰ ثانیه است.` };
       }
       if (sec >= 60 && sec < 120) {
-        return {
-          level: "long1",
-          color: "#fbbf24",
-          bg: "rgba(251,191,36,0.15)",
-          msg: `❄️ توجه (${sec} ثانیه - بیش از ۱ دقیقه): استراحت طولانی‌تر از ۱ دقیقه ضربان قلب چربی‌سوزی رو پایین میاره و بدن رو کمی سست می‌کنه.`
-        };
+        return { level: "long1", color: "#fbbf24", bg: "rgba(251,191,36,0.15)", msg: `❄️ توجه (${sec} ثانیه): استراحت بیش از ۱ دقیقه ضربان قلب رو پایین میاره و بدن رو کمی سست می‌کنه.` };
       }
       if (sec >= 120) {
-        return {
-          level: "long2",
-          color: "#ef4444",
-          bg: "rgba(239,68,68,0.18)",
-          msg: `🚨 هشدار جدی (${Math.round(sec / 60)} دقیقه استراحت!): استراحت ۲ تا ۳ دقیقه در تمرینات ریتمیک باعث سرد شدن کامل عضلات، سست شدن بدن و افزایش احتمال گرفتگی عضله می‌شه!`
-        };
+        return { level: "long2", color: "#ef4444", bg: "rgba(239,68,68,0.18)", msg: `🚨 هشدار جدی (${Math.round(sec / 60)} دقیقه!): استراحت طولانی باعث سرد شدن عضلات و سست شدن کامل بدن می‌شه!` };
       }
-      return {
-        level: "optimal",
-        color: "#00f5d4",
-        bg: "rgba(0,245,212,0.12)",
-        msg: `✅ زمان بهینه هوشمند (${sec} ثانیه): بهترین تعادل برای ریکاوری ATP عضله بدون سرد شدن و سست شدن بدن!`
-      };
+      return { level: "optimal", color: "#00f5d4", bg: "rgba(0,245,212,0.12)", msg: `✅ زمان بهینه هوشمند (${sec} ثانیه): بهترین تعادل بدون سرد شدن بدن!` };
     }
 
     function updateRestWarningUI(sec, bannerId, labelId) {
-      const evalObj = getSmartRestEvaluation(sec);
+      const ev = getSmartRestEvaluation(sec);
       if (labelId) {
         const lbl = document.getElementById(labelId);
-        if (lbl) lbl.textContent = `${sec} ثانیه (${evalObj.level === "optimal" ? "بهینه هوشمند ⚡" : "تغییریافته"})`;
+        if (lbl) lbl.textContent = `${sec} ثانیه (${ev.level === "optimal" ? "بهینه هوشمند ⚡" : "تغییریافته"})`;
       }
       const banner = document.getElementById(bannerId);
       if (banner) {
         banner.style.display = "block";
-        banner.style.background = evalObj.bg;
-        banner.style.border = `1px solid ${evalObj.color}`;
-        banner.style.color = evalObj.color;
-        banner.textContent = evalObj.msg;
+        banner.style.background = ev.bg;
+        banner.style.border = `1px solid ${ev.color}`;
+        banner.style.color = ev.color;
+        banner.textContent = ev.msg;
       }
     }
 
@@ -1161,8 +1498,10 @@
       renderWorkoutHub();
     }
 
-    // پلیر زنده تمرین
     function startLiveWorkoutPlayer() {
+      if (!isSubscriptionActive()) { switchSection("market"); return; }
+      const plan = appState.workoutConfig.planDays || [];
+      if (!plan.length) return;
       document.getElementById("workoutSetupCard").style.display = "none";
       document.getElementById("liveWorkoutPlayerCard").style.display = "flex";
       playerState.currentExIndex = 0;
@@ -1179,7 +1518,7 @@
 
     function startExerciseStep(idx) {
       if (playerState.timerInterval) clearInterval(playerState.timerInterval);
-      const plan = appState.workoutConfig.planDays || DEFAULT_WORKOUT_DAYS;
+      const plan = appState.workoutConfig.planDays || [];
       const dayObj = plan[playerState.activeDayIndex] || plan[0];
       const exList = dayObj.exercises || [];
 
@@ -1197,20 +1536,17 @@
       document.getElementById("playerRestView").style.display = "none";
       document.getElementById("playerStepBadge").textContent = `حرکت ${idx + 1} از ${exList.length} — ${dayObj.title}`;
       document.getElementById("liveExTitle").textContent = ex.name;
-      document.getElementById("liveExSub").textContent = ex.tip || "فرم صحیح بدن را حفظ کن!";
+      document.getElementById("liveExSub").textContent = ex.tip || "تنفس منظم یادت نره رفیق!";
 
-      // رندر آدمک آقا یا خانم با انیمیشن مخصوص همان حرکت
       const animClass = "anim-" + (ex.anim || "jumping");
-      document.getElementById("avatarAnimationStage").innerHTML = getAvatarSvgHtml(appState.workoutConfig.avatarGender, animClass);
+      document.getElementById("avatarAnimationStage").innerHTML = get3DAvatarSvgHtml(appState.workoutConfig.avatarGender, animClass, false);
 
       updatePlayerTimerText();
       playerState.timerInterval = setInterval(() => {
         if (playerState.isPaused) return;
         playerState.remainingSec--;
         updatePlayerTimerText();
-        if (playerState.remainingSec <= 0) {
-          finishCurrentExerciseAndRest();
-        }
+        if (playerState.remainingSec <= 0) finishCurrentExerciseAndRest();
       }, 1000);
     }
 
@@ -1218,11 +1554,8 @@
       const m = Math.floor(Math.max(0, playerState.remainingSec) / 60);
       const s = Math.max(0, playerState.remainingSec) % 60;
       const str = `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-      if (playerState.inRestMode) {
-        document.getElementById("restCountdownNum").textContent = str;
-      } else {
-        document.getElementById("liveExTimer").textContent = str;
-      }
+      if (playerState.inRestMode) document.getElementById("restCountdownNum").textContent = str;
+      else document.getElementById("liveExTimer").textContent = str;
     }
 
     function togglePauseExercise() {
@@ -1236,7 +1569,7 @@
 
     function finishCurrentExerciseAndRest() {
       if (playerState.timerInterval) clearInterval(playerState.timerInterval);
-      const plan = appState.workoutConfig.planDays || DEFAULT_WORKOUT_DAYS;
+      const plan = appState.workoutConfig.planDays || [];
       const dayObj = plan[playerState.activeDayIndex] || plan[0];
       const exList = dayObj.exercises || [];
       const nextIdx = playerState.currentExIndex + 1;
@@ -1246,7 +1579,6 @@
         return;
       }
 
-      // ورود به صفحه استراحت هوشمند
       playerState.inRestMode = true;
       playerState.remainingSec = Number(appState.workoutConfig.preferredRestSec) || 30;
       document.getElementById("playerActiveExerciseView").style.display = "none";
@@ -1260,9 +1592,7 @@
       playerState.timerInterval = setInterval(() => {
         playerState.remainingSec--;
         updatePlayerTimerText();
-        if (playerState.remainingSec <= 0) {
-          skipRestAndStartNext();
-        }
+        if (playerState.remainingSec <= 0) skipRestAndStartNext();
       }, 1000);
     }
 
@@ -1272,11 +1602,8 @@
       updateRestWarningUI(playerState.remainingSec, "liveRestWarningBox", null);
     }
 
-    function skipRestAndStartNext() {
-      startExerciseStep(playerState.currentExIndex + 1);
-    }
+    function skipRestAndStartNext() { startExerciseStep(playerState.currentExIndex + 1); }
 
-    // اتمام جلسه تمرین: باز شدن قفل روز بعدی + قرمز شدن آتیش امروز!
     function completeWorkoutSession() {
       if (playerState.timerInterval) clearInterval(playerState.timerInterval);
       const todayKey = getDateKey(0);
@@ -1284,64 +1611,47 @@
       appState.daysLog[todayKey].workoutDone = true;
 
       const doneIdx = playerState.activeDayIndex;
-      if (!appState.workoutConfig.completedDays.includes(doneIdx)) {
-        appState.workoutConfig.completedDays.push(doneIdx);
-      }
-      const planLen = (appState.workoutConfig.planDays || DEFAULT_WORKOUT_DAYS).length;
+      if (!appState.workoutConfig.completedDays.includes(doneIdx)) appState.workoutConfig.completedDays.push(doneIdx);
+      const planLen = (appState.workoutConfig.planDays || []).length;
       if (appState.workoutConfig.unlockedDayIndex <= doneIdx && doneIdx + 1 < planLen) {
         appState.workoutConfig.unlockedDayIndex = doneIdx + 1;
       }
 
-      saveLocalState();
-      syncWithCloud();
-      exitLiveWorkoutPlayer();
-      renderAllUI();
-      alert("🔥 تبریک قهرمان! تمرین امروزت با موفقیت کامل شد، آتیش قرمزت شعله‌ور شد و قفل روز بعدی باز شد! 🏆");
+      saveLocalState(); syncWithCloud(); exitLiveWorkoutPlayer(); renderAllUI();
+      alert("🔥 ایول قهرمان! تمرین امروزت کامل شد، آتیش قرمزت روشن شد و قفل روز بعدی باز شد! 🏆");
     }
 
-    // انتخاب روزهای هفته و درخواست مجوز نوتیفیکیشن سیستم
     function toggleScheduleDay(dayNum) {
       let arr = appState.workoutConfig.scheduledWeekdays || [];
       if (arr.includes(dayNum)) arr = arr.filter(d => d !== dayNum);
       else arr.push(dayNum);
       appState.workoutConfig.scheduledWeekdays = arr;
-      saveLocalState();
-      renderWorkoutHub();
-      renderFlameAndCalendar();
+      saveLocalState(); renderWorkoutHub(); renderFlameAndCalendar();
     }
 
-    function saveScheduleSettings() {
-      appState.workoutConfig.notifTime = document.getElementById("notifTimeInput").value || "18:00";
-      saveLocalState();
-      syncWithCloud();
-    }
-
-    async function enableWorkoutNotifications() {
-      saveScheduleSettings();
-      if (!("Notification" in window)) {
-        alert("🔔 یادآور داخلی برنامه برای روزهای انتخابی شما فعال شد!");
-        return;
-      }
-      const perm = await Notification.requestPermission();
-      if (perm === "granted") {
+    function enableWorkoutNotifications() {
+      const title = "🔥 یادآور باشگاه BodyMod فعال شد!";
+      const msg = "در روزهای انتخابی بهت خبر میدیم تا آتیشت آبی و خاموش نشه رفیق!";
+      if (window.AndroidNative && window.AndroidNative.requestNotificationPermission) {
+        window.AndroidNative.requestNotificationPermission(title, msg);
         appState.workoutConfig.notifEnabled = true;
         saveLocalState();
-        new Notification("🔥 یادآور باشگاه BodyMod فعال شد!", {
-          body: `در روزهای انتخاب‌شده ساعت ${appState.workoutConfig.notifTime} بهت خبر میدیم تا آتیشت آبی و خاموش نشه!`
+      } else if ("Notification" in window) {
+        Notification.requestPermission().then(p => {
+          if (p === "granted") new Notification(title, { body: msg });
         });
-      } else {
-        alert("⚠️ برای دریافت هشدار در نوار بالای گوشی، مجوز اعلان (Notification) را تایید کن رفیق!");
       }
     }
 
-    // ساخت برنامه جدید با هوش مصنوعی و تبدیل خودکار به روزهای قفل‌دار
     async function generateAiCustomWorkout() {
       if (!appState.userKey) { openAuthModal(); return; }
+      if (!isSubscriptionActive()) { switchSection("market"); return; }
+
       const place = document.getElementById("woPlace").value;
       const focus = document.getElementById("woFocusMuscle").value;
       const loader = document.getElementById("workoutInlineLoader");
       loader.style.display = "block";
-      loader.innerHTML = getBLogoLoaderHtml("مربی هوشمند در حال چیدن حرکات اختصاصی شما...");
+      loader.innerHTML = getBLogoLoaderHtml("مربی هوشمند در حال طراحی برنامه تمرینی اختصاصی این ماهت...");
 
       const prompt = `یک برنامه تمرینی ۴ روزه برای «${place}» با تمرکز بر «${focus}» بده. حتماً در انتهای پاسخت یک خط دقیقاً با فرمت WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"name":"نام حرکت","duration":35,"anim":"squat","tip":"نکته آموزشی"}]}] قرار بده که anim یکی از مقادیر jumping یا squat یا pushup یا armcircle باشد.`;
 
@@ -1349,17 +1659,11 @@
         const res = await fetch(`${WORKER_BASE_URL}/api/ai/chat`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userKey: appState.userKey,
-            prompt: buildEnrichedPrompt(prompt),
-            requestType: "workout_plan",
-            modelType: "flash"
-          })
+          body: JSON.stringify({ userKey: appState.userKey, prompt: buildEnrichedPrompt(prompt), requestType: "workout_plan", modelType: "flash" })
         });
         const data = await res.json();
         loader.style.display = "none";
         if (res.ok && data.ok) {
-          if (data.remainingCoins !== undefined) appState.bodyCoins = data.remainingCoins;
           const match = data.reply.match(/WORKOUT_JSON:\s*(\[[\s\S]*\])/);
           if (match && match[1]) {
             try {
@@ -1371,17 +1675,20 @@
               }
             } catch (e) {}
           }
-          saveLocalState();
-          renderWorkoutHub();
-          renderAllUI();
-          alert("✅ برنامه تمرینی اختصاصی جدید ساخته شد و روز ۱ آماده شروع است!");
+          if (!appState.workoutConfig.planDays || appState.workoutConfig.planDays.length === 0) {
+            appState.workoutConfig.planDays = [
+              { dayNumber: 1, title: `روز ۱: ${focus}`, exercises: [{ name: "گرم کردن و چرخش بازو", duration: 30, anim: "armcircle", tip: "شروع نرم" }, { name: "اسکات فرم‌دهنده", duration: 40, anim: "squat", tip: "کمر صاف" }, { name: "شنا سوئدی", duration: 35, anim: "pushup", tip: "کنترل تنفس" }] },
+              { dayNumber: 2, title: "روز ۲: تقویت و فرم‌دهی", exercises: [{ name: "پروانه سرعتی", duration: 35, anim: "jumping", tip: "ریتم منظم" }, { name: "اسکات عمیق", duration: 40, anim: "squat", tip: "تمرکز روی عضله هدف" }] },
+              { dayNumber: 3, title: "روز ۳: استقامت عضلانی", exercises: [{ name: "چرخش سرشانه", duration: 30, anim: "armcircle", tip: "گرم کردن" }, { name: "شنا قدرتی", duration: 35, anim: "pushup", tip: "انقباض کامل" }] },
+              { dayNumber: 4, title: "روز ۴: چالش کل بدن", exercises: [{ name: "پروانه قدرتی", duration: 40, anim: "jumping", tip: "حداکثر توان" }, { name: "اسکات پایانی", duration: 45, anim: "squat", tip: "فرم صحیح" }] }
+            ];
+          }
+          saveLocalState(); renderWorkoutHub(); syncWithCloud();
+          alert("🔥 برنامه تمرینی اختصاصی این ماهت ساخته شد و روز ۱ باز شد!");
         } else {
-          alert("⛔ " + (data.error || "خطا در دریافت برنامه"));
+          alert("⛔ " + (data.error || "خطا"));
         }
-      } catch (e) {
-        loader.style.display = "none";
-        alert("⛔ خطا در ارتباط با سرور");
-      }
+      } catch (e) { loader.style.display = "none"; }
     }
 
     function switchSection(secId) {
@@ -1396,6 +1703,7 @@
       toggleDrawer(false);
       window.scrollTo({ top: 0, behavior: "smooth" });
 
+      if (secId === "diet") renderDietSection();
       if (secId === "workout") renderWorkoutHub();
       if (secId === "profile") populateProfileForm();
       if (secId === "ceo" && appState.isCeo) loadCeoStats();
@@ -1426,14 +1734,21 @@
       const bmr = isMale ? (10 * w + 6.25 * h - 5 * a + 5) : (10 * w + 6.25 * h - 5 * a - 161);
       let cal = Math.round(bmr * 1.45);
       const gm = appState.userProfile.goalMode;
-      if (gm === "gain_weight" || gm === "bulk_chest") cal += 400;
-      else if (gm === "muscle" || gm === "tone_glutes") cal += 220;
+      if (gm === "gain_weight" || gm === "bulk_chest") cal += 450;
+      else if (gm === "muscle" || gm === "tone_glutes") cal += 250;
       else if (gm === "lose") cal -= 400;
       return { cal: Math.max(1200, cal), prot: Math.round(w * 2), carb: Math.round((cal * 0.48) / 4), fat: Math.round((cal * 0.26) / 9) };
     }
 
     function renderAllUI() {
-      document.getElementById("headerCoinCount").textContent = appState.isCeo ? "∞" : (appState.bodyCoins ?? 30);
+      applyThemeMode();
+      const subOk = isSubscriptionActive();
+      const subBadge = document.getElementById("headerSubBadge");
+      subBadge.textContent = appState.isCeo ? "👑 مدیرعامل" : (subOk ? "💎 اشتراک فعال" : "🔒 تمدید اشتراک");
+
+      const mktText = document.getElementById("marketSubStatusText");
+      if (mktText) mktText.textContent = subOk ? "✅ فعال" : "⚠️ نیازمند تمدید";
+
       const userBtn = document.getElementById("headerUserBtn");
       if (appState.userKey) {
         const displayName = appState.userProfile.nickname || appState.userKey;
@@ -1447,6 +1762,16 @@
 
       document.getElementById("nav-ceo").style.display = appState.isCeo ? "flex" : "none";
       renderFlameAndCalendar();
+
+      const goalLabels = {
+        gain_weight: "📈 افزایش وزن عمومی",
+        muscle: "💪 عضله‌سازی خشک",
+        lose: "🔥 کاهش وزن",
+        tone_glutes: "🍑 فرم‌دهی باسن و سینه",
+        bulk_chest: "🏋️ حجم سینه و بازو",
+        maintain: "⚖️ تناسب اندام"
+      };
+      document.getElementById("goalModeBadge").textContent = goalLabels[appState.userProfile.goalMode] || "تناسب اندام";
 
       const dKey = getDateKey(appState.selectedDateOffset);
       document.getElementById("currentDateLabel").textContent = appState.selectedDateOffset === 0 ? "امروز (" + dKey + ")" : dKey;
@@ -1473,16 +1798,18 @@
       document.getElementById("waterCountText").textContent = dayData.water || 0;
 
       const listEl = document.getElementById("todayFoodsList");
-      listEl.innerHTML = "";
-      (dayData.foods || []).forEach((f, idx) => {
-        const row = document.createElement("div");
-        row.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#080d18; padding:8px 11px; border-radius:10px; font-size:12px; border:1px solid rgba(255,255,255,0.06);";
-        row.innerHTML = `<div><b>${f.name}</b> <span style="color:var(--neon-cyan);">(${f.cal} kcal)</span></div><button onclick="removeFoodItem(${idx})" style="background:none; border:none; color:#f87171; cursor:pointer;">🗑️</button>`;
-        listEl.appendChild(row);
-      });
+      if (listEl) {
+        listEl.innerHTML = "";
+        (dayData.foods || []).forEach((f, idx) => {
+          const row = document.createElement("div");
+          row.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:var(--inner-bg); padding:8px 11px; border-radius:10px; font-size:12px; border:1px solid rgba(148,163,184,0.15);";
+          row.innerHTML = `<div><b>${f.name}</b> <span style="color:var(--neon-cyan);">(${f.cal} kcal)</span></div><button onclick="removeFoodItem(${idx})" style="background:none; border:none; color:#ef4444; cursor:pointer;">🗑️</button>`;
+          listEl.appendChild(row);
+        });
+      }
     }
 
-    function changeDay(delta) { appState.selectedDateOffset += delta; renderAllUI(); }
+    function changeDay(delta) { appState.selectedDateOffset += delta; renderAllUI(); renderDietSection(); }
     function addWater(delta) {
       const dKey = getDateKey(appState.selectedDateOffset);
       if (!appState.daysLog[dKey]) appState.daysLog[dKey] = { foods: [], water: 0, workoutDone: false };
@@ -1493,7 +1820,7 @@
       const dKey = getDateKey(appState.selectedDateOffset);
       if (appState.daysLog[dKey]?.foods) {
         appState.daysLog[dKey].foods.splice(idx, 1);
-        saveLocalState(); renderAllUI(); syncWithCloud();
+        saveLocalState(); renderAllUI(); renderDietSection(); syncWithCloud();
       }
     }
 
@@ -1517,7 +1844,7 @@
       inp.value = "";
 
       const loaderWrap = document.createElement("div");
-      loaderWrap.innerHTML = getBLogoLoaderHtml("مربی هوشمند در حال نوشتن پاسخ...");
+      loaderWrap.innerHTML = getBLogoLoaderHtml("مربی صمیمی در حال نوشتن...");
       box.appendChild(loaderWrap);
       box.scrollTop = box.scrollHeight;
 
@@ -1532,13 +1859,7 @@
         loaderWrap.remove();
         const aiBubble = document.createElement("div");
         aiBubble.className = "msg-bubble msg-ai";
-        if (res.ok && data.ok) {
-          aiBubble.textContent = data.reply;
-          if (data.remainingCoins !== undefined) appState.bodyCoins = data.remainingCoins;
-          saveLocalState(); renderAllUI();
-        } else {
-          aiBubble.textContent = "⛔ " + (data.error || "خطا در ارتباط");
-        }
+        aiBubble.textContent = (res.ok && data.ok) ? data.reply : ("⛔ " + (data.error || "خطا"));
         box.appendChild(aiBubble);
         box.scrollTop = box.scrollHeight;
       } catch (e) { loaderWrap.remove(); }
@@ -1549,9 +1870,11 @@
       const foodText = inp.value.trim();
       if (!foodText) return;
       if (!appState.userKey) { openAuthModal(); return; }
+      if (!isSubscriptionActive()) { switchSection("market"); return; }
+
       const loaderEl = document.getElementById("foodAiInlineLoader");
       loaderEl.style.display = "block";
-      loaderEl.innerHTML = getBLogoLoaderHtml("در حال محاسبه کالری و ماکروها...");
+      loaderEl.innerHTML = getBLogoLoaderHtml("در حال محاسبه کالری و ذخیره در بانک شما...");
       try {
         const res = await fetch(`${WORKER_BASE_URL}/api/ai/chat`, {
           method: "POST",
@@ -1562,7 +1885,6 @@
         loaderEl.style.display = "none";
         if (res.ok && data.ok) {
           inp.value = "";
-          if (data.remainingCoins !== undefined) appState.bodyCoins = data.remainingCoins;
           extractAndSaveFoodJson(data.reply, foodText);
         } else alert("⛔ " + (data.error || "خطا"));
       } catch (e) { loaderEl.style.display = "none"; }
@@ -1572,9 +1894,11 @@
       const file = event.target.files?.[0];
       if (!file) return;
       if (!appState.userKey) { openAuthModal(); return; }
+      if (!isSubscriptionActive()) { switchSection("market"); return; }
+
       const loaderEl = document.getElementById("foodAiInlineLoader");
       loaderEl.style.display = "block";
-      loaderEl.innerHTML = getBLogoLoaderHtml("در حال اسکن تصویر غذا...");
+      loaderEl.innerHTML = getBLogoLoaderHtml("در حال اسکن تصویر غذا و ذخیره در بانک شما...");
       const reader = new FileReader();
       reader.onload = async function() {
         const base64Data = reader.result.split(",")[1];
@@ -1586,10 +1910,8 @@
           });
           const data = await res.json();
           loaderEl.style.display = "none";
-          if (res.ok && data.ok) {
-            if (data.remainingCoins !== undefined) appState.bodyCoins = data.remainingCoins;
-            extractAndSaveFoodJson(data.reply, "غذای اسکن‌شده");
-          } else alert("⛔ " + (data.error || "خطا"));
+          if (res.ok && data.ok) extractAndSaveFoodJson(data.reply, "غذای اسکن‌شده");
+          else alert("⛔ " + (data.error || "خطا"));
         } catch (e) { loaderEl.style.display = "none"; }
       };
       reader.readAsDataURL(file);
@@ -1599,10 +1921,16 @@
       let foodObj = { name: fallbackName, cal: 250, prot: 12, carb: 30, fat: 8 };
       const match = replyText.match(/FOOD_JSON:\s*(\{.*\})/);
       if (match && match[1]) { try { foodObj = { ...foodObj, ...JSON.parse(match[1]) }; } catch (e) {} }
-      const dKey = getDateKey(appState.selectedDateOffset);
-      if (!appState.daysLog[dKey]) appState.daysLog[dKey] = { foods: [], water: 0, workoutDone: false };
-      appState.daysLog[dKey].foods.push(foodObj);
-      saveLocalState(); renderAllUI(); syncWithCloud();
+      addFoodToTodayLog(foodObj);
+      alert(`✅ «${foodObj.name}» (${foodObj.cal} کالری) ثبت شد و برای استفاده‌های بعدی در بانک غذاهای سفارشیت ذخیره موند!`);
+    }
+
+    function checkDurationPlanEligibility() {
+      const val = document.getElementById("profTargetDuration").value;
+      if (val !== "1m") {
+        alert("💎 رفیق در حال حاضر در «فاز آزمایشی (بتا)» هستیم و اشتراک‌ها ۱ ماهه است. پس از خروج از فاز بتا، با تهیه اشتراک ۳ ماهه، ۶ ماهه یا ۱ ساله می‌تونی این هدف‌های بلندمدت رو فعال کنی!");
+        document.getElementById("profTargetDuration").value = "1m";
+      }
     }
 
     function populateProfileForm() {
@@ -1614,25 +1942,27 @@
       document.getElementById("profHeight").value = p.height || 172;
       document.getElementById("profWeight").value = p.weight || 60;
       document.getElementById("profGoalMode").value = p.goalMode || "gain_weight";
+      document.getElementById("profTargetDuration").value = p.targetDuration || "1m";
       document.getElementById("profCoachMemory").value = p.coachMemory || "";
     }
 
     async function saveUserProfileForm() {
       const selectedGender = document.getElementById("profGender").value;
       appState.userProfile = {
-        nickname: document.getElementById("profNickname").value.trim() || "کاربر",
+        nickname: document.getElementById("profNickname").value.trim() || "رفیق",
         city: document.getElementById("profCity").value.trim() || "ایران",
         age: Number(document.getElementById("profAge").value) || 20,
         gender: selectedGender,
         height: Number(document.getElementById("profHeight").value) || 172,
         weight: Number(document.getElementById("profWeight").value) || 60,
         goalMode: document.getElementById("profGoalMode").value,
+        targetDuration: document.getElementById("profTargetDuration").value || "1m",
         coachMemory: document.getElementById("profCoachMemory").value.trim(),
         profileCompleted: true
       };
       appState.workoutConfig.avatarGender = selectedGender;
       saveLocalState(); renderAllUI(); await syncWithCloud();
-      alert("✅ پرونده بدنی و حافظه بلندمدت مربی ذخیره شد!");
+      alert("✅ پرونده بدنی و هدف اشتراک ذخیره شد!");
       switchSection("dashboard");
     }
 
@@ -1644,7 +1974,12 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             userKey: appState.userKey,
-            userProfile: { ...appState.userProfile, workoutConfig: appState.workoutConfig },
+            userProfile: {
+              ...appState.userProfile,
+              dietConfig: appState.dietConfig,
+              workoutConfig: appState.workoutConfig
+            },
+            customFoods: appState.customFoods,
             daysLog: appState.daysLog
           })
         });
@@ -1652,7 +1987,7 @@
         if (res.ok && data.ok && data.user) {
           appState.isCeo = !!data.isCeo;
           appState.isVip = !!data.isVip;
-          appState.bodyCoins = data.user.bodyCoins ?? appState.bodyCoins;
+          appState.vipExpiresAt = data.user.vipExpiresAt || appState.vipExpiresAt;
           saveLocalState(); renderAllUI();
         }
       } catch (e) {}
@@ -1666,13 +2001,13 @@
           appState.userKey = data.user.userKey || uKey;
           appState.isCeo = !!data.isCeo;
           appState.isVip = !!data.isVip;
-          appState.bodyCoins = data.user.bodyCoins ?? 30;
+          appState.vipExpiresAt = data.user.vipExpiresAt || 0;
           if (data.user.userProfile) {
             appState.userProfile = { ...appState.userProfile, ...data.user.userProfile };
-            if (data.user.userProfile.workoutConfig) {
-              appState.workoutConfig = { ...appState.workoutConfig, ...data.user.userProfile.workoutConfig };
-            }
+            if (data.user.userProfile.dietConfig) appState.dietConfig = { ...appState.dietConfig, ...data.user.userProfile.dietConfig };
+            if (data.user.userProfile.workoutConfig) appState.workoutConfig = { ...appState.workoutConfig, ...data.user.userProfile.workoutConfig };
           }
+          if (Array.isArray(data.user.customFoods)) appState.customFoods = data.user.customFoods;
           if (data.user.daysLog) appState.daysLog = { ...appState.daysLog, ...data.user.daysLog };
           saveLocalState(); renderAllUI();
           if (data.isNewUser) switchSection("profile");
@@ -1685,7 +2020,7 @@
 
     async function sendBaleOtpCode() {
       const phone = document.getElementById("authPhoneInput").value.trim();
-      if (!phone) return alert("شماره موبایل را وارد کنید");
+      if (!phone) return alert("شماره موبایل را وارد کن رفیق!");
       try {
         const res = await fetch(`${WORKER_BASE_URL}/api/auth/bale/send-otp`, {
           method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phone })
@@ -1733,10 +2068,10 @@
         });
         const data = await res.json();
         if (res.ok && data.ok) {
-          appState.bodyCoins = data.user.bodyCoins;
           appState.isVip = true;
+          appState.vipExpiresAt = data.user.vipExpiresAt;
           saveLocalState(); renderAllUI(); loadBetaStatus();
-          alert("🎉 بسته با موفقیت فعال شد!");
+          alert("🎉 اشتراک ۱ ماهه ویژه فاز بتا فعال شد و قفل تمام بخش‌های تغذیه و تمرین باز شد!");
         }
       } catch (e) {}
     }
