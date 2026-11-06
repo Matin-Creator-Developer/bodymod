@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>BodyMod | بادی‌مود: بدن مود شده (v7.7.0)</title>
+  <title>BodyMod | بادی‌مود: بدن مود شده (v7.7.1)</title>
   <style>
     :root {
       --bg-dark: #070a12;
@@ -94,7 +94,7 @@
     .profile-pill {
       background: rgba(0, 245, 212, 0.1); border: 1px solid var(--card-border);
       color: var(--text-main); padding: 5px 10px; border-radius: 10px; font-size: 11.5px; font-weight: 800;
-      cursor: pointer; max-width: 130px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      cursor: pointer; max-width: 135px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
 
     /* محتوای اصلی */
@@ -360,12 +360,12 @@
     </div>
   </header>
 
-  <!-- ==================== منوی همبرگری (دارای دکمه خروج از حساب!) ==================== -->
+  <!-- ==================== منوی همبرگری (دارای دکمه خروج از حساب و نسخه 7.7.1) ==================== -->
   <div class="drawer-backdrop" id="drawerBackdrop" onclick="toggleDrawer(false)"></div>
   <aside class="drawer-panel" id="drawerPanel">
     <div>
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; border-bottom:1px solid var(--card-border); padding-bottom:10px;">
-        <span style="font-weight:900; font-size:14.5px; color:var(--neon-cyan);">⚡ منوی سوپراپلیکیشن</span>
+        <span style="font-weight:900; font-size:14px; color:var(--neon-cyan);">⚡ منوی BodyMod <small style="color:var(--neon-gold);">v7.7.1</small></span>
         <button onclick="toggleDrawer(false)" style="background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer;">✕</button>
       </div>
 
@@ -394,10 +394,10 @@
         🤖 چت با مربی صمیمی (AI)
       </button>
       <button class="drawer-item" id="nav-profile" onclick="switchSection('profile')">
-        👤 پرونده بدنی و هدف اشتراک
+        👤 پرونده بدنی و فرم مشخصات
       </button>
       <button class="drawer-item" id="nav-market" onclick="switchSection('market')">
-        💎 تمدید اشتراک و پلن‌های هدف
+        💎 تمدید اشتراک و حمایت مالی
       </button>
       <button class="drawer-item" id="nav-ceo" onclick="switchSection('ceo')" style="display:none; border-color:var(--neon-gold); color:var(--neon-gold);">
         👑 پنل آمار کلان مدیرعامل
@@ -452,7 +452,7 @@
 
       <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-weight:900; font-size:14px;">🎯 وضعیت کالری و درشت‌مغذی‌ها</span>
+          <span style="font-weight:900; font-size:14px;">🎯 وضعیت کالری و درشت‌مغذی‌ها (آفلاین و آنلاین)</span>
           <span id="goalModeBadge" style="font-size:11px; color:var(--neon-cyan); font-weight:800;">تناسب اندام</span>
         </div>
         <div class="cal-summary-grid">
@@ -545,7 +545,7 @@
 
       <div class="card">
         <div style="font-weight:900; font-size:13.5px; color:var(--neon-cyan); margin-bottom:6px;">
-          🆓 ثبت دستی و آفلاین خوراکی سفارشی (همیشه رایگان و بدون محدودیت)
+          🆓 ثبت دستی و آفلاین خوراکی سفارشی (همیشه رایگان و بدون اینترنت)
         </div>
         <div style="display:grid; grid-template-columns:2fr 1fr; gap:6px; margin-bottom:6px;">
           <input type="text" id="manualFoodName" placeholder="نام خوراکی (مثلاً: املت مخصوص من)">
@@ -561,7 +561,7 @@
         </button>
 
         <div style="margin-top:12px; padding-top:10px; border-top:1px solid rgba(148,163,184,0.15);">
-          <div style="font-size:12px; font-weight:900; margin-bottom:6px;">📚 بانک غذاهای ذخیره‌شده من (با جزئیات کامل ماکروها - ثبت با ۱ کلیک):</div>
+          <div style="font-size:12px; font-weight:900; margin-bottom:6px;">📚 بانک غذاهای ذخیره‌شده من (آفلاین - ثبت با ۱ کلیک):</div>
           <div id="savedCustomFoodsList" style="display:flex; flex-direction:column; gap:6px;"></div>
         </div>
 
@@ -606,11 +606,11 @@
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
           <div>
             <label style="font-size:11px; color:var(--text-muted);">وزن فعلی این هفته (کیلوگرم):</label>
-            <input type="number" step="0.1" id="weeklyNewWeightInput" placeholder="مثلاً: 70">
+            <input type="number" step="0.1" id="weeklyNewWeightInput" placeholder="اینجا وزن خودتو بنویس">
           </div>
           <div>
             <label style="font-size:11px; color:var(--text-muted);">قد فعلی (سانتی‌متر):</label>
-            <input type="number" id="weeklyNewHeightInput" placeholder="مثلاً: 175">
+            <input type="number" id="weeklyNewHeightInput" placeholder="اینجا قد خودتو بنویس">
           </div>
         </div>
 
@@ -805,17 +805,34 @@
       </div>
     </section>
 
-    <!-- 🟢 صفحه ۶: پرونده بدنی و دوره هدف (با مثال‌های عمومی و دکمه خروج!) -->
+    <!-- 🟢 صفحه ۶: فرم ثبت‌نام و پرونده بدنی (با متن‌های راهنمای دقیق شما + قوانین در انتهای فرم!) -->
     <section id="sec-profile" class="app-section">
       <div class="fullpage-bar">
-        <div class="fullpage-title">👤 پرونده بدنی و دوره هدف</div>
+        <div class="fullpage-title">👤 پرونده بدنی و فرم مشخصات</div>
         <button class="back-home-btn" onclick="switchSection('dashboard')">🏠 داشبورد</button>
       </div>
       <div class="card card-full-grow">
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
-          <div><label style="font-size:11px; color:var(--text-muted);">نام یا لقب:</label><input type="text" id="profNickname" placeholder="مثلاً: علی یا سارا"></div>
-          <div><label style="font-size:11px; color:var(--text-muted);">شهر:</label><input type="text" id="profCity" placeholder="مثلاً: تهران یا شیراز"></div>
-          <div><label style="font-size:11px; color:var(--text-muted);">سن:</label><input type="number" id="profAge" placeholder="مثلاً: 24"></div>
+          <div>
+            <label style="font-size:11px; color:var(--text-muted);">نام یا لقب:</label>
+            <input type="text" id="profNickname" placeholder="اینجا اسمتو بنویس">
+          </div>
+          <div>
+            <label style="font-size:11px; color:var(--text-muted);">شهر محل سکونت:</label>
+            <input type="text" id="profCity" placeholder="اینجا شهر محل زندگیت رو بنویس">
+          </div>
+        </div>
+
+        <!-- تاریخ تولد (روز / ماه / سال) + جنسیت -->
+        <div style="display:grid; grid-template-columns:2fr 1fr; gap:10px; margin-bottom:10px;">
+          <div>
+            <label style="font-size:11px; color:var(--text-muted);">تاریخ تولد (شمسی):</label>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1.3fr; gap:5px;">
+              <input type="number" id="profBirthDay" placeholder="روز" min="1" max="31" style="text-align:center; padding:10px 6px;">
+              <input type="number" id="profBirthMonth" placeholder="ماه" min="1" max="12" style="text-align:center; padding:10px 6px;">
+              <input type="number" id="profBirthYear" placeholder="سال" min="1320" max="1400" style="text-align:center; padding:10px 6px;">
+            </div>
+          </div>
           <div>
             <label style="font-size:11px; color:var(--text-muted);">جنسیت:</label>
             <select id="profGender">
@@ -823,10 +840,21 @@
               <option value="female">خانم 👩</option>
             </select>
           </div>
-          <div><label style="font-size:11px; color:var(--text-muted);">قد (cm):</label><input type="number" id="profHeight" placeholder="مثلاً: 175"></div>
-          <div><label style="font-size:11px; color:var(--text-muted);">وزن (kg):</label><input type="number" id="profWeight" placeholder="مثلاً: 70"></div>
         </div>
 
+        <!-- قد و وزن با متن دقیق شما -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+          <div>
+            <label style="font-size:11px; color:var(--text-muted);">قد (سانتی‌متر):</label>
+            <input type="number" id="profHeight" placeholder="اینجا قد خودتو بنویس">
+          </div>
+          <div>
+            <label style="font-size:11px; color:var(--text-muted);">وزن (کیلوگرم):</label>
+            <input type="number" id="profWeight" placeholder="اینجا وزن خودتو بنویس">
+          </div>
+        </div>
+
+        <!-- هدف اصلی اندام -->
         <div style="margin-bottom:10px;">
           <label style="font-size:11px; color:var(--text-muted);">🎯 هدف اصلی اندام شما:</label>
           <select id="profGoalMode">
@@ -839,6 +867,18 @@
           </select>
         </div>
 
+        <!-- میزان تمرین و فعالیت هفتگی -->
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; color:var(--text-muted);">🏃 میزان تمرین و فعالیت بدنی هفتگی:</label>
+          <select id="profActivityLevel">
+            <option value="1.2">🛋️ کم‌تحرک (بدون ورزش منظم)</option>
+            <option value="1.375">🚶 فعالیت سبک (۱ تا ۲ روز تمرین در هفته)</option>
+            <option value="1.45" selected>🏋️ فعالیت متوسط (۳ تا ۴ روز تمرین در هفته)</option>
+            <option value="1.6">🔥 فعالیت زیاد و حرفه‌ای (۵ روز یا بیشتر در هفته)</option>
+          </select>
+        </div>
+
+        <!-- دوره زمانی هدف -->
         <div style="margin-bottom:10px;">
           <label style="font-size:11px; color:var(--neon-gold); font-weight:800;">⏳ دوره زمانی هدف (وابسته به نوع اشتراک):</label>
           <select id="profTargetDuration" onchange="checkDurationPlanEligibility()">
@@ -849,10 +889,25 @@
           </select>
         </div>
 
-        <div style="margin-bottom:14px;">
-          <label style="font-size:11.5px; color:var(--neon-cyan); font-weight:800;">🧠 حافظه بلندمدت و استراتژی فعلی مربی هوش مصنوعی:</label>
-          <textarea id="profCoachMemory" rows="3" placeholder="هر نکته‌ای که می‌خوای مربی همیشه یادش بمونه بنویس..."></textarea>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:11.5px; color:var(--neon-cyan); font-weight:800;">🧠 حافظه بلندمدت و نکات شخصی برای مربی هوش مصنوعی:</label>
+          <textarea id="profCoachMemory" rows="2" placeholder="مثلاً: به لاکتوز حساسیت دارم یا زانوی راستم آسیب دیده..."></textarea>
         </div>
+
+        <!-- قوانین و مقررات در انتهای فرم -->
+        <div style="background:var(--inner-bg); border:1px solid var(--card-border); border-radius:12px; padding:10px 12px; margin-bottom:12px;">
+          <div style="font-size:11.5px; font-weight:900; color:var(--neon-cyan); margin-bottom:4px;">📜 قوانین و شرایط استفاده از BodyMod:</div>
+          <div style="font-size:10.5px; color:var(--text-muted); line-height:1.65; max-height:78px; overflow-y:auto; margin-bottom:8px;">
+            ۱. توصیه‌ها، برنامه‌های غذایی و ورزشی ارائه‌شده توسط هوش مصنوعی بادی‌مود صرفاً جنبه آموزشی و کمک‌مربی داشته و جایگزین تجویز پزشک متخصص نیست.<br>
+            ۲. در فاز آزمایشی (بتا)، سهمیه‌های استفاده از هوش مصنوعی به صورت روزانه، هفتگی و ماهانه مدیریت می‌شوند و برای باز ماندن بخش‌های هوشمند، تمدید ماهانه اشتراک الزامی است.<br>
+            ۳. اطلاعات کاربری شما به صورت امن در سرورهای ابری ذخیره می‌شود و هر زمان بخواهید امکان حذف حساب با مهلت بازیابی ۳ روزه وجود دارد.
+          </div>
+          <label style="display:flex; align-items:center; gap:7px; font-size:11.5px; font-weight:800; cursor:pointer;">
+            <input type="checkbox" id="profTermsAccepted" checked style="width:17px; height:17px;">
+            <span>قوانین و شرایط استفاده از برنامه را مطالعه کردم و می‌پذیرم.</span>
+          </label>
+        </div>
+
         <button class="btn" style="width:100%; margin-bottom:12px;" onclick="saveUserProfileForm()">💾 ذخیره پرونده و سینک ابری</button>
 
         <div style="margin-top:auto; padding-top:14px; border-top:1px dashed rgba(239,68,68,0.35); display:flex; flex-direction:column; gap:8px;">
@@ -862,13 +917,14 @@
       </div>
     </section>
 
-    <!-- 🟢 صفحه ۷: فروشگاه اشتراک ماهانه و پلن‌های هدف -->
+    <!-- 🟢 صفحه ۷: فروشگاه اشتراک ماهانه و حمایت درون‌برنامه‌ای (بدون هیچ لینک خارجی برای تایید ۱۰۰٪ مارکت‌ها!) -->
     <section id="sec-market" class="app-section">
       <div class="fullpage-bar">
-        <div class="fullpage-title">💎 اشتراک ویژه و پلن‌های زمانی هدف</div>
+        <div class="fullpage-title">💎 اشتراک ویژه و حمایت درون‌برنامه‌ای</div>
         <button class="back-home-btn" onclick="switchSection('dashboard')">🏠 داشبورد</button>
       </div>
 
+      <!-- اشتراک ۱ ماهه فاز بتا (SKU: vip_beta_1m) -->
       <div class="card" style="border:2px solid var(--neon-cyan);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
           <span style="font-weight:900; font-size:14px; color:var(--neon-cyan);">🔥 اشتراک ۱ ماهه فاز آزمایشی (بتا)</span>
@@ -881,11 +937,23 @@
           <li>در فاز بتا باید <b>هر ماه تمدید شود</b> تا بخش‌های هوشمند قفل نشوند!</li>
         </ul>
         <button class="btn btn-purple" style="width:100%;" onclick="buyMarketPackage('vip_beta_1m')">
-          🚀 فعال‌سازی / تمدید اشتراک ۱ ماهه بتا
+          🚀 خرید / تمدید اشتراک ۱ ماهه بتا (پرداخت درون‌برنامه‌ای)
         </button>
       </div>
 
-      <div class="card" style="opacity:0.75;">
+      <!-- کارت حمایت مالی درون‌برنامه‌ای (SKU: mcd_donate_support - بدون لینک خارجی!) -->
+      <div class="card" style="border:1.5px solid var(--neon-pink);">
+        <div style="font-weight:900; font-size:13.5px; color:var(--neon-pink); margin-bottom:6px;">❤️ حمایت مالی از توسعه سوپراپلیکیشن BodyMod</div>
+        <p style="font-size:11.5px; color:var(--text-muted); line-height:1.65; margin:0 0 10px 0;">
+          رفیق گلم! اگه از امکانات بادی‌مود راضی هستی و دوست داری توی ارتقای سرورهای هوش مصنوعی و پیشرفت سریع‌تر فاز بتا همراهمون باشی، می‌تونی از طریق پرداخت درون‌برنامه‌ای از ما حمایت کنی:
+        </p>
+        <button class="btn" style="width:100%; font-size:12.5px;" onclick="buyMarketPackage('mcd_donate_support')">
+          🎁 حمایت درون‌برنامه‌ای از توسعه‌دهنده
+        </button>
+      </div>
+
+      <!-- اشتراک‌های بلندمدت آینده (SKU: vip_beta_3m) -->
+      <div class="card" style="opacity:0.8;">
         <div style="font-weight:900; font-size:13.5px; color:var(--neon-gold); margin-bottom:6px;">🏆 اشتراک‌های هدف ۳ ماهه، ۶ ماهه و ۱ ساله (پس از فاز آزمایشی)</div>
         <p style="font-size:11.5px; color:var(--text-muted); line-height:1.6; margin:0;">
           پس از پایان فاز آزمایشی، برای انتخاب اهداف بلندمدت (۳ ماهه، ۶ ماهه یا ۱ ساله)، داشتن اشتراک هم‌زمان با همان دوره الزامی خواهد بود.
@@ -908,10 +976,10 @@
 
   </main>
 
-  <!-- ==================== فوتر ثابت (همراه با شماره نسخه 7.7.0) ==================== -->
+  <!-- ==================== فوتر ثابت (نسخه 7.7.1 - بدون ای‌نماد و لینک خارجی) ==================== -->
   <footer class="app-footer">
     <div class="footer-inner">
-      <div style="font-weight:900; font-size:13px; color:var(--neon-cyan); margin-bottom:4px;">⚡ BodyMod | بادی‌مود: بدن مود شده <span style="font-size:11px; color:var(--neon-gold);">(نسخه 7.7.0 بتا)</span></div>
+      <div style="font-weight:900; font-size:13px; color:var(--neon-cyan); margin-bottom:4px;">⚡ BodyMod | بادی‌مود: بدن مود شده <span style="font-size:11px; color:var(--neon-gold);">(نسخه 7.7.1 بتا)</span></div>
       <div style="font-size:11px; color:var(--text-muted);">طراحی و توسعه توسط <b>Matin Mohammadi</b> — تمامی حقوق محفوظ است © ۲۰۲۶</div>
     </div>
   </footer>
@@ -939,7 +1007,6 @@
         <button onclick="closeAuthModal()" style="background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer;">✕</button>
       </div>
 
-      <!-- توضیحات مهم و صمیمی درباره ارسال کد در پیام‌رسان بله یا ورود با گوگل -->
       <div style="background:var(--inner-bg); border:1px solid rgba(251,191,36,0.45); border-radius:13px; padding:10px 12px; margin-bottom:12px; font-size:11.5px; line-height:1.7; color:var(--text-main);">
         💬 <b style="color:var(--neon-gold);">نکته خیلی مهم رفیق:</b><br>
         فعلاً کد تایید ۴ رقمی فقط از طریق <b>پیام‌رسان «بله»</b> ارسال می‌شه!
@@ -957,7 +1024,6 @@
           <button class="btn" id="sendOtpBtn" onclick="sendBaleOtpCode()" style="white-space:nowrap; padding:0 14px;">ارسال کد 💬</button>
         </div>
 
-        <!-- کادر قرمز رنگ اخطار در صورتی که کاربر در پیام‌رسان بله حساب نداشته باشد -->
         <div id="baleNoAccountErrorBox" class="bale-red-error-box"></div>
       </div>
 
@@ -991,6 +1057,27 @@
     const WORKER_BASE_URL = "https://server.matin-mohammadi.ir";
     const WEEKDAY_NAMES_FA = ["شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه"];
 
+    function getDefaultUserProfile() {
+      return {
+        nickname: "",
+        city: "",
+        birthDay: "",
+        birthMonth: "",
+        birthYear: "",
+        age: 22,
+        gender: "male",
+        height: "",
+        weight: "",
+        goalMode: "maintain",
+        activityLevel: "1.45",
+        targetDuration: "1m",
+        coachMemory: "",
+        strategyCalorieAdjust: 0,
+        termsAccepted: true,
+        profileCompleted: false
+      };
+    }
+
     let appState = {
       userKey: localStorage.getItem("bm_user_key") || "",
       themeMode: localStorage.getItem("bm_theme_mode_manual") || "dark",
@@ -1001,12 +1088,7 @@
       lastWeeklyCheckinAt: 0,
       lastWeeklyNotifSentDay: "",
       bodyLogs: [],
-      userProfile: {
-        nickname: "", city: "", age: 22, gender: "male", height: 175, weight: 70,
-        goalMode: "maintain", targetDuration: "1m", coachMemory: "",
-        strategyCalorieAdjust: 0,
-        profileCompleted: false
-      },
+      userProfile: getDefaultUserProfile(),
       dietConfig: {
         activeWeekdayTab: 0,
         weeklyPlan: {},
@@ -1039,17 +1121,32 @@
       timerInterval: null
     };
 
-    // ==================== تم برنامه (فقط دستی: دارک یا لایت) ====================
+    // ==================== ۱. باز و بسته کردن تضمینی پاپ‌آپ ورود و منو ====================
+    window.openAuthModal = function() {
+      const modal = document.getElementById("authModal");
+      if (modal) modal.style.display = "flex";
+      const errBox = document.getElementById("baleNoAccountErrorBox");
+      if (errBox) { errBox.style.display = "none"; errBox.innerHTML = ""; }
+    };
+
+    window.closeAuthModal = function() {
+      const modal = document.getElementById("authModal");
+      if (modal) modal.style.display = "none";
+    };
+
+    window.handleHeaderProfileClick = function() {
+      if (!appState.userKey) window.openAuthModal();
+      else switchSection("profile");
+    };
+
+    // ==================== ۲. تم برنامه (فقط دستی: دارک یا لایت) ====================
     function applyThemeMode() {
       let mode = appState.themeMode;
       if (mode !== "light" && mode !== "dark") mode = "dark";
       appState.themeMode = mode;
 
-      if (mode === "light") {
-        document.body.classList.add("light-mode");
-      } else {
-        document.body.classList.remove("light-mode");
-      }
+      if (mode === "light") document.body.classList.add("light-mode");
+      else document.body.classList.remove("light-mode");
 
       const sel = document.getElementById("themeSelectDropdown");
       if (sel) sel.value = mode;
@@ -1061,16 +1158,17 @@
       applyThemeMode();
     }
 
-    // ==================== پاپ‌آپ اولین نصب و نوتیفیکیشن ====================
+    // ==================== ۳. پاپ‌آپ اولین نصب و نوتیفیکیشن ====================
     function checkFirstInstallNotificationPrompt() {
-      const prompted = localStorage.getItem("bm_first_notif_prompted_v77");
+      const prompted = localStorage.getItem("bm_first_notif_prompted_v771");
       if (!prompted) {
-        document.getElementById("firstInstallNotifModal").style.display = "flex";
+        const m = document.getElementById("firstInstallNotifModal");
+        if (m) m.style.display = "flex";
       }
     }
 
     function acceptFirstInstallNotif() {
-      localStorage.setItem("bm_first_notif_prompted_v77", "yes");
+      localStorage.setItem("bm_first_notif_prompted_v771", "yes");
       document.getElementById("firstInstallNotifModal").style.display = "none";
 
       const title = "🔥 اعلان‌های هوشمند BodyMod فعال شد!";
@@ -1086,7 +1184,7 @@
     }
 
     function dismissFirstInstallNotif() {
-      localStorage.setItem("bm_first_notif_prompted_v77", "later");
+      localStorage.setItem("bm_first_notif_prompted_v771", "later");
       document.getElementById("firstInstallNotifModal").style.display = "none";
     }
 
@@ -1133,13 +1231,13 @@
 
     function loadLocalState() {
       try {
-        const saved = localStorage.getItem("bm_app_state_v77");
+        const saved = localStorage.getItem("bm_app_state_v771");
         if (saved) {
           const parsed = JSON.parse(saved);
           appState = {
             ...appState,
             ...parsed,
-            userProfile: { ...appState.userProfile, ...(parsed.userProfile || {}) },
+            userProfile: { ...getDefaultUserProfile(), ...(parsed.userProfile || {}) },
             dietConfig: { ...appState.dietConfig, ...(parsed.dietConfig || {}) },
             workoutConfig: { ...appState.workoutConfig, ...(parsed.workoutConfig || {}) },
             customFoods: Array.isArray(parsed.customFoods) ? parsed.customFoods : [],
@@ -1153,7 +1251,7 @@
 
     function saveLocalState() {
       try {
-        localStorage.setItem("bm_app_state_v77", JSON.stringify(appState));
+        localStorage.setItem("bm_app_state_v771", JSON.stringify(appState));
         if (appState.userKey) localStorage.setItem("bm_user_key", appState.userKey);
       } catch (e) {}
     }
@@ -1162,25 +1260,46 @@
       return appState.isCeo || appState.isVip || (appState.vipExpiresAt && appState.vipExpiresAt > Date.now());
     }
 
-    // پاکسازی کامل کش هنگام خروج از حساب کاربری
+    // پاکسازی کامل کش برای تغییر اکانت یا خروج
+    function resetStateForNewAccount() {
+      appState.isCeo = false;
+      appState.isVip = false;
+      appState.vipExpiresAt = 0;
+      appState.lastWeeklyCheckinAt = 0;
+      appState.bodyLogs = [];
+      appState.customFoods = [];
+      appState.daysLog = {};
+      appState.userProfile = getDefaultUserProfile();
+      appState.dietConfig = {
+        activeWeekdayTab: 0,
+        weeklyPlan: {},
+        mealRemindersEnabled: false,
+        timeBreakfast: "08:30",
+        timeLunch: "13:30",
+        timeDinner: "20:30"
+      };
+      appState.workoutConfig = {
+        preferredRestSec: 30,
+        scheduledWeekdays: [6, 1, 3],
+        notifEnabled: false,
+        forceAllowForGainWeight: false,
+        unlockedDayIndex: 0,
+        completedDays: [],
+        planDays: []
+      };
+    }
+
     function logoutCurrentUser() {
-      if (confirm("رفیق می‌خوای از حسابت خارج بشی؟ اطلاعات ابری‌ت محفوظه ولی کش این دستگاه پاک می‌شه.")) {
+      if (confirm("رفیق می‌خوای از حسابت خارج بشی؟ اطلاعات ابری‌ت محفوظه و کش این گوشی پاک می‌شه.")) {
         localStorage.removeItem("bm_user_key");
-        localStorage.removeItem("bm_app_state_v77");
+        localStorage.removeItem("bm_app_state_v771");
         appState.userKey = "";
-        appState.isCeo = false;
-        appState.isVip = false;
-        appState.vipExpiresAt = 0;
-        appState.bodyLogs = [];
-        appState.customFoods = [];
-        appState.daysLog = {};
-        appState.userProfile = {
-          nickname: "", city: "", age: 22, gender: "male", height: 175, weight: 70,
-          goalMode: "maintain", targetDuration: "1m", coachMemory: "", strategyCalorieAdjust: 0, profileCompleted: false
-        };
+        resetStateForNewAccount();
         saveLocalState();
-        alert("🚪 از حساب کاربری خارج شدی رفیق!");
-        location.reload();
+        toggleDrawer(false);
+        renderAllUI();
+        switchSection("dashboard");
+        alert("🚪 با موفقیت از حساب کاربری خارج شدی رفیق!");
       }
     }
 
@@ -1241,7 +1360,7 @@
       }
     }
 
-    // ==================== لاگ هفتگی بدن و تحلیل هوش مصنوعی ====================
+    // ==================== ۴. لاگ هفتگی بدن و تحلیل هوش مصنوعی ====================
     function extractLast7DaysFoodSummary() {
       let lines = [];
       for (let i = -6; i <= 0; i++) {
@@ -1260,8 +1379,8 @@
     }
 
     function renderAnalysisSection() {
-      document.getElementById("weeklyNewWeightInput").value = appState.userProfile.weight || 70;
-      document.getElementById("weeklyNewHeightInput").value = appState.userProfile.height || 175;
+      document.getElementById("weeklyNewWeightInput").value = appState.userProfile.weight || "";
+      document.getElementById("weeklyNewHeightInput").value = appState.userProfile.height || "";
       document.getElementById("auto7DayFoodsPreview").textContent = extractLast7DaysFoodSummary();
 
       const now = Date.now();
@@ -1296,11 +1415,11 @@
     }
 
     async function submitWeeklyBodyAndDietAnalysis() {
-      if (!appState.userKey) { openAuthModal(); return; }
+      if (!appState.userKey) { window.openAuthModal(); return; }
       if (!isSubscriptionActive()) { switchSection("market"); return; }
 
       const newW = Number(document.getElementById("weeklyNewWeightInput").value);
-      const newH = Number(document.getElementById("weeklyNewHeightInput").value) || appState.userProfile.height || 175;
+      const newH = Number(document.getElementById("weeklyNewHeightInput").value) || Number(appState.userProfile.height) || 175;
       if (!newW || newW < 25 || newW > 250) {
         alert("رفیق لطفاً وزن فعلیت رو به درستی وارد کن!");
         return;
@@ -1382,7 +1501,7 @@ ${foodSummary7Days}
       }
     }
 
-    // ==================== برنامه غذایی هفتگی و ثبت خوراکی ====================
+    // ==================== ۵. برنامه غذایی هفتگی و ثبت خوراکی ====================
     function renderDietSection() {
       const subOk = isSubscriptionActive();
       document.getElementById("dietSubLockBanner").style.display = subOk ? "none" : "block";
@@ -1438,7 +1557,7 @@ ${foodSummary7Days}
       const customBox = document.getElementById("savedCustomFoodsList");
       customBox.innerHTML = "";
       if (!appState.customFoods || appState.customFoods.length === 0) {
-        customBox.innerHTML = `<span style="font-size:11px; color:var(--text-muted);">هر خوراکی که با AI تحلیل کنی یا دستی ثبت کنی، اینجا ذخیره می‌شه.</span>`;
+        customBox.innerHTML = `<span style="font-size:11px; color:var(--text-muted);">هر خوراکی که با AI تحلیل کنی یا دستی ثبت کنی، با جزئیات کامل ماکروها اینجا ذخیره می‌شه.</span>`;
       } else {
         appState.customFoods.forEach((cf, idx) => {
           const item = document.createElement("div");
@@ -1476,9 +1595,8 @@ ${foodSummary7Days}
         fat: Math.round(Number(foodObj.fat) || 0)
       };
       const existingIdx = appState.customFoods.findIndex(f => f.name === cleanObj.name);
-      if (existingIdx !== -1) {
-        appState.customFoods[existingIdx] = cleanObj;
-      } else {
+      if (existingIdx !== -1) appState.customFoods[existingIdx] = cleanObj;
+      else {
         appState.customFoods.unshift(cleanObj);
         if (appState.customFoods.length > 50) appState.customFoods.pop();
       }
@@ -1534,7 +1652,7 @@ ${foodSummary7Days}
     }
 
     async function generateWeeklyAiDietMenu() {
-      if (!appState.userKey) { openAuthModal(); return; }
+      if (!appState.userKey) { window.openAuthModal(); return; }
       if (!isSubscriptionActive()) { switchSection("market"); return; }
 
       const loader = document.getElementById("dietMenuInlineLoader");
@@ -1566,9 +1684,7 @@ WEEKLY_DIET_JSON:{"day_0":[{"mealType":"صبحانه","name":"نام غذا","ca
               }
             } catch (e) {}
           }
-          if (!parsedOk) {
-            appState.dietConfig.weeklyPlan = buildFallbackVariedWeeklyDiet();
-          }
+          if (!parsedOk) appState.dietConfig.weeklyPlan = buildFallbackVariedWeeklyDiet();
           saveLocalState();
           renderDietSection();
           syncWithCloud();
@@ -1648,7 +1764,7 @@ WEEKLY_DIET_JSON:{"day_0":[{"mealType":"صبحانه","name":"نام غذا","ca
       }
     }
 
-    // ==================== باشگاه هوشمند ====================
+    // ==================== ۶. باشگاه هوشمند ====================
     function unlockWorkoutBuilderForGainWeight() {
       appState.workoutConfig.forceAllowForGainWeight = true;
       saveLocalState();
@@ -1866,11 +1982,8 @@ WEEKLY_DIET_JSON:{"day_0":[{"mealType":"صبحانه","name":"نام غذا","ca
     }
 
     function prevExerciseStep() {
-      if (playerState.currentSetNum > 1) {
-        startExerciseStep(playerState.currentExIndex, playerState.currentSetNum - 1);
-      } else if (playerState.currentExIndex > 0) {
-        startExerciseStep(playerState.currentExIndex - 1, 1);
-      }
+      if (playerState.currentSetNum > 1) startExerciseStep(playerState.currentExIndex, playerState.currentSetNum - 1);
+      else if (playerState.currentExIndex > 0) startExerciseStep(playerState.currentExIndex - 1, 1);
     }
 
     function finishCurrentSetOrExercise() {
@@ -1919,11 +2032,8 @@ WEEKLY_DIET_JSON:{"day_0":[{"mealType":"صبحانه","name":"نام غذا","ca
     }
 
     function skipRestAndContinue() {
-      if (playerState.currentSetNum < playerState.totalSetsForCurrent) {
-        startExerciseStep(playerState.currentExIndex, playerState.currentSetNum + 1);
-      } else {
-        startExerciseStep(playerState.currentExIndex + 1, 1);
-      }
+      if (playerState.currentSetNum < playerState.totalSetsForCurrent) startExerciseStep(playerState.currentExIndex, playerState.currentSetNum + 1);
+      else startExerciseStep(playerState.currentExIndex + 1, 1);
     }
 
     function completeWorkoutSession() {
@@ -1966,7 +2076,7 @@ WEEKLY_DIET_JSON:{"day_0":[{"mealType":"صبحانه","name":"نام غذا","ca
     }
 
     async function generateAiCustomWorkout() {
-      if (!appState.userKey) { openAuthModal(); return; }
+      if (!appState.userKey) { window.openAuthModal(); return; }
       if (!isSubscriptionActive()) { switchSection("market"); return; }
 
       const place = document.getElementById("woPlace").value;
@@ -2067,18 +2177,14 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
       }
     }
 
-    function handleHeaderProfileClick() {
-      if (!appState.userKey) openAuthModal();
-      else switchSection("profile");
-    }
-
     function calculateTargetMacros() {
       const w = Number(appState.userProfile.weight) || 70;
       const h = Number(appState.userProfile.height) || 175;
       const a = Number(appState.userProfile.age) || 22;
+      const actMult = Number(appState.userProfile.activityLevel) || 1.45;
       const isMale = appState.userProfile.gender !== "female";
       const bmr = isMale ? (10 * w + 6.25 * h - 5 * a + 5) : (10 * w + 6.25 * h - 5 * a - 161);
-      let cal = Math.round(bmr * 1.45);
+      let cal = Math.round(bmr * actMult);
       const gm = appState.userProfile.goalMode;
       if (gm === "gain_weight" || gm === "bulk_chest") cal += 450;
       else if (gm === "muscle" || gm === "tone_glutes") cal += 250;
@@ -2116,6 +2222,7 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
         if (logoutBtn) logoutBtn.style.display = "none";
         if (drawerLogout) drawerLogout.style.display = "none";
         document.getElementById("syncStatusLabel").textContent = "💾 آفلاین";
+        document.getElementById("drawerSyncBadge").textContent = "💾 وضعیت: حافظه گوشی";
       }
 
       document.getElementById("nav-ceo").style.display = appState.isCeo ? "flex" : "none";
@@ -2190,33 +2297,310 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
       }
     }
 
+    function buildEnrichedPrompt(userRawPrompt) {
+      const p = appState.userProfile || {};
+      const mem = p.coachMemory ? `\n[حافظه بلندمدت و استراتژی کاربر: ${p.coachMemory}]` : "";
+      return `${userRawPrompt}${mem}`;
+    }
+
+    // ==================== ۷. چت با مربی و تحلیل خوراکی ====================
+    async function sendCoachMessage() {
+      const inp = document.getElementById("chatPromptInput");
+      const text = inp.value.trim();
+      if (!text) return;
+      if (!appState.userKey) { window.openAuthModal(); return; }
+
+      const box = document.getElementById("chatMessagesBox");
+      const userBubble = document.createElement("div");
+      userBubble.className = "msg-bubble msg-user";
+      userBubble.textContent = text;
+      box.appendChild(userBubble);
+      inp.value = "";
+
+      const loaderWrap = document.createElement("div");
+      loaderWrap.innerHTML = getBLogoLoaderHtml("مربی صمیمی در حال نوشتن...");
+      box.appendChild(loaderWrap);
+      box.scrollTop = box.scrollHeight;
+
+      const modelType = document.getElementById("aiModelSelect").value;
+      try {
+        const res = await fetch(`${WORKER_BASE_URL}/api/ai/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userKey: appState.userKey, prompt: buildEnrichedPrompt(text), requestType: "chat", modelType })
+        });
+        const data = await res.json();
+        loaderWrap.remove();
+        const aiBubble = document.createElement("div");
+        aiBubble.className = "msg-bubble msg-ai";
+        aiBubble.textContent = (res.ok && data.ok) ? data.reply : ("⛔ " + (data.error || "خطا"));
+        box.appendChild(aiBubble);
+        box.scrollTop = box.scrollHeight;
+      } catch (e) { loaderWrap.remove(); }
+    }
+
+    async function analyzeFoodByText() {
+      const inp = document.getElementById("aiFoodInput");
+      const foodText = inp.value.trim();
+      if (!foodText) return;
+      if (!appState.userKey) { window.openAuthModal(); return; }
+      if (!isSubscriptionActive()) { switchSection("market"); return; }
+
+      const loaderEl = document.getElementById("foodAiInlineLoader");
+      loaderEl.style.display = "block";
+      loaderEl.innerHTML = getBLogoLoaderHtml("در حال محاسبه دقیق کالری، پروتئین، کربوهیدرات و چربی...");
+      try {
+        const res = await fetch(`${WORKER_BASE_URL}/api/ai/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userKey: appState.userKey,
+            prompt: `این خوراکی را دقیق تحلیل کن و حتماً میزان کالری (cal)، پروتئین (prot)، کربوهیدرات (carb) و چربی (fat) آن را به گرم در FOOD_JSON بده: ${foodText}`,
+            requestType: "food_text",
+            modelType: "lite"
+          })
+        });
+        const data = await res.json();
+        loaderEl.style.display = "none";
+        if (res.ok && data.ok) {
+          inp.value = "";
+          extractAndSaveFoodJson(data.reply, foodText);
+        } else alert("⛔ " + (data.error || "خطا"));
+      } catch (e) { loaderEl.style.display = "none"; }
+    }
+
+    async function analyzeFoodByImage(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      if (!appState.userKey) { window.openAuthModal(); return; }
+      if (!isSubscriptionActive()) { switchSection("market"); return; }
+
+      const loaderEl = document.getElementById("foodAiInlineLoader");
+      loaderEl.style.display = "block";
+      loaderEl.innerHTML = getBLogoLoaderHtml("در حال اسکن تصویر غذا و استخراج کالری، پروتئین، کربوهیدرات و چربی...");
+      const reader = new FileReader();
+      reader.onload = async function() {
+        const base64Data = reader.result.split(",")[1];
+        try {
+          const res = await fetch(`${WORKER_BASE_URL}/api/ai/chat`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userKey: appState.userKey,
+              prompt: "این تصویر غذا را تحلیل کن و حتماً کالری (cal)، پروتئین (prot)، کربوهیدرات (carb) و چربی (fat) را در FOOD_JSON برگردان.",
+              imageBase64: base64Data,
+              requestType: "food_image",
+              modelType: "flash"
+            })
+          });
+          const data = await res.json();
+          loaderEl.style.display = "none";
+          if (res.ok && data.ok) extractAndSaveFoodJson(data.reply, "غذای اسکن‌شده");
+          else alert("⛔ " + (data.error || "خطا"));
+        } catch (e) { loaderEl.style.display = "none"; }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function extractAndSaveFoodJson(replyText, fallbackName) {
+      let foodObj = { name: fallbackName, cal: 240, prot: 4, carb: 32, fat: 10 };
+      const match = replyText.match(/FOOD_JSON:\s*(\{[\s\S]*?\})/);
+      if (match && match[1]) {
+        try {
+          const parsed = JSON.parse(match[1]);
+          foodObj = {
+            name: parsed.name || fallbackName,
+            cal: Math.round(Number(parsed.cal) || 240),
+            prot: Math.round(Number(parsed.prot) || 0),
+            carb: Math.round(Number(parsed.carb) || 0),
+            fat: Math.round(Number(parsed.fat) || 0)
+          };
+        } catch (e) {}
+      }
+      addFoodToTodayLog(foodObj);
+      alert(`✅ «${foodObj.name}» ثبت شد!\n🔥 کالری: ${foodObj.cal} kcal\n🥩 پروتئین: ${foodObj.prot}g | 🍚 کربوهیدرات: ${foodObj.carb}g | 🥑 چربی: ${foodObj.fat}g`);
+    }
+
+    // ==================== ۸. فرم پرونده بدنی با روز/ماه/سال تولد و قوانین ====================
+    function checkDurationPlanEligibility() {
+      const val = document.getElementById("profTargetDuration").value;
+      if (val !== "1m") {
+        alert("💎 رفیق در حال حاضر در «فاز آزمایشی (بتا)» هستیم و اشتراک‌ها ۱ ماهه است. پس از خروج از فاز بتا، با تهیه اشتراک ۳ ماهه، ۶ ماهه یا ۱ ساله می‌تونی این هدف‌های بلندمدت رو فعال کنی!");
+        document.getElementById("profTargetDuration").value = "1m";
+      }
+    }
+
+    function populateProfileForm() {
+      const p = appState.userProfile || {};
+      document.getElementById("profNickname").value = p.nickname || "";
+      document.getElementById("profCity").value = p.city || "";
+      document.getElementById("profBirthDay").value = p.birthDay || "";
+      document.getElementById("profBirthMonth").value = p.birthMonth || "";
+      document.getElementById("profBirthYear").value = p.birthYear || "";
+      document.getElementById("profGender").value = p.gender || "male";
+      document.getElementById("profHeight").value = p.height || "";
+      document.getElementById("profWeight").value = p.weight || "";
+      document.getElementById("profGoalMode").value = p.goalMode || "maintain";
+      document.getElementById("profActivityLevel").value = p.activityLevel || "1.45";
+      document.getElementById("profTargetDuration").value = p.targetDuration || "1m";
+      document.getElementById("profCoachMemory").value = p.coachMemory || "";
+      document.getElementById("profTermsAccepted").checked = p.termsAccepted !== false;
+    }
+
+    async function saveUserProfileForm() {
+      const termsChecked = document.getElementById("profTermsAccepted").checked;
+      if (!termsChecked) {
+        alert("رفیق برای ذخیره پرونده، لطفاً تیک موافقت با قوانین و شرایط برنامه رو بزن! 😉📜");
+        return;
+      }
+
+      const bDay = Number(document.getElementById("profBirthDay").value) || "";
+      const bMonth = Number(document.getElementById("profBirthMonth").value) || "";
+      const bYear = Number(document.getElementById("profBirthYear").value) || "";
+
+      // محاسبه خودکار سن از روی سال تولد شمسی (سال جاری: ۱۴۰۵)
+      let calculatedAge = 22;
+      if (bYear && bYear >= 1320 && bYear <= 1400) {
+        calculatedAge = 1405 - bYear;
+      } else if (appState.userProfile.age) {
+        calculatedAge = Number(appState.userProfile.age) || 22;
+      }
+
+      const hVal = Number(document.getElementById("profHeight").value);
+      const wVal = Number(document.getElementById("profWeight").value);
+
+      if (!hVal || !wVal) {
+        alert("رفیق لطفاً قد و وزنت رو وارد کن تا مربی بتونه کالری و برنامه‌ت رو دقیق حساب کنه! ⚖️");
+        return;
+      }
+
+      appState.userProfile = {
+        ...appState.userProfile,
+        nickname: document.getElementById("profNickname").value.trim() || "رفیق",
+        city: document.getElementById("profCity").value.trim() || "ایران",
+        birthDay: bDay,
+        birthMonth: bMonth,
+        birthYear: bYear,
+        age: calculatedAge,
+        gender: document.getElementById("profGender").value,
+        height: hVal,
+        weight: wVal,
+        goalMode: document.getElementById("profGoalMode").value,
+        activityLevel: document.getElementById("profActivityLevel").value || "1.45",
+        targetDuration: document.getElementById("profTargetDuration").value || "1m",
+        coachMemory: document.getElementById("profCoachMemory").value.trim(),
+        termsAccepted: true,
+        profileCompleted: true
+      };
+
+      saveLocalState();
+      renderAllUI();
+      await syncWithCloud();
+      alert("✅ ایول رفیق! پرونده بدنی و مشخصاتت با موفقیت ذخیره و سینک شد! 🔥");
+      switchSection("dashboard");
+    }
+
+    // ==================== ۹. سینک ابری، لاگین بله (با پیش‌شماره 0 ثابت) و گوگل ====================
+    async function syncWithCloud() {
+      if (!appState.userKey) return;
+      try {
+        const res = await fetch(`${WORKER_BASE_URL}/api/user/sync`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userKey: appState.userKey,
+            userProfile: {
+              ...appState.userProfile,
+              lastWeeklyCheckinAt: appState.lastWeeklyCheckinAt,
+              dietConfig: appState.dietConfig,
+              workoutConfig: appState.workoutConfig
+            },
+            customFoods: appState.customFoods,
+            bodyLogs: appState.bodyLogs,
+            daysLog: appState.daysLog
+          })
+        });
+        const data = await res.json();
+        if (res.ok && data.ok && data.user) {
+          appState.isCeo = !!data.isCeo;
+          appState.isVip = !!data.isVip;
+          appState.vipExpiresAt = data.user.vipExpiresAt || appState.vipExpiresAt;
+          saveLocalState();
+          renderAllUI();
+        }
+      } catch (e) {}
+    }
+
+    async function fetchUserProfileFromCloud(uKey) {
+      try {
+        const res = await fetch(`${WORKER_BASE_URL}/api/user/profile?userKey=${encodeURIComponent(uKey)}`);
+        const data = await res.json();
+        if (res.ok && data.user) {
+          const incomingKey = data.user.userKey || uKey;
+          // اگر کاربر با اکانت جدیدی وارد شده، ابتدا کش اکانت قبلی را کاملاً پاک کن!
+          if (appState.userKey && appState.userKey !== incomingKey) {
+            resetStateForNewAccount();
+          }
+          appState.userKey = incomingKey;
+          appState.isCeo = !!data.isCeo;
+          appState.isVip = !!data.isVip;
+          appState.vipExpiresAt = data.user.vipExpiresAt || 0;
+
+          if (data.isNewUser) {
+            resetStateForNewAccount();
+            appState.userKey = incomingKey;
+            appState.isCeo = !!data.isCeo;
+            appState.isVip = !!data.isVip;
+            appState.vipExpiresAt = data.user.vipExpiresAt || 0;
+          } else {
+            if (data.user.userProfile) {
+              appState.userProfile = { ...getDefaultUserProfile(), ...data.user.userProfile };
+              if (data.user.userProfile.lastWeeklyCheckinAt) appState.lastWeeklyCheckinAt = data.user.userProfile.lastWeeklyCheckinAt;
+              if (data.user.userProfile.dietConfig) appState.dietConfig = { ...appState.dietConfig, ...data.user.userProfile.dietConfig };
+              if (data.user.userProfile.workoutConfig) appState.workoutConfig = { ...appState.workoutConfig, ...data.user.userProfile.workoutConfig };
+            }
+            appState.customFoods = Array.isArray(data.user.customFoods) ? data.user.customFoods : [];
+            appState.bodyLogs = Array.isArray(data.user.bodyLogs) ? data.user.bodyLogs : [];
+            appState.daysLog = data.user.daysLog || {};
+          }
+
+          saveLocalState();
+          renderAllUI();
+          if (data.isNewUser) switchSection("profile");
+        }
+      } catch (e) {}
+    }
+
     function sanitizeTenDigitPhone(inputEl) {
       let val = inputEl.value.replace(/[^0-9]/g, "");
       if (val.startsWith("0")) val = val.slice(1);
-      if (val.startsWith("9")) val = val.slice(0, 10);
-      inputEl.value = val;
+      if (val.length > 0 && !val.startsWith("9")) {
+        // هدایت کاربر به شروع از عدد 9
+      }
+      inputEl.value = val.slice(0, 10);
     }
 
-    // بررسی اینکه آیا کاربر در پیام‌رسان بله حساب دارد یا خیر
     async function sendBaleOtpCode() {
       const rawInput = document.getElementById("authPhoneInput").value.trim();
       const errBox = document.getElementById("baleNoAccountErrorBox");
       errBox.style.display = "none";
-      errBox.textContent = "";
+      errBox.innerHTML = "";
 
-      if (!rawInput || rawInput.length < 10) {
-        alert("رفیق شماره موبایلت رو کامل وارد نکردی! (۱۰ رقم بعد از صفر)");
+      if (!rawInput || rawInput.length !== 10 || !rawInput.startsWith("9")) {
+        alert("رفیق شماره‌ت باید از 9 شروع بشه و دقیقاً ۱۰ رقم باشه! (چون صفر اولش ثابته، مثلاً: 9123456789) 😉");
         return;
       }
 
-      const fullPhone = "0" + rawInput;
+      const fullPhoneWithZero = "0" + rawInput;
       const btn = document.getElementById("sendOtpBtn");
-      btn.textContent = "در حال بررسی...";
+      btn.textContent = "بررسی بله...";
       btn.disabled = true;
 
       try {
         const res = await fetch(`${WORKER_BASE_URL}/api/auth/bale/send-otp`, {
-          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phone: fullPhone })
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: fullPhoneWithZero })
         });
         const data = await res.json();
         btn.textContent = "ارسال کد 💬";
@@ -2226,8 +2610,9 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
           document.getElementById("otpVerifyBox").style.display = "block";
           alert("✅ ایول! کد تایید ۴ رقمی به پیام‌رسان «بله» فرستاده شد رفیق.");
         } else if (data.noBaleAccount) {
+          document.getElementById("otpVerifyBox").style.display = "none";
           errBox.style.display = "block";
-          errBox.innerHTML = data.error;
+          errBox.innerHTML = data.error || "⛔ رفیق تو هنوز با این شماره توی پیام‌رسان «بله» ثبت‌نام نکردی! اول برنامه بله رو نصب و ثبت‌نام کن، یا با دکمه Google وارد شو!";
         } else {
           alert("⛔ " + (data.error || "خطا در ارسال کد تایید"));
         }
@@ -2240,22 +2625,111 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
 
     async function verifyBaleOtpCode() {
       const rawInput = document.getElementById("authPhoneInput").value.trim();
-      const fullPhone = "0" + rawInput;
+      const fullPhoneWithZero = "0" + rawInput;
       const code = document.getElementById("authOtpInput").value.trim();
       if (!code || code.length !== 4) return alert("رفیق کد تایید ۴ رقمی رو دقیق وارد کن!");
 
       try {
         const res = await fetch(`${WORKER_BASE_URL}/api/auth/bale/verify-otp`, {
-          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phone: fullPhone, code })
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: fullPhoneWithZero, code })
         });
         const data = await res.json();
         if (res.ok && data.ok) {
-          closeAuthModal();
-          await fetchUserProfileFromCloud(data.user.userKey);
+          window.closeAuthModal();
+          resetStateForNewAccount();
+          await fetchUserProfileFromCloud(data.user.userKey || fullPhoneWithZero);
         } else {
           alert("⛔ " + (data.error || "کد اشتباه است"));
         }
       } catch (e) { alert("⛔ خطا در تایید کد"); }
+    }
+
+    function startGoogleLogin() {
+      window.open(`${WORKER_BASE_URL}/auth/google-direct`, '_system');
+    }
+
+    window.onGoogleChromeAuthSuccess = async function(email, name) {
+      window.closeAuthModal();
+      resetStateForNewAccount();
+      appState.userKey = email;
+      if (name) appState.userProfile.nickname = name;
+      saveLocalState();
+      await fetchUserProfileFromCloud(email);
+    };
+
+    async function buyMarketPackage(sku) {
+      if (!appState.userKey) { window.openAuthModal(); return; }
+      try {
+        const res = await fetch(`${WORKER_BASE_URL}/api/payment/market/verify`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userKey: appState.userKey, sku })
+        });
+        const data = await res.json();
+        if (res.ok && data.ok) {
+          if (sku === "mcd_donate_support") {
+            alert("❤️ دمت گرم رفیق باوفا! حمایت مالیت ثبت شد و کلی به پیشرفت BodyMod کمک کردی!");
+          } else {
+            appState.isVip = true;
+            appState.vipExpiresAt = data.user.vipExpiresAt;
+            saveLocalState();
+            renderAllUI();
+            loadBetaStatus();
+            alert("🎉 اشتراک ۱ ماهه ویژه فاز بتا فعال شد و قفل تمام بخش‌های تغذیه و تمرین باز شد!");
+          }
+        }
+      } catch (e) {}
+    }
+
+    async function loadCeoStats() {
+      const loader = document.getElementById("ceoInlineLoader");
+      const box = document.getElementById("ceoStatsContainer");
+      loader.style.display = "block";
+      loader.innerHTML = getBLogoLoaderHtml("در حال دریافت آمار مدیرعامل...");
+      try {
+        const res = await fetch(`${WORKER_BASE_URL}/api/ceo/stats`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userKey: appState.userKey })
+        });
+        const data = await res.json();
+        loader.style.display = "none";
+        if (res.ok && data.ok) {
+          box.innerHTML = `<div>👥 کل ثبت‌نامی‌ها: <b>${data.totalRegistered}</b></div><div>✅ پرونده‌های کامل: <b>${data.totalUsers}</b></div><div>🎂 میانگین سن: <b>${data.avgAge} سال</b></div>`;
+        }
+      } catch (e) { loader.style.display = "none"; }
+    }
+
+    function openDeleteAccountModal() {
+      if (!appState.userKey) return alert("رفیق اول وارد حسابت شو!");
+      document.getElementById("deleteAccModal").style.display = "flex";
+    }
+
+    async function confirmDeleteAccount() {
+      const phrase = document.getElementById("deleteConfirmInput").value.trim();
+      try {
+        const res = await fetch(`${WORKER_BASE_URL}/api/user/delete`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userKey: appState.userKey, confirmPhrase: phrase })
+        });
+        const data = await res.json();
+        if (res.ok && data.ok) {
+          localStorage.clear();
+          alert("💥 " + data.message);
+          location.reload();
+        } else alert("⛔ " + (data.error || "خطا"));
+      } catch (e) {}
+    }
+
+    async function loadBetaStatus() {
+      try {
+        const res = await fetch(`${WORKER_BASE_URL}/api/beta/status`);
+        const data = await res.json();
+        if (res.ok && data.ok) document.getElementById("betaCapText").textContent = `${data.remaining} از ${data.totalCapacity} نفر باقی‌مانده`;
+      } catch (e) {}
     }
 
     window.addEventListener("DOMContentLoaded", () => {
