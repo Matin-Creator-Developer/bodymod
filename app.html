@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>BodyMod | بادی‌مود: بدن مود شده (v7.7.1)</title>
+  <title>BodyMod | بادی‌مود: بدن مود شده (v7.7.2)</title>
   <style>
     :root {
       --bg-dark: #070a12;
@@ -132,7 +132,9 @@
     }
     body.light-mode .btn { color: #ffffff; }
     .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn-purple { background: linear-gradient(135deg, #9b5de5, #f15bb5); color: #fff !important; }
+    .btn-orange { background: linear-gradient(135deg, #f97316, #fbbf24); color: #070a12 !important; }
     .btn-outline { background: rgba(0,245,212,0.08); border: 1px solid var(--neon-cyan); color: var(--neon-cyan) !important; }
     .btn-danger { background: rgba(239,68,68,0.15); border: 1px solid var(--neon-red); color: #ef4444 !important; }
 
@@ -141,6 +143,36 @@
       color: var(--text-main); border-radius: 11px; padding: 10px 12px; font-size: 13px; outline: none;
     }
     input:focus, select:focus, textarea:focus { border-color: var(--neon-cyan); }
+
+    /* ==================== بنر قفل ۳ حالته هوشمند (ثبت‌نام / فرم / اشتراک API) ==================== */
+    .sub-lock-banner {
+      border-radius: 18px; padding: 16px; text-align: center; margin-bottom: 12px;
+      transition: all 0.25s ease;
+    }
+    /* حالت ۱: آبی (نیاز به ثبت‌نام و ورود) */
+    .lock-mode-auth {
+      background: linear-gradient(135deg, rgba(56,189,248,0.20), rgba(0,245,212,0.12));
+      border: 2px dashed var(--neon-blue);
+    }
+    /* حالت ۲: نارنجی/طلایی (نیاز به پر کردن فرم پرونده بدنی) */
+    .lock-mode-profile {
+      background: linear-gradient(135deg, rgba(249,115,22,0.20), rgba(251,191,36,0.14));
+      border: 2px dashed var(--neon-orange);
+    }
+    /* حالت ۳: بنفش/صورتی (هزینه بالای API هوش مصنوعی و نیاز به اشتراک) */
+    .lock-mode-sub {
+      background: linear-gradient(135deg, rgba(241,91,181,0.18), rgba(155,93,229,0.22));
+      border: 2px dashed var(--neon-pink);
+    }
+
+    /* کلاس قفل شدن کامل کارت‌ها و دکمه‌های هوش مصنوعی */
+    .ai-locked-zone {
+      opacity: 0.38 !important;
+      pointer-events: none !important;
+      user-select: none !important;
+      filter: grayscale(45%);
+      transition: 0.25s;
+    }
 
     /* کادر ویژه شماره موبایل با پیش‌شماره 0 ثابت در سمت چپ */
     .phone-input-group {
@@ -308,11 +340,6 @@
     .msg-ai { background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-main); align-self: flex-start; }
     .msg-user { background: var(--neon-cyan); color: #070a12; font-weight: 800; align-self: flex-end; }
 
-    .sub-lock-banner {
-      background: linear-gradient(135deg, rgba(239,68,68,0.16), rgba(155,93,229,0.16));
-      border: 2px dashed var(--neon-red); border-radius: 18px; padding: 18px; text-align: center; margin-bottom: 12px;
-    }
-
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(4,7,14,0.86); backdrop-filter: blur(8px);
       z-index: 3000; display: none; align-items: center; justify-content: center; padding: 16px;
@@ -360,12 +387,12 @@
     </div>
   </header>
 
-  <!-- ==================== منوی همبرگری (دارای دکمه خروج از حساب و نسخه 7.7.1) ==================== -->
+  <!-- ==================== منوی همبرگری (نسخه 7.7.2) ==================== -->
   <div class="drawer-backdrop" id="drawerBackdrop" onclick="toggleDrawer(false)"></div>
   <aside class="drawer-panel" id="drawerPanel">
     <div>
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; border-bottom:1px solid var(--card-border); padding-bottom:10px;">
-        <span style="font-weight:900; font-size:14px; color:var(--neon-cyan);">⚡ منوی BodyMod <small style="color:var(--neon-gold);">v7.7.1</small></span>
+        <span style="font-weight:900; font-size:14px; color:var(--neon-cyan);">⚡ منوی BodyMod <small style="color:var(--neon-gold);">v7.7.2</small></span>
         <button onclick="toggleDrawer(false)" style="background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer;">✕</button>
       </div>
 
@@ -504,14 +531,8 @@
         <button class="back-home-btn" onclick="switchSection('dashboard')">🏠 داشبورد</button>
       </div>
 
-      <div id="dietSubLockBanner" class="sub-lock-banner" style="display:none;">
-        <div style="font-size:32px;">🔒</div>
-        <div style="font-weight:900; font-size:14px; color:var(--neon-red); margin:4px 0;">رفیق اشتراک ماهانه‌ت فعال نیست یا وقتش تموم شده!</div>
-        <p style="font-size:11.5px; color:var(--text-muted); margin:0 0 10px 0;">
-          برای باز شدن برنامه غذایی ۷ روزه هوش مصنوعی، اشتراک ماهانه‌ت رو تمدید کن. (البته ثبت دستی آفلاین همیشه برات رایگانه!)
-        </p>
-        <button class="btn btn-purple" onclick="switchSection('market')">💎 تمدید اشتراک ماهانه</button>
-      </div>
+      <!-- بنر قفل ۳ حالته هوشمند برای بخش تغذیه AI -->
+      <div id="dietSubLockBanner" class="sub-lock-banner" style="display:none;"></div>
 
       <div class="card" id="aiWeeklyDietPlanCard">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
@@ -543,6 +564,7 @@
         <div id="foodAiInlineLoader" style="display:none;"></div>
       </div>
 
+      <!-- بخش ثبت دستی و آفلاین که همیشه برای همه باز و رایگان است -->
       <div class="card">
         <div style="font-weight:900; font-size:13.5px; color:var(--neon-cyan); margin-bottom:6px;">
           🆓 ثبت دستی و آفلاین خوراکی سفارشی (همیشه رایگان و بدون اینترنت)
@@ -587,14 +609,17 @@
       </div>
     </section>
 
-    <!-- 🟢 صفحه ۳: لاگ هفتگی بدن و تحلیل هوش مصنوعی ۷ روز گذشته + تغییر استراتژی -->
+    <!-- 🟢 صفحه ۳: لاگ هفتگی بدن و تحلیل هوش مصنوعی ۷ روز گذشته (قفل کامل در صورت نداشتن ثبت‌نام/فرم/اشتراک!) -->
     <section id="sec-analysis" class="app-section">
       <div class="fullpage-bar">
         <div class="fullpage-title">📈 لاگ هفتگی بدن و تحلیل ۷ روزه AI</div>
         <button class="back-home-btn" onclick="switchSection('dashboard')">🏠 داشبورد</button>
       </div>
 
-      <div class="card">
+      <!-- بنر قفل ۳ حالته هوشمند برای بخش تحلیل هفتگی AI -->
+      <div id="analysisSubLockBanner" class="sub-lock-banner" style="display:none;"></div>
+
+      <div class="card" id="analysisAiMainCard">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
           <span style="font-weight:900; font-size:14px; color:var(--neon-gold);">⚖️ گام اول: ثبت قد و وزن این هفته (هر ۷ روز یک‌بار)</span>
           <span id="weeklyCheckinCountdownBadge" style="font-size:11px; color:var(--neon-cyan); font-weight:900;">بررسی موعد...</span>
@@ -627,25 +652,21 @@
         <div id="weeklyAnalysisResultBox" style="display:none; margin-top:12px; background:var(--inner-bg); border:2px solid var(--neon-cyan); border-radius:14px; padding:13px; font-size:12.5px; line-height:1.75; white-space:pre-wrap;"></div>
       </div>
 
-      <div class="card">
+      <div class="card" id="analysisHistoryCard">
         <div style="font-weight:900; font-size:13px; color:var(--neon-cyan); margin-bottom:8px;">📋 تاریخچه تغییرات هفتگی قد و وزن شما:</div>
         <div id="bodyLogsHistoryList" style="display:flex; flex-direction:column; gap:6px; font-size:12px;"></div>
       </div>
     </section>
 
-    <!-- 🟢 صفحه ۴: باشگاه هوشمند -->
+    <!-- 🟢 صفحه ۴: باشگاه هوشمند (قفل کامل در صورت نداشتن ثبت‌نام/فرم/اشتراک!) -->
     <section id="sec-workout" class="app-section">
       <div class="fullpage-bar">
         <div class="fullpage-title">🏋️ باشگاه هوشمند و راهنمای گام‌به‌گام تمرین</div>
         <button class="back-home-btn" onclick="switchSection('dashboard')">🏠 داشبورد</button>
       </div>
 
-      <div id="workoutSubLockBanner" class="sub-lock-banner" style="display:none;">
-        <div style="font-size:32px;">🔒</div>
-        <div style="font-weight:900; font-size:14px; color:var(--neon-red);">رفیق بخش تمرین به خاطر عدم تمدید اشتراک ماهانه قفله!</div>
-        <p style="font-size:11.5px; color:var(--text-muted); margin:6px 0 10px 0;">برای دسترسی به برنامه تمرینی، اشتراک ماهانه‌ت رو تمدید کن.</p>
-        <button class="btn btn-purple" onclick="switchSection('market')">💎 تمدید اشتراک</button>
-      </div>
+      <!-- بنر قفل ۳ حالته هوشمند برای باشگاه AI -->
+      <div id="workoutSubLockBanner" class="sub-lock-banner" style="display:none;"></div>
 
       <div id="gainWeightNoWorkoutCard" class="card" style="display:none; border-color:var(--neon-gold);">
         <div style="font-weight:900; font-size:14px; color:var(--neon-gold); margin-bottom:6px;">💡 توصیه مربی برای هدف «افزایش وزن عمومی» شما:</div>
@@ -779,13 +800,17 @@
       </div>
     </section>
 
-    <!-- 🟢 صفحه ۵: چت صمیمی با مربی هوشمند -->
+    <!-- 🟢 صفحه ۵: چت صمیمی با مربی هوشمند (قفل کامل در صورت نداشتن ثبت‌نام/فرم/اشتراک!) -->
     <section id="sec-coach" class="app-section">
       <div class="fullpage-bar">
         <div class="fullpage-title">🤖 چت صمیمی با مربی هوشمند BodyMod</div>
         <button class="back-home-btn" onclick="switchSection('dashboard')">🏠 داشبورد</button>
       </div>
-      <div class="card card-full-grow">
+
+      <!-- بنر قفل ۳ حالته هوشمند برای چت با مربی AI -->
+      <div id="coachSubLockBanner" class="sub-lock-banner" style="display:none;"></div>
+
+      <div class="card card-full-grow" id="coachMainCard">
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
           <span style="font-size:11.5px; color:var(--text-muted);">سهمیه فاز بتا: روزی ۳ پیام (بدون نیاز به سکه)</span>
           <select id="aiModelSelect" style="width:auto; padding:6px 10px; font-size:11.5px; font-weight:800;">
@@ -805,7 +830,7 @@
       </div>
     </section>
 
-    <!-- 🟢 صفحه ۶: فرم ثبت‌نام و پرونده بدنی (با متن‌های راهنمای دقیق شما + قوانین در انتهای فرم!) -->
+    <!-- 🟢 صفحه ۶: فرم ثبت‌نام و پرونده بدنی -->
     <section id="sec-profile" class="app-section">
       <div class="fullpage-bar">
         <div class="fullpage-title">👤 پرونده بدنی و فرم مشخصات</div>
@@ -823,7 +848,6 @@
           </div>
         </div>
 
-        <!-- تاریخ تولد (روز / ماه / سال) + جنسیت -->
         <div style="display:grid; grid-template-columns:2fr 1fr; gap:10px; margin-bottom:10px;">
           <div>
             <label style="font-size:11px; color:var(--text-muted);">تاریخ تولد (شمسی):</label>
@@ -842,7 +866,6 @@
           </div>
         </div>
 
-        <!-- قد و وزن با متن دقیق شما -->
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
           <div>
             <label style="font-size:11px; color:var(--text-muted);">قد (سانتی‌متر):</label>
@@ -854,7 +877,6 @@
           </div>
         </div>
 
-        <!-- هدف اصلی اندام -->
         <div style="margin-bottom:10px;">
           <label style="font-size:11px; color:var(--text-muted);">🎯 هدف اصلی اندام شما:</label>
           <select id="profGoalMode">
@@ -867,7 +889,6 @@
           </select>
         </div>
 
-        <!-- میزان تمرین و فعالیت هفتگی -->
         <div style="margin-bottom:10px;">
           <label style="font-size:11px; color:var(--text-muted);">🏃 میزان تمرین و فعالیت بدنی هفتگی:</label>
           <select id="profActivityLevel">
@@ -878,7 +899,6 @@
           </select>
         </div>
 
-        <!-- دوره زمانی هدف -->
         <div style="margin-bottom:10px;">
           <label style="font-size:11px; color:var(--neon-gold); font-weight:800;">⏳ دوره زمانی هدف (وابسته به نوع اشتراک):</label>
           <select id="profTargetDuration" onchange="checkDurationPlanEligibility()">
@@ -894,7 +914,6 @@
           <textarea id="profCoachMemory" rows="2" placeholder="مثلاً: به لاکتوز حساسیت دارم یا زانوی راستم آسیب دیده..."></textarea>
         </div>
 
-        <!-- قوانین و مقررات در انتهای فرم -->
         <div style="background:var(--inner-bg); border:1px solid var(--card-border); border-radius:12px; padding:10px 12px; margin-bottom:12px;">
           <div style="font-size:11.5px; font-weight:900; color:var(--neon-cyan); margin-bottom:4px;">📜 قوانین و شرایط استفاده از BodyMod:</div>
           <div style="font-size:10.5px; color:var(--text-muted); line-height:1.65; max-height:78px; overflow-y:auto; margin-bottom:8px;">
@@ -917,14 +936,13 @@
       </div>
     </section>
 
-    <!-- 🟢 صفحه ۷: فروشگاه اشتراک ماهانه و حمایت درون‌برنامه‌ای (بدون هیچ لینک خارجی برای تایید ۱۰۰٪ مارکت‌ها!) -->
+    <!-- 🟢 صفحه ۷: فروشگاه اشتراک ماهانه و حمایت درون‌برنامه‌ای -->
     <section id="sec-market" class="app-section">
       <div class="fullpage-bar">
         <div class="fullpage-title">💎 اشتراک ویژه و حمایت درون‌برنامه‌ای</div>
         <button class="back-home-btn" onclick="switchSection('dashboard')">🏠 داشبورد</button>
       </div>
 
-      <!-- اشتراک ۱ ماهه فاز بتا (SKU: vip_beta_1m) -->
       <div class="card" style="border:2px solid var(--neon-cyan);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
           <span style="font-weight:900; font-size:14px; color:var(--neon-cyan);">🔥 اشتراک ۱ ماهه فاز آزمایشی (بتا)</span>
@@ -934,6 +952,7 @@
           <li>باز شدن قفل <b>برنامه غذایی متنوع ۷ روزه (تمدید هفتگی)</b></li>
           <li>باز شدن قفل <b>تحلیل هفتگی لاگ بدن + خوراکی‌های ۷ روز گذشته و تنظیم استراتژی</b></li>
           <li>باز شدن قفل <b>طراحی برنامه ورزشی ماهانه با توضیحات گام‌به‌گام</b></li>
+          <li>باز شدن قفل <b>چت روزانه با مربی صمیمی هوش مصنوعی</b></li>
           <li>در فاز بتا باید <b>هر ماه تمدید شود</b> تا بخش‌های هوشمند قفل نشوند!</li>
         </ul>
         <button class="btn btn-purple" style="width:100%;" onclick="buyMarketPackage('vip_beta_1m')">
@@ -941,18 +960,16 @@
         </button>
       </div>
 
-      <!-- کارت حمایت مالی درون‌برنامه‌ای (SKU: mcd_donate_support - بدون لینک خارجی!) -->
       <div class="card" style="border:1.5px solid var(--neon-pink);">
         <div style="font-weight:900; font-size:13.5px; color:var(--neon-pink); margin-bottom:6px;">❤️ حمایت مالی از توسعه سوپراپلیکیشن BodyMod</div>
         <p style="font-size:11.5px; color:var(--text-muted); line-height:1.65; margin:0 0 10px 0;">
-          رفیق گلم! اگه از امکانات بادی‌مود راضی هستی و دوست داری توی ارتقای سرورهای هوش مصنوعی و پیشرفت سریع‌تر فاز بتا همراهمون باشی، می‌تونی از طریق پرداخت درون‌برنامه‌ای از ما حمایت کنی:
+          رفیق گلم! سرورها و APIهای هوش مصنوعی واقعاً گرون هستن. اگه از بادی‌مود راضی هستی و دوست داری توی ارتقای سرورها و پیشرفت سریع‌تر فاز بتا همراهمون باشی، می‌تونی از طریق پرداخت درون‌برنامه‌ای حمایت کنی:
         </p>
         <button class="btn" style="width:100%; font-size:12.5px;" onclick="buyMarketPackage('mcd_donate_support')">
           🎁 حمایت درون‌برنامه‌ای از توسعه‌دهنده
         </button>
       </div>
 
-      <!-- اشتراک‌های بلندمدت آینده (SKU: vip_beta_3m) -->
       <div class="card" style="opacity:0.8;">
         <div style="font-weight:900; font-size:13.5px; color:var(--neon-gold); margin-bottom:6px;">🏆 اشتراک‌های هدف ۳ ماهه، ۶ ماهه و ۱ ساله (پس از فاز آزمایشی)</div>
         <p style="font-size:11.5px; color:var(--text-muted); line-height:1.6; margin:0;">
@@ -976,15 +993,15 @@
 
   </main>
 
-  <!-- ==================== فوتر ثابت (نسخه 7.7.1 - بدون ای‌نماد و لینک خارجی) ==================== -->
+  <!-- ==================== فوتر ثابت ==================== -->
   <footer class="app-footer">
     <div class="footer-inner">
-      <div style="font-weight:900; font-size:13px; color:var(--neon-cyan); margin-bottom:4px;">⚡ BodyMod | بادی‌مود: بدن مود شده <span style="font-size:11px; color:var(--neon-gold);">(نسخه 7.7.1 بتا)</span></div>
+      <div style="font-weight:900; font-size:13px; color:var(--neon-cyan); margin-bottom:4px;">⚡ BodyMod | بادی‌مود: بدن مود شده <span style="font-size:11px; color:var(--neon-gold);">(نسخه 7.7.2 بتا)</span></div>
       <div style="font-size:11px; color:var(--text-muted);">طراحی و توسعه توسط <b>Matin Mohammadi</b> — تمامی حقوق محفوظ است © ۲۰۲۶</div>
     </div>
   </footer>
 
-  <!-- ==================== مودال خوش‌آمدگویی و درخواست اولیه مجوز نوتیفیکیشن هنگام اولین نصب ==================== -->
+  <!-- ==================== مودال خوش‌آمدگویی و درخواست اولیه مجوز نوتیفیکیشن ==================== -->
   <div class="modal-overlay" id="firstInstallNotifModal">
     <div class="modal-card" style="text-align:center;">
       <div style="font-size:44px; margin-bottom:6px;">🔔</div>
@@ -999,7 +1016,7 @@
     </div>
   </div>
 
-  <!-- ==================== مودال ورود و ثبت‌نام (با پیش‌شماره 0 ثابت، راهنمای بله و کادر خطای قرمز!) ==================== -->
+  <!-- ==================== مودال ورود و ثبت‌نام (با پیش‌شماره 0 ثابت، تایمر ۳۰ ثانیه ارسال مجدد و بدون کش قبلی!) ==================== -->
   <div class="modal-overlay" id="authModal">
     <div class="modal-card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
@@ -1019,7 +1036,7 @@
         <div style="display:flex; gap:6px; margin-top:6px; align-items:stretch;">
           <div class="phone-input-group">
             <span class="phone-zero-prefix">0</span>
-            <input type="tel" id="authPhoneInput" class="phone-ten-digit-input" maxlength="10" placeholder="9123456789" oninput="sanitizeTenDigitPhone(this)">
+            <input type="tel" id="authPhoneInput" autocomplete="off" class="phone-ten-digit-input" maxlength="10" placeholder="9123456789" oninput="sanitizeTenDigitPhone(this)">
           </div>
           <button class="btn" id="sendOtpBtn" onclick="sendBaleOtpCode()" style="white-space:nowrap; padding:0 14px;">ارسال کد 💬</button>
         </div>
@@ -1027,11 +1044,18 @@
         <div id="baleNoAccountErrorBox" class="bale-red-error-box"></div>
       </div>
 
+      <!-- باکس ورود کد ۴ رقمی + تایمر شمارش معکوس ۳۰ ثانیه‌ای برای ارسال مجدد -->
       <div id="otpVerifyBox" style="display:none; margin-bottom:12px; padding:11px; background:var(--inner-bg); border:1.5px solid var(--neon-cyan); border-radius:13px;">
         <label style="font-size:11.5px; font-weight:800; color:var(--neon-cyan); display:block; margin-bottom:6px;">✅ کد ۴ رقمی ارسال‌شده به پیام‌رسان بله رو وارد کن:</label>
-        <div style="display:flex; gap:6px;">
-          <input type="tel" maxlength="4" id="authOtpInput" placeholder="1234" style="direction:ltr; text-align:center; font-weight:900; font-size:16px; letter-spacing:6px;">
+        <div style="display:flex; gap:6px; margin-bottom:10px;">
+          <input type="tel" maxlength="4" id="authOtpInput" autocomplete="off" placeholder="----" style="direction:ltr; text-align:center; font-weight:900; font-size:17px; letter-spacing:8px;">
           <button class="btn btn-purple" onclick="verifyBaleOtpCode()" style="white-space:nowrap;">تایید کد 🚀</button>
+        </div>
+
+        <!-- نوار تایمر ۳۰ ثانیه و دکمه ارسال مجدد -->
+        <div style="display:flex; align-items:center; justify-content:space-between; padding-top:8px; border-top:1px dashed rgba(148,163,184,0.2); font-size:11px;">
+          <span id="otpTimerText" style="color:var(--neon-gold); font-weight:800;">⏳ ارسال مجدد کد تا 30 ثانیه دیگر...</span>
+          <button id="resendOtpBtn" class="back-home-btn" onclick="sendBaleOtpCode(true)" disabled style="opacity:0.45; cursor:not-allowed;">🔄 ارسال مجدد کد</button>
         </div>
       </div>
 
@@ -1121,17 +1145,30 @@
       timerInterval: null
     };
 
-    // ==================== ۱. باز و بسته کردن تضمینی پاپ‌آپ ورود و منو ====================
+    let otpCountdownInterval = null;
+
+    // ==================== ۱. مدیریت پاپ‌آپ ورود و پاکسازی کش شماره قبل ====================
     window.openAuthModal = function() {
       const modal = document.getElementById("authModal");
       if (modal) modal.style.display = "flex";
+
+      // خالی کردن کامل کادرهای ورود برای جلوگیری از ماندن کش شماره قبلی
+      const phoneInp = document.getElementById("authPhoneInput");
+      const otpInp = document.getElementById("authOtpInput");
       const errBox = document.getElementById("baleNoAccountErrorBox");
+      const verifyBox = document.getElementById("otpVerifyBox");
+
+      if (phoneInp) phoneInp.value = "";
+      if (otpInp) otpInp.value = "";
       if (errBox) { errBox.style.display = "none"; errBox.innerHTML = ""; }
+      if (verifyBox) verifyBox.style.display = "none";
+      if (otpCountdownInterval) clearInterval(otpCountdownInterval);
     };
 
     window.closeAuthModal = function() {
       const modal = document.getElementById("authModal");
       if (modal) modal.style.display = "none";
+      if (otpCountdownInterval) clearInterval(otpCountdownInterval);
     };
 
     window.handleHeaderProfileClick = function() {
@@ -1160,7 +1197,7 @@
 
     // ==================== ۳. پاپ‌آپ اولین نصب و نوتیفیکیشن ====================
     function checkFirstInstallNotificationPrompt() {
-      const prompted = localStorage.getItem("bm_first_notif_prompted_v771");
+      const prompted = localStorage.getItem("bm_first_notif_prompted_v772");
       if (!prompted) {
         const m = document.getElementById("firstInstallNotifModal");
         if (m) m.style.display = "flex";
@@ -1168,12 +1205,10 @@
     }
 
     function acceptFirstInstallNotif() {
-      localStorage.setItem("bm_first_notif_prompted_v771", "yes");
+      localStorage.setItem("bm_first_notif_prompted_v772", "yes");
       document.getElementById("firstInstallNotifModal").style.display = "none";
-
       const title = "🔥 اعلان‌های هوشمند BodyMod فعال شد!";
       const msg = "دمت گرم رفیق! هر ۷ روز یک‌بار برای ثبت لاگ بدن و تحلیل هفتگی خوراکی‌ها بهت خبر میدیم.";
-
       if (window.AndroidNative && window.AndroidNative.requestNotificationPermission) {
         window.AndroidNative.requestNotificationPermission(title, msg);
       } else if ("Notification" in window) {
@@ -1184,7 +1219,7 @@
     }
 
     function dismissFirstInstallNotif() {
-      localStorage.setItem("bm_first_notif_prompted_v771", "later");
+      localStorage.setItem("bm_first_notif_prompted_v772", "later");
       document.getElementById("firstInstallNotifModal").style.display = "none";
     }
 
@@ -1197,19 +1232,6 @@
 
       const banner = document.getElementById("weeklyCheckinDueBanner");
       if (banner) banner.style.display = isDue ? "flex" : "none";
-
-      const todayKey = getDateKey(0);
-      if (isDue && appState.lastWeeklyNotifSentDay !== todayKey) {
-        appState.lastWeeklyNotifSentDay = todayKey;
-        saveLocalState();
-        const nTitle = "⏰ موعد ثبت لاگ هفتگی بدن و تحلیل ۷ روزه!";
-        const nMsg = "رفیق ۷ روز گذشت! قد و وزنت رو ثبت کن تا هوش مصنوعی خوراکی‌های هفته‌ت رو تحلیل کنه و استراتژیت رو تنظیم کنه.";
-        if (window.AndroidNative && window.AndroidNative.sendLocalNotification) {
-          window.AndroidNative.sendLocalNotification(nTitle, nMsg);
-        } else if ("Notification" in window && Notification.permission === "granted") {
-          new Notification(nTitle, { body: nMsg });
-        }
-      }
     }
 
     function getBLogoLoaderHtml(customText = "مربی هوشمند در حال پردازش...") {
@@ -1231,7 +1253,7 @@
 
     function loadLocalState() {
       try {
-        const saved = localStorage.getItem("bm_app_state_v771");
+        const saved = localStorage.getItem("bm_app_state_v772");
         if (saved) {
           const parsed = JSON.parse(saved);
           appState = {
@@ -1251,7 +1273,7 @@
 
     function saveLocalState() {
       try {
-        localStorage.setItem("bm_app_state_v771", JSON.stringify(appState));
+        localStorage.setItem("bm_app_state_v772", JSON.stringify(appState));
         if (appState.userKey) localStorage.setItem("bm_user_key", appState.userKey);
       } catch (e) {}
     }
@@ -1260,7 +1282,6 @@
       return appState.isCeo || appState.isVip || (appState.vipExpiresAt && appState.vipExpiresAt > Date.now());
     }
 
-    // پاکسازی کامل کش برای تغییر اکانت یا خروج
     function resetStateForNewAccount() {
       appState.isCeo = false;
       appState.isVip = false;
@@ -1292,7 +1313,7 @@
     function logoutCurrentUser() {
       if (confirm("رفیق می‌خوای از حسابت خارج بشی؟ اطلاعات ابری‌ت محفوظه و کش این گوشی پاک می‌شه.")) {
         localStorage.removeItem("bm_user_key");
-        localStorage.removeItem("bm_app_state_v771");
+        localStorage.removeItem("bm_app_state_v772");
         appState.userKey = "";
         resetStateForNewAccount();
         saveLocalState();
@@ -1360,7 +1381,88 @@
       }
     }
 
-    // ==================== ۴. لاگ هفتگی بدن و تحلیل هوش مصنوعی ====================
+    // ==================== ۴. مدیریت سیستم قفل ۳ مرحله‌ای و ۳ رنگه هوش مصنوعی ====================
+    function updateAiLockBannersAndZones() {
+      const hasKey = !!appState.userKey;
+      const profileCompleted = !!(appState.userProfile && appState.userProfile.profileCompleted);
+      const subActive = isSubscriptionActive();
+
+      let lockMode = "none"; // 'auth', 'profile', 'sub', 'ok'
+      let bannerHtml = "";
+
+      if (!hasKey) {
+        lockMode = "auth";
+        bannerHtml = `
+          <div style="font-size:32px; margin-bottom:4px;">🔐</div>
+          <div style="font-weight:900; font-size:13.5px; color:#38bdf8; margin-bottom:4px;">نیاز به ورود یا ثبت‌نام در حساب ابری!</div>
+          <p style="font-size:11.5px; color:var(--text-main); margin:0 0 10px 0; line-height:1.6;">
+            رفیق گلم برای استفاده از قابلیت‌های هوش مصنوعی، اول باید با شماره موبایل (بله) یا اکانت گوگل وارد حسابت بشی تا اطلاعاتت ذخیره بشه.
+          </p>
+          <button class="btn btn-outline" style="border-color:#38bdf8; color:#38bdf8 !important;" onclick="window.openAuthModal()">🔑 ورود / ثبت‌نام سریع</button>
+        `;
+      } else if (!profileCompleted) {
+        lockMode = "profile";
+        bannerHtml = `
+          <div style="font-size:32px; margin-bottom:4px;">📋</div>
+          <div style="font-weight:900; font-size:13.5px; color:var(--neon-orange); margin-bottom:4px;">ثبت‌نام انجام شد! حالا نوبت تکمیل فرم مشخصاته!</div>
+          <p style="font-size:11.5px; color:var(--text-main); margin:0 0 10px 0; line-height:1.6;">
+            رفیق تا قد، وزن، تاریخ تولد و هدفت رو توی فرم پرونده بدنی کامل نکنی، هوش مصنوعی نمی‌تونه برات محاسبه و تحلیل انجام بده.
+          </p>
+          <button class="btn btn-orange" onclick="switchSection('profile')">👤 تکمیل فرم مشخصات بدنی</button>
+        `;
+      } else if (!subActive) {
+        lockMode = "sub";
+        bannerHtml = `
+          <div style="font-size:32px; margin-bottom:4px;">💎</div>
+          <div style="font-weight:900; font-size:13.5px; color:var(--neon-pink); margin-bottom:4px;">سرورها و APIهای هوش مصنوعی رایگان نیستن و واقعاً گرون هستن!</div>
+          <p style="font-size:11.5px; color:var(--text-main); margin:0 0 10px 0; line-height:1.6;">
+            برای اینکه بتونیم این مربی هوشمند، تحلیل ۷ روزه و برنامه‌های اختصاصی رو برات سرپا نگه داریم، نیاز به تهیه اشتراک ماهانه فاز بتا داری ❤️🔥
+          </p>
+          <button class="btn btn-purple" onclick="switchSection('market')">🚀 فعال‌سازی اشتراک ویژه بتا</button>
+        `;
+      }
+
+      const banners = [
+        { id: "dietSubLockBanner", cardId: "aiWeeklyDietPlanCard" },
+        { id: "analysisSubLockBanner", cardId: "analysisAiMainCard" },
+        { id: "workoutSubLockBanner", cardId: "workoutSetupCard" },
+        { id: "coachSubLockBanner", cardId: "coachMainCard" }
+      ];
+
+      banners.forEach(b => {
+        const banEl = document.getElementById(b.id);
+        const cardEl = document.getElementById(b.cardId);
+        if (!banEl) return;
+
+        if (lockMode === "ok") {
+          banEl.style.display = "none";
+          if (cardEl) cardEl.classList.remove("ai-locked-zone");
+        } else {
+          banEl.style.display = "block";
+          banEl.className = "sub-lock-banner " + (lockMode === "auth" ? "lock-mode-auth" : lockMode === "profile" ? "lock-mode-profile" : "lock-mode-sub");
+          banEl.innerHTML = bannerHtml;
+          if (cardEl) {
+            // بخش تغذیه آفلاین همیشه باز است، فقط بخش AI آن قفل می شود
+            if (b.cardId === "aiWeeklyDietPlanCard") {
+              const planCard = document.getElementById("aiWeeklyDietPlanCard");
+              const scanCard = document.getElementById("aiFoodScannerCard");
+              if (planCard) {
+                if (lockMode === "sub") planCard.classList.add("ai-locked-zone");
+                else planCard.classList.remove("ai-locked-zone");
+              }
+              if (scanCard) {
+                if (lockMode === "sub") scanCard.classList.add("ai-locked-zone");
+                else scanCard.classList.remove("ai-locked-zone");
+              }
+            } else {
+              cardEl.classList.add("ai-locked-zone");
+            }
+          }
+        }
+      });
+    }
+
+    // ==================== ۵. لاگ هفتگی بدن و تحلیل هوش مصنوعی ====================
     function extractLast7DaysFoodSummary() {
       let lines = [];
       for (let i = -6; i <= 0; i++) {
@@ -1501,13 +1603,8 @@ ${foodSummary7Days}
       }
     }
 
-    // ==================== ۵. برنامه غذایی هفتگی و ثبت خوراکی ====================
+    // ==================== ۶. برنامه غذایی هفتگی و ثبت خوراکی ====================
     function renderDietSection() {
-      const subOk = isSubscriptionActive();
-      document.getElementById("dietSubLockBanner").style.display = subOk ? "none" : "block";
-      document.getElementById("aiWeeklyDietPlanCard").style.opacity = subOk ? "1" : "0.45";
-      document.getElementById("aiFoodScannerCard").style.opacity = subOk ? "1" : "0.45";
-
       document.getElementById("mealNotifToggle").checked = !!appState.dietConfig.mealRemindersEnabled;
       document.getElementById("timeBreakfast").value = appState.dietConfig.timeBreakfast || "08:30";
       document.getElementById("timeLunch").value = appState.dietConfig.timeLunch || "13:30";
@@ -1764,7 +1861,7 @@ WEEKLY_DIET_JSON:{"day_0":[{"mealType":"صبحانه","name":"نام غذا","ca
       }
     }
 
-    // ==================== ۶. باشگاه هوشمند ====================
+    // ==================== ۷. باشگاه هوشمند ====================
     function unlockWorkoutBuilderForGainWeight() {
       appState.workoutConfig.forceAllowForGainWeight = true;
       saveLocalState();
@@ -1772,9 +1869,6 @@ WEEKLY_DIET_JSON:{"day_0":[{"mealType":"صبحانه","name":"نام غذا","ca
     }
 
     function renderWorkoutHub() {
-      const subOk = isSubscriptionActive();
-      document.getElementById("workoutSubLockBanner").style.display = subOk ? "none" : "block";
-
       const isGainGeneral = appState.userProfile.goalMode === "gain_weight";
       const hasPlan = Array.isArray(appState.workoutConfig.planDays) && appState.workoutConfig.planDays.length > 0;
 
@@ -1957,7 +2051,7 @@ WEEKLY_DIET_JSON:{"day_0":[{"mealType":"صبحانه","name":"نام غذا","ca
       document.getElementById("liveExTitle").textContent = ex.name;
       document.getElementById("liveExMuscle").textContent = `🎯 عضله درگیر: ${ex.muscle || "عضلات هدف و مرکزی بدن"}`;
       document.getElementById("liveExHowTo").textContent = ex.howTo || ex.tip || "فرم صحیح بدن را حفظ کرده و با دامنه حرکتی کامل و کنترل‌شده حرکت را انجام دهید.";
-      document.getElementById("liveExBreathing").textContent = `💨 تنفس و نکته ایمنی: ${ex.breathing || "در بخش فشار حرکت بازدم (تخلیه نفس) و در بخش بازگشت دم (نفس عمیق) انجام دهید."}`;
+      document.getElementById("liveExBreathing").textContent = `💨 تنفس و نکته ایمنی: ${ex.breathing || "در بخش فشار حرکت بازدم و در بخش بازگشت دم انجام دهید."}`;
 
       updatePlayerTimerText();
       playerState.timerInterval = setInterval(() => {
@@ -2087,11 +2181,11 @@ WEEKLY_DIET_JSON:{"day_0":[{"mealType":"صبحانه","name":"نام غذا","ca
 
       const prompt = `یک برنامه تمرینی ۴ روزه کامل برای «${place}» با تمرکز بر «${focus}» طراحی کن.
 قوانین الزامی هر روز تمرینی:
-1. ابتدا ۲ حرکت گرمایشی (phase:"warmup" مانند پروانه و چرخش مفاصل، هر کدام ۱ ست)
+1. ابتدا ۲ حرکت گرمایشی (phase:"warmup" مانند پروانه، هر کدام ۱ ست)
 2. سپس ۳ تا ۴ حرکت اصلی متنوع (phase:"main"، هر کدام ۳ ست، با توضیحات بسیار دقیق و مرحله‌به‌مرحله در فیلد howTo که کاربر بدون عکس کاملاً بفهمد چطور حرکت را اجرا کند)
 3. در پایان ۲ حرکت کششی و سرمایشی (phase:"cooldown"، هر کدام ۱ ست).
 حتماً در انتهای پاسخت یک خط دقیقاً با این فرمت JSON قرار بده:
-WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phase":"warmup","name":"پروانه (Jumping Jacks)","sets":1,"duration":35,"muscle":"کل بدن","howTo":"توضیح دقیق و کامل اجرا","breathing":"نکته تنفس"}]}]`;
+WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phase":"warmup","name":"پروانه (Jumping Jacks)","sets":1,"duration":35,"muscle":"کل بدن","howTo":"توضیح کامل اجرا","breathing":"نکته تنفس"}]}]`;
 
       try {
         const res = await fetch(`${WORKER_BASE_URL}/api/ai/chat`, {
@@ -2134,12 +2228,10 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
         {
           dayNumber: 1, title: `روز ۱: ${focus} (کامل با گرم کردن و کشش)`,
           exercises: [
-            { phase: "warmup", name: "حرکت پروانه (Jumping Jacks)", sets: 1, duration: 40, muscle: "گرم کردن کل بدن و افزایش ضربان قلب", howTo: "صاف بایستید، پاها کنار هم و دست‌ها کنار بدن باشند. با یک پرش نرم روی پنجه پا، پاها را به اندازه دو برابر عرض شانه باز کنید و هم‌زمان دست‌ها را از طرفین بالای سر ببرید تا به هم برسند و دوباره به حالت اول برگردید.", breathing: "نفس‌های عمیق و ریتمیک بکشید و هرگز روی پاشنه پا محکم فرود نیایید." },
-            { phase: "warmup", name: "چرخش پویا از بازو و سرشانه", sets: 1, duration: 35, muscle: "مفاصل شانه، سینه و بالای کمر", howTo: "پاها را به عرض شانه باز کنید، دست‌ها را در طرفین کاملاً صاف و موازی با زمین نگه دارید و دایره‌های متوسط به سمت جلو و سپس عقب رسم کنید تا مفصل شانه کاملاً گرم شود.", breathing: "شانه‌ها را به گوش‌ها نزدیک نکنید و گردن را آزاد نگه دارید." },
-            { phase: "main", name: "شنا سوئدی استاندارد (یا روی زانو)", sets: 3, duration: 35, muscle: "عضلات سینه، سرشانه جلویی و پشت بازو", howTo: "کف دست‌ها را کمی بازتر از عرض شانه روی زمین بگذارید. بدن از سر تا پاشنه پا در یک خط صاف باشد. آرنج‌ها را با زاویه ۴۵ درجه خم کنید تا سینه به نزدیکی زمین برسد، ۱ ثانیه مکث کرده و با انقباض سینه بالا بیایید.", breathing: "هنگام پایین رفتن نفس بگیرید (دم) و موقع بالا آمدن و فشار، نفس را بیرون دهید (بازدم)." },
-            { phase: "main", name: "اسکات عمیق کنترل‌شده", sets: 3, duration: 40, muscle: "چهارسر ران، همسترینگ و عضلات سرینی (باسن)", howTo: "پاها را به اندازه عرض شانه باز کنید و پنجه پا کمی رو به بیرون باشد. سینه را بالا نگه دارید و باسن را به عقب و پایین بفرستید (انگار می‌خواهید روی یک صندلی بنشینید) تا ران‌ها موازی زمین شوند، سپس با فشار پاشنه پا بالا بیایید.", breathing: "هنگام نشستن دم عمیق و هنگام بلند شدن بازدم انجام دهید؛ زانوها به سمت داخل خم نشوند." },
-            { phase: "main", name: "پل باسن ایزومتریک (Glute Bridge)", sets: 3, duration: 40, muscle: "عضلات باسن، پشت ران و فیله کمر", howTo: "به پشت روی زمین دراز بکشید، زانوها را خم کرده و کف پاها را روی زمین بگذارید. با منقبض کردن عضلات باسن، لگن را تا جایی بالا ببرید که بدن از شانه تا زانو در یک خط صاف قرار بگیرد، ۲ ثانیه در بالا مکث کرده و آرام پایین بیایید.", breathing: "در بالاترین نقطه بازدم انجام دهید و از قوس دادن بیش از حد به کمر خودداری کنید." },
-            { phase: "cooldown", name: "کشش عضلات سینه، سرشانه و کمر (سرد کردن)", sets: 1, duration: 40, muscle: "ریکاوری و کاهش اسیدلاکتیک عضلات", howTo: "دست‌ها را پشت کمر قلاب کنید و به آرامی به سمت عقب بکشید تا قفسه سینه باز شود. سپس در حالت چهارزانو نشسته و دست‌ها را به سمت جلو روی زمین بکشید (حرکت سجده کششی) تا عضلات کمر و شانه کاملاً آرام شوند.", breathing: "دم‌های طولانی ۴ ثانیه‌ای از بینی و بازدم‌های آرام ۶ ثانیه‌ای از دهان انجام دهید." }
+            { phase: "warmup", name: "حرکت پروانه (Jumping Jacks)", sets: 1, duration: 40, muscle: "گرم کردن کل بدن و افزایش ضربان قلب", howTo: "صاف بایستید، پاها کنار هم و دست‌ها کنار بدن باشند. با یک پرش نرم روی پنجه پا، پاها را به اندازه دو برابر عرض شانه باز کنید و هم‌زمان دست‌ها را از طرفین بالای سر ببرید تا به هم برسند.", breathing: "نفس‌های عمیق و ریتمیک بکشید." },
+            { phase: "main", name: "شنا سوئدی استاندارد (یا روی زانو)", sets: 3, duration: 35, muscle: "عضلات سینه، سرشانه جلویی و پشت بازو", howTo: "کف دست‌ها را کمی بازتر از عرض شانه روی زمین بگذارید. بدن صاف باشد و آرنج‌ها را با زاویه ۴۵ درجه خم کنید تا سینه به نزدیکی زمین برسد.", breathing: "پایین رفتن دم، بالا آمدن بازدم." },
+            { phase: "main", name: "اسکات عمیق کنترل‌شده", sets: 3, duration: 40, muscle: "چهارسر ران، همسترینگ و باسن", howTo: "پاها به عرض شانه، باسن را به عقب و پایین بفرستید تا ران‌ها موازی زمین شوند، سپس با فشار پاشنه پا بالا بیایید.", breathing: "نشستن دم، بلند شدن بازدم." },
+            { phase: "cooldown", name: "کشش عضلات سینه و کمر (سرد کردن)", sets: 1, duration: 40, muscle: "ریکاوری عضلات", howTo: "دست‌ها را پشت کمر قلاب کنید و آرام به سمت عقب بکشید تا قفسه سینه باز شود.", breathing: "تنفس عمیق و آرام." }
           ]
         }
       ];
@@ -2198,6 +2290,7 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
     function renderAllUI() {
       applyThemeMode();
       checkWeeklyBodyLogDueAndNotify();
+      updateAiLockBannersAndZones();
 
       const subOk = isSubscriptionActive();
       const subBadge = document.getElementById("headerSubBadge");
@@ -2303,7 +2396,6 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
       return `${userRawPrompt}${mem}`;
     }
 
-    // ==================== ۷. چت با مربی و تحلیل خوراکی ====================
     async function sendCoachMessage() {
       const inp = document.getElementById("chatPromptInput");
       const text = inp.value.trim();
@@ -2377,7 +2469,7 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
 
       const loaderEl = document.getElementById("foodAiInlineLoader");
       loaderEl.style.display = "block";
-      loaderEl.innerHTML = getBLogoLoaderHtml("در حال اسکن تصویر غذا و استخراج کالری، پروتئین، کربوهیدرات و چربی...");
+      loaderEl.innerHTML = getBLogoLoaderHtml("در حال اسکن تصویر غذا و استخراج ماکروها...");
       const reader = new FileReader();
       reader.onload = async function() {
         const base64Data = reader.result.split(",")[1];
@@ -2421,11 +2513,10 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
       alert(`✅ «${foodObj.name}» ثبت شد!\n🔥 کالری: ${foodObj.cal} kcal\n🥩 پروتئین: ${foodObj.prot}g | 🍚 کربوهیدرات: ${foodObj.carb}g | 🥑 چربی: ${foodObj.fat}g`);
     }
 
-    // ==================== ۸. فرم پرونده بدنی با روز/ماه/سال تولد و قوانین ====================
     function checkDurationPlanEligibility() {
       const val = document.getElementById("profTargetDuration").value;
       if (val !== "1m") {
-        alert("💎 رفیق در حال حاضر در «فاز آزمایشی (بتا)» هستیم و اشتراک‌ها ۱ ماهه است. پس از خروج از فاز بتا، با تهیه اشتراک ۳ ماهه، ۶ ماهه یا ۱ ساله می‌تونی این هدف‌های بلندمدت رو فعال کنی!");
+        alert("💎 رفیق در حال حاضر در «فاز آزمایشی (بتا)» هستیم و اشتراک‌ها ۱ ماهه است. پس از خروج از فاز بتا، با تهیه اشتراک بلندمدت می‌تونی این هدف‌ها رو فعال کنی!");
         document.getElementById("profTargetDuration").value = "1m";
       }
     }
@@ -2458,10 +2549,11 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
       const bMonth = Number(document.getElementById("profBirthMonth").value) || "";
       const bYear = Number(document.getElementById("profBirthYear").value) || "";
 
-      // محاسبه خودکار سن از روی سال تولد شمسی (سال جاری: ۱۴۰۵)
+      // محاسبه دقیق و پویای سن از روی تقویم شمسی سیستم
+      const currentShamsiYear = 1405; // سال جاری شمسی
       let calculatedAge = 22;
       if (bYear && bYear >= 1320 && bYear <= 1400) {
-        calculatedAge = 1405 - bYear;
+        calculatedAge = currentShamsiYear - bYear;
       } else if (appState.userProfile.age) {
         calculatedAge = Number(appState.userProfile.age) || 22;
       }
@@ -2500,7 +2592,7 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
       switchSection("dashboard");
     }
 
-    // ==================== ۹. سینک ابری، لاگین بله (با پیش‌شماره 0 ثابت) و گوگل ====================
+    // ==================== ۱۰. سینک ابری و احراز هویت بله (با تایمر ۳۰ ثانیه) ====================
     async function syncWithCloud() {
       if (!appState.userKey) return;
       try {
@@ -2537,7 +2629,6 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
         const data = await res.json();
         if (res.ok && data.user) {
           const incomingKey = data.user.userKey || uKey;
-          // اگر کاربر با اکانت جدیدی وارد شده، ابتدا کش اکانت قبلی را کاملاً پاک کن!
           if (appState.userKey && appState.userKey !== incomingKey) {
             resetStateForNewAccount();
           }
@@ -2574,26 +2665,52 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
     function sanitizeTenDigitPhone(inputEl) {
       let val = inputEl.value.replace(/[^0-9]/g, "");
       if (val.startsWith("0")) val = val.slice(1);
-      if (val.length > 0 && !val.startsWith("9")) {
-        // هدایت کاربر به شروع از عدد 9
-      }
       inputEl.value = val.slice(0, 10);
     }
 
-    async function sendBaleOtpCode() {
+    // راه‌اندازی تایمر شمارش معکوس ۳۰ ثانیه‌ای برای ارسال مجدد کد
+    function startOtpCountdown(sec = 30) {
+      const timerText = document.getElementById("otpTimerText");
+      const resendBtn = document.getElementById("resendOtpBtn");
+      if (!timerText || !resendBtn) return;
+
+      resendBtn.disabled = true;
+      resendBtn.style.opacity = "0.45";
+      resendBtn.style.cursor = "not-allowed";
+
+      let remaining = sec;
+      timerText.textContent = `⏳ ارسال مجدد کد تا ${remaining} ثانیه دیگر...`;
+
+      if (otpCountdownInterval) clearInterval(otpCountdownInterval);
+
+      otpCountdownInterval = setInterval(() => {
+        remaining--;
+        if (remaining > 0) {
+          timerText.textContent = `⏳ ارسال مجدد کد تا ${remaining} ثانیه دیگر...`;
+        } else {
+          clearInterval(otpCountdownInterval);
+          timerText.textContent = "✅ اکنون می‌توانید درخواست کد مجدد کنید:";
+          resendBtn.disabled = false;
+          resendBtn.style.opacity = "1";
+          resendBtn.style.cursor = "pointer";
+        }
+      }, 1000);
+    }
+
+    async function sendBaleOtpCode(isResend = false) {
       const rawInput = document.getElementById("authPhoneInput").value.trim();
       const errBox = document.getElementById("baleNoAccountErrorBox");
       errBox.style.display = "none";
       errBox.innerHTML = "";
 
       if (!rawInput || rawInput.length !== 10 || !rawInput.startsWith("9")) {
-        alert("رفیق شماره‌ت باید از 9 شروع بشه و دقیقاً ۱۰ رقم باشه! (چون صفر اولش ثابته، مثلاً: 9123456789) 😉");
+        alert("رفیق شماره‌ت باید از 9 شروع بشه و دقیقاً ۱۰ رقم باشه! (چون صفر اولش ثابته، مثل: 9123456789) 😉");
         return;
       }
 
       const fullPhoneWithZero = "0" + rawInput;
       const btn = document.getElementById("sendOtpBtn");
-      btn.textContent = "بررسی بله...";
+      btn.textContent = isResend ? "ارسال مجدد..." : "بررسی بله...";
       btn.disabled = true;
 
       try {
@@ -2608,11 +2725,15 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
 
         if (res.ok && data.ok) {
           document.getElementById("otpVerifyBox").style.display = "block";
-          alert("✅ ایول! کد تایید ۴ رقمی به پیام‌رسان «بله» فرستاده شد رفیق.");
+          startOtpCountdown(data.cooldownSec || 30);
+          alert(isResend ? "🔄 کد جدید مجدد به بله ارسال شد!" : "✅ ایول! کد تایید ۴ رقمی به پیام‌رسان «بله» فرستاده شد رفیق.");
+        } else if (res.status === 429 && data.cooldownWaitSec) {
+          startOtpCountdown(data.cooldownWaitSec);
+          alert(data.error);
         } else if (data.noBaleAccount) {
           document.getElementById("otpVerifyBox").style.display = "none";
           errBox.style.display = "block";
-          errBox.innerHTML = data.error || "⛔ رفیق تو هنوز با این شماره توی پیام‌رسان «بله» ثبت‌نام نکردی! اول برنامه بله رو نصب و ثبت‌نام کن، یا با دکمه Google وارد شو!";
+          errBox.innerHTML = data.error || "⛔ رفیق تو هنوز با این شماره توی پیام‌رسان «بله» ثبت‌نام نکردی!";
         } else {
           alert("⛔ " + (data.error || "خطا در ارسال کد تایید"));
         }
