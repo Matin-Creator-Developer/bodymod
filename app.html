@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>BodyMod | بادی‌مود: بدن مود شده (v7.7.2)</title>
+  <title>BodyMod | بادی‌مود: بدن مود شده (v7.7.3)</title>
   <style>
     :root {
       --bg-dark: #070a12;
@@ -23,7 +23,6 @@
       --drawer-bg: #0b1120;
     }
 
-    /* تم روشن (Light Mode) */
     body.light-mode {
       --bg-dark: #f1f5f9;
       --card-bg: #ffffff;
@@ -54,7 +53,6 @@
       transition: background-color 0.25s, color 0.25s;
     }
 
-    /* هدر بالای ثابت */
     .top-sticky-shell {
       position: sticky; top: 0; z-index: 900;
       background: var(--header-bg); backdrop-filter: blur(14px);
@@ -97,7 +95,6 @@
       cursor: pointer; max-width: 135px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
 
-    /* محتوای اصلی */
     .main-viewport {
       flex: 1; width: 100%; max-width: 540px; margin: 0 auto;
       padding: 12px 14px 24px 14px; display: flex; flex-direction: column;
@@ -144,28 +141,24 @@
     }
     input:focus, select:focus, textarea:focus { border-color: var(--neon-cyan); }
 
-    /* ==================== بنر قفل ۳ حالته هوشمند (ثبت‌نام / فرم / اشتراک API) ==================== */
+    /* بنر قفل ۳ حالته هوشمند (ثبت‌نام / فرم / اشتراک API) */
     .sub-lock-banner {
       border-radius: 18px; padding: 16px; text-align: center; margin-bottom: 12px;
       transition: all 0.25s ease;
     }
-    /* حالت ۱: آبی (نیاز به ثبت‌نام و ورود) */
     .lock-mode-auth {
       background: linear-gradient(135deg, rgba(56,189,248,0.20), rgba(0,245,212,0.12));
       border: 2px dashed var(--neon-blue);
     }
-    /* حالت ۲: نارنجی/طلایی (نیاز به پر کردن فرم پرونده بدنی) */
     .lock-mode-profile {
       background: linear-gradient(135deg, rgba(249,115,22,0.20), rgba(251,191,36,0.14));
       border: 2px dashed var(--neon-orange);
     }
-    /* حالت ۳: بنفش/صورتی (هزینه بالای API هوش مصنوعی و نیاز به اشتراک) */
     .lock-mode-sub {
       background: linear-gradient(135deg, rgba(241,91,181,0.18), rgba(155,93,229,0.22));
       border: 2px dashed var(--neon-pink);
     }
 
-    /* کلاس قفل شدن کامل کارت‌ها و دکمه‌های هوش مصنوعی */
     .ai-locked-zone {
       opacity: 0.38 !important;
       pointer-events: none !important;
@@ -174,7 +167,6 @@
       transition: 0.25s;
     }
 
-    /* کادر ویژه شماره موبایل با پیش‌شماره 0 ثابت در سمت چپ */
     .phone-input-group {
       display: flex; align-items: stretch; direction: ltr;
       background: var(--inner-bg); border: 1.5px solid var(--card-border);
@@ -193,7 +185,6 @@
       padding: 10px 12px !important; width: 100%; direction: ltr;
     }
 
-    /* کادر خطای قرمز عدم وجود حساب بله */
     .bale-red-error-box {
       display: none; margin-top: 10px; padding: 11px 13px;
       background: rgba(239, 68, 68, 0.16); border: 1.5px solid var(--neon-red);
@@ -202,7 +193,6 @@
     }
     body:not(.light-mode) .bale-red-error-box { color: #fca5a5; }
 
-    /* لودینگ انیمیشنی حرف B */
     .b-inline-loader {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       padding: 18px 14px; margin: 8px 0;
@@ -222,7 +212,6 @@
     }
     .b-loader-text { margin-top: 8px; font-size: 12px; font-weight: 800; color: var(--neon-cyan); }
 
-    /* سیستم آتیش قرمز، آبی و خاموش */
     .flame-box {
       display: flex; align-items: center; justify-content: space-between;
       padding: 12px 14px; border-radius: 16px; margin-bottom: 10px;
@@ -304,7 +293,6 @@
       margin-top: 10px; padding: 9px 12px; border-radius: 12px; font-size: 11.5px; font-weight: 800; line-height: 1.5; display: none;
     }
 
-    /* منوی همبرگری */
     .drawer-backdrop {
       position: fixed; inset: 0; background: rgba(0,0,0,0.68); backdrop-filter: blur(4px);
       z-index: 2000; display: none;
@@ -387,16 +375,15 @@
     </div>
   </header>
 
-  <!-- ==================== منوی همبرگری (نسخه 7.7.2) ==================== -->
+  <!-- ==================== منوی همبرگری (نسخه 7.7.3) ==================== -->
   <div class="drawer-backdrop" id="drawerBackdrop" onclick="toggleDrawer(false)"></div>
   <aside class="drawer-panel" id="drawerPanel">
     <div>
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; border-bottom:1px solid var(--card-border); padding-bottom:10px;">
-        <span style="font-weight:900; font-size:14px; color:var(--neon-cyan);">⚡ منوی BodyMod <small style="color:var(--neon-gold);">v7.7.2</small></span>
+        <span style="font-weight:900; font-size:14px; color:var(--neon-cyan);">⚡ منوی BodyMod <small style="color:var(--neon-gold);">v7.7.3</small></span>
         <button onclick="toggleDrawer(false)" style="background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer;">✕</button>
       </div>
 
-      <!-- منوی کشویی انتخاب دستی تم -->
       <div style="background:var(--inner-bg); border:1px solid var(--neon-purple); border-radius:12px; padding:9px 10px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; gap:8px;">
         <span style="font-size:12px; font-weight:800; white-space:nowrap;">🌓 تم برنامه:</span>
         <select id="themeSelectDropdown" onchange="onThemeDropdownChange(this.value)" style="padding:5px 8px; font-size:11.5px; font-weight:900; border-radius:8px; width:auto; min-width:135px;">
@@ -424,7 +411,7 @@
         👤 پرونده بدنی و فرم مشخصات
       </button>
       <button class="drawer-item" id="nav-market" onclick="switchSection('market')">
-        💎 تمدید اشتراک و حمایت مالی
+        💎 اشتراک بتا و حمایت مالی
       </button>
       <button class="drawer-item" id="nav-ceo" onclick="switchSection('ceo')" style="display:none; border-color:var(--neon-gold); color:var(--neon-gold);">
         👑 پنل آمار کلان مدیرعامل
@@ -609,7 +596,7 @@
       </div>
     </section>
 
-    <!-- 🟢 صفحه ۳: لاگ هفتگی بدن و تحلیل هوش مصنوعی ۷ روز گذشته (قفل کامل در صورت نداشتن ثبت‌نام/فرم/اشتراک!) -->
+    <!-- 🟢 صفحه ۳: لاگ هفتگی بدن و تحلیل هوش مصنوعی ۷ روز گذشته -->
     <section id="sec-analysis" class="app-section">
       <div class="fullpage-bar">
         <div class="fullpage-title">📈 لاگ هفتگی بدن و تحلیل ۷ روزه AI</div>
@@ -657,8 +644,7 @@
         <div id="bodyLogsHistoryList" style="display:flex; flex-direction:column; gap:6px; font-size:12px;"></div>
       </div>
     </section>
-
-    <!-- 🟢 صفحه ۴: باشگاه هوشمند (قفل کامل در صورت نداشتن ثبت‌نام/فرم/اشتراک!) -->
+    <!-- 🟢 صفحه ۴: باشگاه هوشمند -->
     <section id="sec-workout" class="app-section">
       <div class="fullpage-bar">
         <div class="fullpage-title">🏋️ باشگاه هوشمند و راهنمای گام‌به‌گام تمرین</div>
@@ -800,7 +786,7 @@
       </div>
     </section>
 
-    <!-- 🟢 صفحه ۵: چت صمیمی با مربی هوشمند (قفل کامل در صورت نداشتن ثبت‌نام/فرم/اشتراک!) -->
+    <!-- 🟢 صفحه ۵: چت صمیمی با مربی هوشمند -->
     <section id="sec-coach" class="app-section">
       <div class="fullpage-bar">
         <div class="fullpage-title">🤖 چت صمیمی با مربی هوشمند BodyMod</div>
@@ -830,7 +816,7 @@
       </div>
     </section>
 
-    <!-- 🟢 صفحه ۶: فرم ثبت‌نام و پرونده بدنی -->
+    <!-- 🟢 صفحه ۶: فرم ثبت‌نام و پرونده بدنی (بدون اشتراک‌های قفل‌شده اضافی!) -->
     <section id="sec-profile" class="app-section">
       <div class="fullpage-bar">
         <div class="fullpage-title">👤 پرونده بدنی و فرم مشخصات</div>
@@ -899,16 +885,6 @@
           </select>
         </div>
 
-        <div style="margin-bottom:10px;">
-          <label style="font-size:11px; color:var(--neon-gold); font-weight:800;">⏳ دوره زمانی هدف (وابسته به نوع اشتراک):</label>
-          <select id="profTargetDuration" onchange="checkDurationPlanEligibility()">
-            <option value="1m">🗓️ برنامه هدف ۱ ماهه (فعال در فاز آزمایشی بتا - نیازمند تمدید ماهانه)</option>
-            <option value="3m">🔒 برنامه هدف ۳ ماهه (نیازمند اشتراک ۳ ماهه - پس از فاز بتا)</option>
-            <option value="6m">🔒 برنامه هدف ۶ ماهه (نیازمند اشتراک ۶ ماهه - پس از فاز بتا)</option>
-            <option value="12m">🔒 برنامه هدف ۱ ساله (نیازمند اشتراک ۱ ساله - پس از فاز بتا)</option>
-          </select>
-        </div>
-
         <div style="margin-bottom:12px;">
           <label style="font-size:11.5px; color:var(--neon-cyan); font-weight:800;">🧠 حافظه بلندمدت و نکات شخصی برای مربی هوش مصنوعی:</label>
           <textarea id="profCoachMemory" rows="2" placeholder="مثلاً: به لاکتوز حساسیت دارم یا زانوی راستم آسیب دیده..."></textarea>
@@ -918,7 +894,7 @@
           <div style="font-size:11.5px; font-weight:900; color:var(--neon-cyan); margin-bottom:4px;">📜 قوانین و شرایط استفاده از BodyMod:</div>
           <div style="font-size:10.5px; color:var(--text-muted); line-height:1.65; max-height:78px; overflow-y:auto; margin-bottom:8px;">
             ۱. توصیه‌ها، برنامه‌های غذایی و ورزشی ارائه‌شده توسط هوش مصنوعی بادی‌مود صرفاً جنبه آموزشی و کمک‌مربی داشته و جایگزین تجویز پزشک متخصص نیست.<br>
-            ۲. در فاز آزمایشی (بتا)، سهمیه‌های استفاده از هوش مصنوعی به صورت روزانه، هفتگی و ماهانه مدیریت می‌شوند و برای باز ماندن بخش‌های هوشمند، تمدید ماهانه اشتراک الزامی است.<br>
+            ۲. در فاز آزمایشی (بتا)، سهمیه‌های استفاده از هوش مصنوعی به صورت روزانه، هفتگی و ماهانه مدیریت می‌شوند و برای باز ماندن بخش‌های هوشمند، داشتن اشتراک فعال الزامی است.<br>
             ۳. اطلاعات کاربری شما به صورت امن در سرورهای ابری ذخیره می‌شود و هر زمان بخواهید امکان حذف حساب با مهلت بازیابی ۳ روزه وجود دارد.
           </div>
           <label style="display:flex; align-items:center; gap:7px; font-size:11.5px; font-weight:800; cursor:pointer;">
@@ -936,45 +912,40 @@
       </div>
     </section>
 
-    <!-- 🟢 صفحه ۷: فروشگاه اشتراک ماهانه و حمایت درون‌برنامه‌ای -->
+    <!-- 🟢 صفحه ۷: فروشگاه اشتراک بتا و حمایت درون‌برنامه‌ای (فقط ۱ اشتراک تمیز + کارت حمایت مصرفی!) -->
     <section id="sec-market" class="app-section">
       <div class="fullpage-bar">
-        <div class="fullpage-title">💎 اشتراک ویژه و حمایت درون‌برنامه‌ای</div>
+        <div class="fullpage-title">💎 اشتراک ویژه بتا و حمایت درون‌برنامه‌ای</div>
         <button class="back-home-btn" onclick="switchSection('dashboard')">🏠 داشبورد</button>
       </div>
 
+      <!-- تنها اشتراک برنامه در فاز بتا (SKU: vip_beta_1m) -->
       <div class="card" style="border:2px solid var(--neon-cyan);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-          <span style="font-weight:900; font-size:14px; color:var(--neon-cyan);">🔥 اشتراک ۱ ماهه فاز آزمایشی (بتا)</span>
+          <span style="font-weight:900; font-size:14px; color:var(--neon-cyan);">🔥 اشتراک ویژه فاز آزمایشی (بتا - ۳۰ روزه)</span>
           <span id="marketSubStatusText" style="font-size:11px; font-weight:900; color:var(--neon-gold);">بررسی وضعیت...</span>
         </div>
         <ul style="font-size:12px; color:var(--text-muted); line-height:1.8; padding-right:18px; margin:8px 0;">
-          <li>باز شدن قفل <b>برنامه غذایی متنوع ۷ روزه (تمدید هفتگی)</b></li>
+          <li>باز شدن قفل <b>برنامه غذایی متنوع ۷ روزه هوش مصنوعی</b></li>
           <li>باز شدن قفل <b>تحلیل هفتگی لاگ بدن + خوراکی‌های ۷ روز گذشته و تنظیم استراتژی</b></li>
-          <li>باز شدن قفل <b>طراحی برنامه ورزشی ماهانه با توضیحات گام‌به‌گام</b></li>
-          <li>باز شدن قفل <b>چت روزانه با مربی صمیمی هوش مصنوعی</b></li>
-          <li>در فاز بتا باید <b>هر ماه تمدید شود</b> تا بخش‌های هوشمند قفل نشوند!</li>
+          <li>باز شدن قفل <b>طراحی برنامه ورزشی اختصاصی با توضیحات گام‌به‌گام</b></li>
+          <li>باز شدن قفل <b>چت روزانه و اسکن خوراکی‌ها با مربی هوش مصنوعی</b></li>
+          <li>قابلیت <b>خرید و تمدید چندباره</b> (هر بار خرید، ۳۰ روز به اعتبار شما اضافه می‌کند)</li>
         </ul>
-        <button class="btn btn-purple" style="width:100%;" onclick="buyMarketPackage('vip_beta_1m')">
-          🚀 خرید / تمدید اشتراک ۱ ماهه بتا (پرداخت درون‌برنامه‌ای)
+        <button class="btn btn-purple" id="buyVipBetaBtn" style="width:100%; padding:13px;" onclick="buyMarketPackage('vip_beta_1m')">
+          🚀 خرید / تمدید اشتراک فاز بتا (درگاه بازار و مایکت)
         </button>
       </div>
 
+      <!-- کارت حمایت مالی مصرفی و چندبار خرید (SKU: mcd_donate_support) -->
       <div class="card" style="border:1.5px solid var(--neon-pink);">
         <div style="font-weight:900; font-size:13.5px; color:var(--neon-pink); margin-bottom:6px;">❤️ حمایت مالی از توسعه سوپراپلیکیشن BodyMod</div>
         <p style="font-size:11.5px; color:var(--text-muted); line-height:1.65; margin:0 0 10px 0;">
-          رفیق گلم! سرورها و APIهای هوش مصنوعی واقعاً گرون هستن. اگه از بادی‌مود راضی هستی و دوست داری توی ارتقای سرورها و پیشرفت سریع‌تر فاز بتا همراهمون باشی، می‌تونی از طریق پرداخت درون‌برنامه‌ای حمایت کنی:
+          رفیق گلم! سرورها و APIهای هوش مصنوعی واقعاً گرون هستن. اگه از بادی‌مود راضی هستی و دوست داری توی ارتقای سرورهای هوش مصنوعی به سطح پیشرفته (Tier 1) و پیشرفت سریع‌تر برنامه همراهمون باشی، می‌تونی هر چند بار که دوست داشتی از طریق پرداخت درون‌برنامه‌ای از ما حمایت کنی:
         </p>
-        <button class="btn" style="width:100%; font-size:12.5px;" onclick="buyMarketPackage('mcd_donate_support')">
-          🎁 حمایت درون‌برنامه‌ای از توسعه‌دهنده
+        <button class="btn" id="buyDonateBtn" style="width:100%; font-size:12.5px;" onclick="buyMarketPackage('mcd_donate_support')">
+          🎁 حمایت درون‌برنامه‌ای از توسعه‌دهنده (قابل خرید چندباره)
         </button>
-      </div>
-
-      <div class="card" style="opacity:0.8;">
-        <div style="font-weight:900; font-size:13.5px; color:var(--neon-gold); margin-bottom:6px;">🏆 اشتراک‌های هدف ۳ ماهه، ۶ ماهه و ۱ ساله (پس از فاز آزمایشی)</div>
-        <p style="font-size:11.5px; color:var(--text-muted); line-height:1.6; margin:0;">
-          پس از پایان فاز آزمایشی، برای انتخاب اهداف بلندمدت (۳ ماهه، ۶ ماهه یا ۱ ساله)، داشتن اشتراک هم‌زمان با همان دوره الزامی خواهد بود.
-        </p>
       </div>
     </section>
 
@@ -996,7 +967,7 @@
   <!-- ==================== فوتر ثابت ==================== -->
   <footer class="app-footer">
     <div class="footer-inner">
-      <div style="font-weight:900; font-size:13px; color:var(--neon-cyan); margin-bottom:4px;">⚡ BodyMod | بادی‌مود: بدن مود شده <span style="font-size:11px; color:var(--neon-gold);">(نسخه 7.7.2 بتا)</span></div>
+      <div style="font-weight:900; font-size:13px; color:var(--neon-cyan); margin-bottom:4px;">⚡ BodyMod | بادی‌مود: بدن مود شده <span style="font-size:11px; color:var(--neon-gold);">(نسخه 7.7.3 بتا)</span></div>
       <div style="font-size:11px; color:var(--text-muted);">طراحی و توسعه توسط <b>Matin Mohammadi</b> — تمامی حقوق محفوظ است © ۲۰۲۶</div>
     </div>
   </footer>
@@ -1016,7 +987,7 @@
     </div>
   </div>
 
-  <!-- ==================== مودال ورود و ثبت‌نام (با پیش‌شماره 0 ثابت، تایمر ۳۰ ثانیه ارسال مجدد و بدون کش قبلی!) ==================== -->
+  <!-- ==================== مودال ورود و ثبت‌نام ==================== -->
   <div class="modal-overlay" id="authModal">
     <div class="modal-card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
@@ -1044,7 +1015,6 @@
         <div id="baleNoAccountErrorBox" class="bale-red-error-box"></div>
       </div>
 
-      <!-- باکس ورود کد ۴ رقمی + تایمر شمارش معکوس ۳۰ ثانیه‌ای برای ارسال مجدد -->
       <div id="otpVerifyBox" style="display:none; margin-bottom:12px; padding:11px; background:var(--inner-bg); border:1.5px solid var(--neon-cyan); border-radius:13px;">
         <label style="font-size:11.5px; font-weight:800; color:var(--neon-cyan); display:block; margin-bottom:6px;">✅ کد ۴ رقمی ارسال‌شده به پیام‌رسان بله رو وارد کن:</label>
         <div style="display:flex; gap:6px; margin-bottom:10px;">
@@ -1052,7 +1022,6 @@
           <button class="btn btn-purple" onclick="verifyBaleOtpCode()" style="white-space:nowrap;">تایید کد 🚀</button>
         </div>
 
-        <!-- نوار تایمر ۳۰ ثانیه و دکمه ارسال مجدد -->
         <div style="display:flex; align-items:center; justify-content:space-between; padding-top:8px; border-top:1px dashed rgba(148,163,184,0.2); font-size:11px;">
           <span id="otpTimerText" style="color:var(--neon-gold); font-weight:800;">⏳ ارسال مجدد کد تا 30 ثانیه دیگر...</span>
           <button id="resendOtpBtn" class="back-home-btn" onclick="sendBaleOtpCode(true)" disabled style="opacity:0.45; cursor:not-allowed;">🔄 ارسال مجدد کد</button>
@@ -1077,6 +1046,7 @@
       </div>
     </div>
   </div>
+
   <script>
     const WORKER_BASE_URL = "https://server.matin-mohammadi.ir";
     const WEEKDAY_NAMES_FA = ["شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه"];
@@ -1145,6 +1115,12 @@
       timerInterval: null
     };
 
+    let marketRuntimeConfig = {
+      bazaarPublicKey: "",
+      myketPublicKey: "",
+      packageName: "ir.matinmohammadi.bodymod"
+    };
+
     let otpCountdownInterval = null;
 
     // ==================== ۱. مدیریت پاپ‌آپ ورود و پاکسازی کش شماره قبل ====================
@@ -1152,7 +1128,6 @@
       const modal = document.getElementById("authModal");
       if (modal) modal.style.display = "flex";
 
-      // خالی کردن کامل کادرهای ورود برای جلوگیری از ماندن کش شماره قبلی
       const phoneInp = document.getElementById("authPhoneInput");
       const otpInp = document.getElementById("authOtpInput");
       const errBox = document.getElementById("baleNoAccountErrorBox");
@@ -1197,7 +1172,7 @@
 
     // ==================== ۳. پاپ‌آپ اولین نصب و نوتیفیکیشن ====================
     function checkFirstInstallNotificationPrompt() {
-      const prompted = localStorage.getItem("bm_first_notif_prompted_v772");
+      const prompted = localStorage.getItem("bm_first_notif_prompted_v773");
       if (!prompted) {
         const m = document.getElementById("firstInstallNotifModal");
         if (m) m.style.display = "flex";
@@ -1205,7 +1180,7 @@
     }
 
     function acceptFirstInstallNotif() {
-      localStorage.setItem("bm_first_notif_prompted_v772", "yes");
+      localStorage.setItem("bm_first_notif_prompted_v773", "yes");
       document.getElementById("firstInstallNotifModal").style.display = "none";
       const title = "🔥 اعلان‌های هوشمند BodyMod فعال شد!";
       const msg = "دمت گرم رفیق! هر ۷ روز یک‌بار برای ثبت لاگ بدن و تحلیل هفتگی خوراکی‌ها بهت خبر میدیم.";
@@ -1219,7 +1194,7 @@
     }
 
     function dismissFirstInstallNotif() {
-      localStorage.setItem("bm_first_notif_prompted_v772", "later");
+      localStorage.setItem("bm_first_notif_prompted_v773", "later");
       document.getElementById("firstInstallNotifModal").style.display = "none";
     }
 
@@ -1251,14 +1226,22 @@
       return d.toISOString().split("T")[0];
     }
 
+    function getStorageKeyForCurrentUser() {
+      const uk = (appState.userKey || localStorage.getItem("bm_user_key") || "guest").toLowerCase().trim();
+      return "bm_state_v773_" + uk;
+    }
+
     function loadLocalState() {
       try {
-        const saved = localStorage.getItem("bm_app_state_v772");
+        const uk = localStorage.getItem("bm_user_key") || "";
+        appState.userKey = uk;
+        const saved = localStorage.getItem(getStorageKeyForCurrentUser());
         if (saved) {
           const parsed = JSON.parse(saved);
           appState = {
             ...appState,
             ...parsed,
+            userKey: uk,
             userProfile: { ...getDefaultUserProfile(), ...(parsed.userProfile || {}) },
             dietConfig: { ...appState.dietConfig, ...(parsed.dietConfig || {}) },
             workoutConfig: { ...appState.workoutConfig, ...(parsed.workoutConfig || {}) },
@@ -1273,13 +1256,13 @@
 
     function saveLocalState() {
       try {
-        localStorage.setItem("bm_app_state_v772", JSON.stringify(appState));
         if (appState.userKey) localStorage.setItem("bm_user_key", appState.userKey);
+        localStorage.setItem(getStorageKeyForCurrentUser(), JSON.stringify(appState));
       } catch (e) {}
     }
 
     function isSubscriptionActive() {
-      return appState.isCeo || appState.isVip || (appState.vipExpiresAt && appState.vipExpiresAt > Date.now());
+      return !!(appState.isCeo || appState.isVip || (appState.vipExpiresAt && Number(appState.vipExpiresAt) > Date.now()));
     }
 
     function resetStateForNewAccount() {
@@ -1312,8 +1295,11 @@
 
     function logoutCurrentUser() {
       if (confirm("رفیق می‌خوای از حسابت خارج بشی؟ اطلاعات ابری‌ت محفوظه و کش این گوشی پاک می‌شه.")) {
+        const oldStorageKey = getStorageKeyForCurrentUser();
         localStorage.removeItem("bm_user_key");
+        localStorage.removeItem(oldStorageKey);
         localStorage.removeItem("bm_app_state_v772");
+        localStorage.removeItem("bm_app_state_v771");
         appState.userKey = "";
         resetStateForNewAccount();
         saveLocalState();
@@ -1324,6 +1310,81 @@
       }
     }
 
+    // ==================== ۴. مدیریت سیستم قفل ۳ مرحله‌ای و باز شدن ۱۰۰٪ با اشتراک فعال ====================
+    function updateAiLockBannersAndZones() {
+      const hasKey = !!appState.userKey;
+      const profileCompleted = !!(appState.userProfile && appState.userProfile.profileCompleted);
+      const subActive = isSubscriptionActive();
+
+      let lockMode = "ok"; // اگر همه شرایط اوکی باشد، قفل کاملاً باز است!
+      let bannerHtml = "";
+
+      if (!hasKey) {
+        lockMode = "auth";
+        bannerHtml = `
+          <div style="font-size:32px; margin-bottom:4px;">🔐</div>
+          <div style="font-weight:900; font-size:13.5px; color:#38bdf8; margin-bottom:4px;">نیاز به ورود یا ثبت‌نام در حساب ابری!</div>
+          <p style="font-size:11.5px; color:var(--text-main); margin:0 0 10px 0; line-height:1.6;">
+            رفیق گلم برای استفاده از قابلیت‌های هوش مصنوعی، اول باید با شماره موبایل (بله) یا اکانت گوگل وارد حسابت بشی تا اطلاعاتت ذخیره بشه.
+          </p>
+          <button class="btn btn-outline" style="border-color:#38bdf8; color:#38bdf8 !important;" onclick="window.openAuthModal()">🔑 ورود / ثبت‌نام سریع</button>
+        `;
+      } else if (!profileCompleted && !appState.isCeo) {
+        lockMode = "profile";
+        bannerHtml = `
+          <div style="font-size:32px; margin-bottom:4px;">📋</div>
+          <div style="font-weight:900; font-size:13.5px; color:var(--neon-orange); margin-bottom:4px;">ثبت‌نام انجام شد! حالا نوبت تکمیل فرم مشخصاته!</div>
+          <p style="font-size:11.5px; color:var(--text-main); margin:0 0 10px 0; line-height:1.6;">
+            رفیق تا قد، وزن، تاریخ تولد و هدفت رو توی فرم پرونده بدنی کامل نکنی، هوش مصنوعی نمی‌تونه برات محاسبه و تحلیل انجام بده.
+          </p>
+          <button class="btn btn-orange" onclick="switchSection('profile')">👤 تکمیل فرم مشخصات بدنی</button>
+        `;
+      } else if (!subActive) {
+        lockMode = "sub";
+        bannerHtml = `
+          <div style="font-size:32px; margin-bottom:4px;">💎</div>
+          <div style="font-weight:900; font-size:13.5px; color:var(--neon-pink); margin-bottom:4px;">سرورها و APIهای هوش مصنوعی رایگان نیستن و واقعاً گرون هستن!</div>
+          <p style="font-size:11.5px; color:var(--text-main); margin:0 0 10px 0; line-height:1.6;">
+            برای اینکه بتونیم این مربی هوشمند، تحلیل ۷ روزه و برنامه‌های اختصاصی رو برات سرپا نگه داریم، نیاز به تهیه اشتراک ویژه فاز بتا داری ❤️🔥
+          </p>
+          <button class="btn btn-purple" onclick="switchSection('market')">🚀 فعال‌سازی اشتراک ویژه بتا</button>
+        `;
+      } else {
+        lockMode = "ok";
+      }
+
+      const planCard = document.getElementById("aiWeeklyDietPlanCard");
+      const scanCard = document.getElementById("aiFoodScannerCard");
+      const analysisCard = document.getElementById("analysisAiMainCard");
+      const workoutCard = document.getElementById("workoutSetupCard");
+      const coachCard = document.getElementById("coachMainCard");
+
+      const banners = ["dietSubLockBanner", "analysisSubLockBanner", "workoutSubLockBanner", "coachSubLockBanner"];
+
+      if (lockMode === "ok") {
+        // باز کردن کامل تمام بخش‌های هوش مصنوعی وقتی اشتراک فعال است یا مدیرعامل است!
+        banners.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) { el.style.display = "none"; el.innerHTML = ""; }
+        });
+        [planCard, scanCard, analysisCard, workoutCard, coachCard].forEach(c => {
+          if (c) c.classList.remove("ai-locked-zone");
+        });
+      } else {
+        const modeCls = "sub-lock-banner " + (lockMode === "auth" ? "lock-mode-auth" : lockMode === "profile" ? "lock-mode-profile" : "lock-mode-sub");
+        banners.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) {
+            el.style.display = "block";
+            el.className = modeCls;
+            el.innerHTML = bannerHtml;
+          }
+        });
+        [planCard, scanCard, analysisCard, workoutCard, coachCard].forEach(c => {
+          if (c) c.classList.add("ai-locked-zone");
+        });
+      }
+    }
     function evaluateFlameStatus() {
       const todayKey = getDateKey(0);
       const yesterdayKey = getDateKey(-1);
@@ -1381,87 +1442,6 @@
       }
     }
 
-    // ==================== ۴. مدیریت سیستم قفل ۳ مرحله‌ای و ۳ رنگه هوش مصنوعی ====================
-    function updateAiLockBannersAndZones() {
-      const hasKey = !!appState.userKey;
-      const profileCompleted = !!(appState.userProfile && appState.userProfile.profileCompleted);
-      const subActive = isSubscriptionActive();
-
-      let lockMode = "none"; // 'auth', 'profile', 'sub', 'ok'
-      let bannerHtml = "";
-
-      if (!hasKey) {
-        lockMode = "auth";
-        bannerHtml = `
-          <div style="font-size:32px; margin-bottom:4px;">🔐</div>
-          <div style="font-weight:900; font-size:13.5px; color:#38bdf8; margin-bottom:4px;">نیاز به ورود یا ثبت‌نام در حساب ابری!</div>
-          <p style="font-size:11.5px; color:var(--text-main); margin:0 0 10px 0; line-height:1.6;">
-            رفیق گلم برای استفاده از قابلیت‌های هوش مصنوعی، اول باید با شماره موبایل (بله) یا اکانت گوگل وارد حسابت بشی تا اطلاعاتت ذخیره بشه.
-          </p>
-          <button class="btn btn-outline" style="border-color:#38bdf8; color:#38bdf8 !important;" onclick="window.openAuthModal()">🔑 ورود / ثبت‌نام سریع</button>
-        `;
-      } else if (!profileCompleted) {
-        lockMode = "profile";
-        bannerHtml = `
-          <div style="font-size:32px; margin-bottom:4px;">📋</div>
-          <div style="font-weight:900; font-size:13.5px; color:var(--neon-orange); margin-bottom:4px;">ثبت‌نام انجام شد! حالا نوبت تکمیل فرم مشخصاته!</div>
-          <p style="font-size:11.5px; color:var(--text-main); margin:0 0 10px 0; line-height:1.6;">
-            رفیق تا قد، وزن، تاریخ تولد و هدفت رو توی فرم پرونده بدنی کامل نکنی، هوش مصنوعی نمی‌تونه برات محاسبه و تحلیل انجام بده.
-          </p>
-          <button class="btn btn-orange" onclick="switchSection('profile')">👤 تکمیل فرم مشخصات بدنی</button>
-        `;
-      } else if (!subActive) {
-        lockMode = "sub";
-        bannerHtml = `
-          <div style="font-size:32px; margin-bottom:4px;">💎</div>
-          <div style="font-weight:900; font-size:13.5px; color:var(--neon-pink); margin-bottom:4px;">سرورها و APIهای هوش مصنوعی رایگان نیستن و واقعاً گرون هستن!</div>
-          <p style="font-size:11.5px; color:var(--text-main); margin:0 0 10px 0; line-height:1.6;">
-            برای اینکه بتونیم این مربی هوشمند، تحلیل ۷ روزه و برنامه‌های اختصاصی رو برات سرپا نگه داریم، نیاز به تهیه اشتراک ماهانه فاز بتا داری ❤️🔥
-          </p>
-          <button class="btn btn-purple" onclick="switchSection('market')">🚀 فعال‌سازی اشتراک ویژه بتا</button>
-        `;
-      }
-
-      const banners = [
-        { id: "dietSubLockBanner", cardId: "aiWeeklyDietPlanCard" },
-        { id: "analysisSubLockBanner", cardId: "analysisAiMainCard" },
-        { id: "workoutSubLockBanner", cardId: "workoutSetupCard" },
-        { id: "coachSubLockBanner", cardId: "coachMainCard" }
-      ];
-
-      banners.forEach(b => {
-        const banEl = document.getElementById(b.id);
-        const cardEl = document.getElementById(b.cardId);
-        if (!banEl) return;
-
-        if (lockMode === "ok") {
-          banEl.style.display = "none";
-          if (cardEl) cardEl.classList.remove("ai-locked-zone");
-        } else {
-          banEl.style.display = "block";
-          banEl.className = "sub-lock-banner " + (lockMode === "auth" ? "lock-mode-auth" : lockMode === "profile" ? "lock-mode-profile" : "lock-mode-sub");
-          banEl.innerHTML = bannerHtml;
-          if (cardEl) {
-            // بخش تغذیه آفلاین همیشه باز است، فقط بخش AI آن قفل می شود
-            if (b.cardId === "aiWeeklyDietPlanCard") {
-              const planCard = document.getElementById("aiWeeklyDietPlanCard");
-              const scanCard = document.getElementById("aiFoodScannerCard");
-              if (planCard) {
-                if (lockMode === "sub") planCard.classList.add("ai-locked-zone");
-                else planCard.classList.remove("ai-locked-zone");
-              }
-              if (scanCard) {
-                if (lockMode === "sub") scanCard.classList.add("ai-locked-zone");
-                else scanCard.classList.remove("ai-locked-zone");
-              }
-            } else {
-              cardEl.classList.add("ai-locked-zone");
-            }
-          }
-        }
-      });
-    }
-
     // ==================== ۵. لاگ هفتگی بدن و تحلیل هوش مصنوعی ====================
     function extractLast7DaysFoodSummary() {
       let lines = [];
@@ -1481,6 +1461,7 @@
     }
 
     function renderAnalysisSection() {
+      updateAiLockBannersAndZones();
       document.getElementById("weeklyNewWeightInput").value = appState.userProfile.weight || "";
       document.getElementById("weeklyNewHeightInput").value = appState.userProfile.height || "";
       document.getElementById("auto7DayFoodsPreview").textContent = extractLast7DaysFoodSummary();
@@ -1518,6 +1499,7 @@
 
     async function submitWeeklyBodyAndDietAnalysis() {
       if (!appState.userKey) { window.openAuthModal(); return; }
+      if (!appState.userProfile.profileCompleted && !appState.isCeo) { switchSection("profile"); return; }
       if (!isSubscriptionActive()) { switchSection("market"); return; }
 
       const newW = Number(document.getElementById("weeklyNewWeightInput").value);
@@ -1605,6 +1587,7 @@ ${foodSummary7Days}
 
     // ==================== ۶. برنامه غذایی هفتگی و ثبت خوراکی ====================
     function renderDietSection() {
+      updateAiLockBannersAndZones();
       document.getElementById("mealNotifToggle").checked = !!appState.dietConfig.mealRemindersEnabled;
       document.getElementById("timeBreakfast").value = appState.dietConfig.timeBreakfast || "08:30";
       document.getElementById("timeLunch").value = appState.dietConfig.timeLunch || "13:30";
@@ -1869,6 +1852,7 @@ WEEKLY_DIET_JSON:{"day_0":[{"mealType":"صبحانه","name":"نام غذا","ca
     }
 
     function renderWorkoutHub() {
+      updateAiLockBannersAndZones();
       const isGainGeneral = appState.userProfile.goalMode === "gain_weight";
       const hasPlan = Array.isArray(appState.workoutConfig.planDays) && appState.workoutConfig.planDays.length > 0;
 
@@ -2249,6 +2233,7 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
       toggleDrawer(false);
       window.scrollTo({ top: 0, behavior: "smooth" });
 
+      updateAiLockBannersAndZones();
       if (secId === "diet") renderDietSection();
       if (secId === "analysis") renderAnalysisSection();
       if (secId === "workout") renderWorkoutHub();
@@ -2297,7 +2282,7 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
       subBadge.textContent = appState.isCeo ? "👑 مدیرعامل" : (subOk ? "💎 اشتراک فعال" : "🔒 تمدید اشتراک");
 
       const mktText = document.getElementById("marketSubStatusText");
-      if (mktText) mktText.textContent = subOk ? "✅ فعال" : "⚠️ نیازمند تمدید";
+      if (mktText) mktText.textContent = subOk ? "✅ فعال" : "⚠️ نیازمند خرید / تمدید";
 
       const userBtn = document.getElementById("headerUserBtn");
       const logoutBtn = document.getElementById("profileLogoutBtn");
@@ -2401,6 +2386,7 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
       const text = inp.value.trim();
       if (!text) return;
       if (!appState.userKey) { window.openAuthModal(); return; }
+      if (!isSubscriptionActive()) { switchSection("market"); return; }
 
       const box = document.getElementById("chatMessagesBox");
       const userBubble = document.createElement("div");
@@ -2513,12 +2499,19 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
       alert(`✅ «${foodObj.name}» ثبت شد!\n🔥 کالری: ${foodObj.cal} kcal\n🥩 پروتئین: ${foodObj.prot}g | 🍚 کربوهیدرات: ${foodObj.carb}g | 🥑 چربی: ${foodObj.fat}g`);
     }
 
-    function checkDurationPlanEligibility() {
-      const val = document.getElementById("profTargetDuration").value;
-      if (val !== "1m") {
-        alert("💎 رفیق در حال حاضر در «فاز آزمایشی (بتا)» هستیم و اشتراک‌ها ۱ ماهه است. پس از خروج از فاز بتا، با تهیه اشتراک بلندمدت می‌تونی این هدف‌ها رو فعال کنی!");
-        document.getElementById("profTargetDuration").value = "1m";
-      }
+    // ==================== ۸. محاسبه زنده و پویای سال جاری شمسی از تقویم رسمی ایران ====================
+    function getLiveCurrentShamsiYear() {
+      try {
+        const fmt = new Intl.DateTimeFormat("fa-IR-u-ca-persian", { year: "numeric" });
+        const faYear = fmt.format(new Date());
+        const enDigits = faYear.replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d)).replace(/[^0-9]/g, "");
+        const parsed = parseInt(enDigits, 10);
+        if (parsed >= 1404 && parsed <= 1500) return parsed;
+      } catch (e) {}
+      const now = new Date();
+      const gYear = now.getFullYear();
+      const beforeNowruz = (now.getMonth() < 2) || (now.getMonth() === 2 && now.getDate() < 21);
+      return beforeNowruz ? (gYear - 622) : (gYear - 621);
     }
 
     function populateProfileForm() {
@@ -2533,7 +2526,6 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
       document.getElementById("profWeight").value = p.weight || "";
       document.getElementById("profGoalMode").value = p.goalMode || "maintain";
       document.getElementById("profActivityLevel").value = p.activityLevel || "1.45";
-      document.getElementById("profTargetDuration").value = p.targetDuration || "1m";
       document.getElementById("profCoachMemory").value = p.coachMemory || "";
       document.getElementById("profTermsAccepted").checked = p.termsAccepted !== false;
     }
@@ -2549,10 +2541,9 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
       const bMonth = Number(document.getElementById("profBirthMonth").value) || "";
       const bYear = Number(document.getElementById("profBirthYear").value) || "";
 
-      // محاسبه دقیق و پویای سن از روی تقویم شمسی سیستم
-      const currentShamsiYear = 1405; // سال جاری شمسی
+      const currentShamsiYear = getLiveCurrentShamsiYear();
       let calculatedAge = 22;
-      if (bYear && bYear >= 1320 && bYear <= 1400) {
+      if (bYear && bYear >= 1320 && bYear <= currentShamsiYear) {
         calculatedAge = currentShamsiYear - bYear;
       } else if (appState.userProfile.age) {
         calculatedAge = Number(appState.userProfile.age) || 22;
@@ -2579,7 +2570,7 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
         weight: wVal,
         goalMode: document.getElementById("profGoalMode").value,
         activityLevel: document.getElementById("profActivityLevel").value || "1.45",
-        targetDuration: document.getElementById("profTargetDuration").value || "1m",
+        targetDuration: "1m",
         coachMemory: document.getElementById("profCoachMemory").value.trim(),
         termsAccepted: true,
         profileCompleted: true
@@ -2588,11 +2579,11 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
       saveLocalState();
       renderAllUI();
       await syncWithCloud();
-      alert("✅ ایول رفیق! پرونده بدنی و مشخصاتت با موفقیت ذخیره و سینک شد! 🔥");
+      alert(`✅ ایول رفیق! پرونده بدنی شما (سن محاسبه‌شده: ${calculatedAge} سال) با موفقیت ذخیره و سینک شد! 🔥`);
       switchSection("dashboard");
     }
 
-    // ==================== ۱۰. سینک ابری و احراز هویت بله (با تایمر ۳۰ ثانیه) ====================
+    // ==================== ۹. سینک ابری و احراز هویت بله (با تایمر ۳۰ ثانیه) ====================
     async function syncWithCloud() {
       if (!appState.userKey) return;
       try {
@@ -2657,7 +2648,7 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
 
           saveLocalState();
           renderAllUI();
-          if (data.isNewUser) switchSection("profile");
+          if (data.isNewUser && !appState.isCeo) switchSection("profile");
         }
       } catch (e) {}
     }
@@ -2668,7 +2659,6 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
       inputEl.value = val.slice(0, 10);
     }
 
-    // راه‌اندازی تایمر شمارش معکوس ۳۰ ثانیه‌ای برای ارسال مجدد کد
     function startOtpCountdown(sec = 30) {
       const timerText = document.getElementById("otpTimerText");
       const resendBtn = document.getElementById("resendOtpBtn");
@@ -2780,28 +2770,133 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
       await fetchUserProfileFromCloud(email);
     };
 
-    async function buyMarketPackage(sku) {
-      if (!appState.userKey) { window.openAuthModal(); return; }
+    // ==================== ۱۰. اتصال واقعی به SDK درگاه بازار و مایکت + Consume ====================
+    async function loadMarketBillingConfig() {
+      try {
+        const res = await fetch(`${WORKER_BASE_URL}/api/payment/market/config`);
+        const data = await res.json();
+        if (res.ok && data.ok) {
+          marketRuntimeConfig = {
+            packageName: data.packageName || "ir.matinmohammadi.bodymod",
+            bazaarPublicKey: data.bazaarPublicKey || "",
+            myketPublicKey: data.myketPublicKey || ""
+          };
+        }
+      } catch (e) {}
+    }
+
+    function getNativeIabBridge() {
+      return window.myketIab || window.bazaarIab || window.inappbilling || (window.cordova && window.cordova.plugins && window.cordova.plugins.inappbilling) || null;
+    }
+
+    function consumeMarketReceipt(bridge, receiptData) {
+      try {
+        if (window.AndroidNative && typeof window.AndroidNative.consumePurchase === "function") {
+          window.AndroidNative.consumePurchase(receiptData.purchaseToken || "");
+          return;
+        }
+        if (bridge && typeof bridge.consumeProduct === "function") {
+          bridge.consumeProduct(() => {}, () => {}, receiptData.productId || receiptData.sku);
+        } else if (bridge && typeof bridge.consumePurchase === "function") {
+          bridge.consumePurchase(() => {}, () => {}, receiptData.purchaseToken || receiptData.originalJson);
+        }
+      } catch (e) {}
+    }
+
+    async function verifyPurchaseWithCloudServer(sku, receipt) {
       try {
         const res = await fetch(`${WORKER_BASE_URL}/api/payment/market/verify`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userKey: appState.userKey, sku })
+          body: JSON.stringify({
+            userKey: appState.userKey,
+            sku,
+            purchaseToken: receipt.purchaseToken || receipt.token || "",
+            originalJson: receipt.originalJson || "",
+            signature: receipt.signature || "",
+            storeName: receipt.storeName || "auto",
+            packageName: marketRuntimeConfig.packageName
+          })
         });
         const data = await res.json();
         if (res.ok && data.ok) {
+          if (data.consumeNow) {
+            consumeMarketReceipt(getNativeIabBridge(), { ...receipt, sku });
+          }
           if (sku === "mcd_donate_support") {
-            alert("❤️ دمت گرم رفیق باوفا! حمایت مالیت ثبت شد و کلی به پیشرفت BodyMod کمک کردی!");
+            alert("❤️ دمت گرم رفیق باوفا! حمایت مالیت با موفقیت ثبت و مصرف شد (هر زمان بخوای دوباره می‌تونی حمایت کنی)!");
           } else {
             appState.isVip = true;
             appState.vipExpiresAt = data.user.vipExpiresAt;
             saveLocalState();
             renderAllUI();
             loadBetaStatus();
-            alert("🎉 اشتراک ۱ ماهه ویژه فاز بتا فعال شد و قفل تمام بخش‌های تغذیه و تمرین باز شد!");
+            alert("🎉 اشتراک ویژه ۳۰ روزه فاز بتا فعال شد و قفل تمام بخش‌های هوش مصنوعی برات باز شد!");
           }
+        } else {
+          alert("⛔ " + (data.error || "تایید پرداخت انجام نشد"));
         }
-      } catch (e) {}
+      } catch (e) {
+        alert("⛔ خطا در ارتباط با سرور تایید پرداخت");
+      }
+    }
+
+    async function buyMarketPackage(sku) {
+      if (!appState.userKey) { window.openAuthModal(); return; }
+
+      await loadMarketBillingConfig();
+      const iab = getNativeIabBridge();
+      const pubKey = marketRuntimeConfig.myketPublicKey || marketRuntimeConfig.bazaarPublicKey || "";
+
+      // ۱. اگر پلاگین کوردووا یا پل بومی اندروید (بازار / مایکت) روی گوشی فعال باشد
+      if (window.AndroidNative && typeof window.AndroidNative.startMarketPurchase === "function") {
+        window.onNativeMarketPurchaseResult = function(resObj) {
+          if (resObj && resObj.purchaseToken) verifyPurchaseWithCloudServer(sku, resObj);
+          else alert("⛔ خرید لغو شد یا ناتمام ماند رفیق!");
+        };
+        window.AndroidNative.startMarketPurchase(sku, pubKey);
+        return;
+      }
+
+      if (iab && typeof iab.init === "function") {
+        iab.init(
+          function() {
+            const buyFn = iab.buy || iab.subscribe;
+            buyFn.call(
+              iab,
+              function(purchaseData) {
+                const parsed = typeof purchaseData === "string" ? JSON.parse(purchaseData) : (purchaseData || {});
+                verifyPurchaseWithCloudServer(sku, {
+                  purchaseToken: parsed.purchaseToken || parsed.token || "",
+                  originalJson: parsed.originalJson || JSON.stringify(parsed),
+                  signature: parsed.signature || ""
+                });
+              },
+              function(err) {
+                alert("⛔ فرآیند پرداخت در مارکت لغو شد: " + JSON.stringify(err));
+              },
+              sku
+            );
+          },
+          function(initErr) {
+            alert("⚠️ برنامه مارکت (کافه بازار یا مایکت) روی گوشی باز نشد یا به حساب کاربری مارکت وارد نشدی رفیق!");
+          },
+          { showErrors: false },
+          [sku],
+          pubKey
+        );
+        return;
+      }
+
+      // ۲. اگر مدیرعامل (متین عزیز) در حال تست بدون پلاگین مارکت است
+      if (appState.isCeo) {
+        if (confirm("👑 متین جان! چون با اکانت مدیرعامل هستی، می‌خوای این خرید رو به صورت تستی (CEO Bypass) تایید و فعال کنم؟")) {
+          await verifyPurchaseWithCloudServer(sku, { purchaseToken: "CEO_TEST_TOKEN", storeName: "ceo" });
+        }
+        return;
+      }
+
+      alert("💳 رفیق گلم! برای خرید اشتراک یا حمایت مالی، لطفاً مطمئن شو که برنامه «کافه بازار» یا «مایکت» روی گوشیت نصبه و داخلش لاگین هستی!");
     }
 
     async function loadCeoStats() {
@@ -2857,6 +2952,7 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
       loadLocalState();
       renderAllUI();
       loadBetaStatus();
+      loadMarketBillingConfig();
       checkFirstInstallNotificationPrompt();
       if (appState.userKey) fetchUserProfileFromCloud(appState.userKey);
     });

@@ -46,7 +46,7 @@ jobs:
 
           cat << 'EOF' > config.xml
           <?xml version='1.0' encoding='utf-8'?>
-          <widget id="ir.matinmohammadi.bodymod" version="7.7.1" android-versionCode="771" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android">
+          <widget id="ir.matinmohammadi.bodymod" version="7.7.3" android-versionCode="773" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android">
               <name>BodyMod</name>
               <description>سوپراپلیکیشن هوشمند بادی‌مود</description>
               <author email="diaperloveradultbaby5@gmail.com" href="https://bodymod.matin-mohammadi.ir">Matin Mohammadi</author>
