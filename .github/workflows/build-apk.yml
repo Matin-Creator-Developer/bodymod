@@ -384,17 +384,12 @@ jobs:
         run: |
           cd bodymod_app
           keytool -genkey -v -keystore bodymod-release.keystore -alias bodymod_key -keyalg RSA -keysize 2048 -validity 10000 -storepass bodymod123456 -keypass bodymod123456 -dname "CN=Matin Mohammadi, OU=BodyMod, O=BodyMod, L=Urmia, S=WA, C=IR"
-
-          cd platforms/android
-          chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon --stacktrace
-
-          UNSIGNED_APK=$(find app/build/outputs/apk/release -name "*-unsigned.apk" | head -n 1)
-          ZIPALIGN="/usr/local/lib/android/sdk/build-tools/34.0.0/zipalign"
-          APKSIGNER="/usr/local/lib/android/sdk/build-tools/34.0.0/apksigner"
-
-          "$ZIPALIGN" -v -p 4 "$UNSIGNED_APK" aligned.apk
-          "$APKSIGNER" sign --ks ../../bodymod-release.keystore --ks-key-alias bodymod_key --ks-pass pass:bodymod123456 --key-pass pass:bodymod123456 --out "../../../BodyMod-${{ matrix.store_title }}-v7.7.4.apk" aligned.apk
+          
+          # اجرای بیلد استاندارد کوردووا (که خودش app.html رو کپی و gradlew رو میسازه)
+          cordova build android --release -- --keystore=bodymod-release.keystore --storePassword=bodymod123456 --password=bodymod123456 --alias=bodymod_key --packageType=apk
+          
+          APK_PATH=$(find platforms/android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          cp "$APK_PATH" "../BodyMod-${{ matrix.store_title }}-v7.7.4.apk"
 
       - name: Upload Isolated ${{ matrix.store_title }} APK Artifact
         uses: actions/upload-artifact@v4
