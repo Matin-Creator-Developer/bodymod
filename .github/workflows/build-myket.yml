@@ -21,6 +21,11 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Set up Gradle 8.7
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
       - name: Set up Node.js 22
         uses: actions/setup-node@v4
         with:
@@ -75,8 +80,8 @@ jobs:
             base64 -d <<< "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" > www/icon.png
           fi
           
-          export CORDOVA_ANDROID_GRADLE_DISTRIBUTION_URL="https\://services.gradle.org/distributions/gradle-8.7-bin.zip"
-          cordova platform add android@13.0.0
+          # فقط اضافه کردن پلتفرم
+          cordova platform add android@13.0.0 --no-telemetry
 
       - name: Inject Isolated Myket Billing Bridge
         run: |
@@ -328,14 +333,21 @@ jobs:
               f.write(java_code)
           PYEOF
 
-      - name: Build & Sign Myket APK
+      - name: Direct Gradle Build & Sign Myket APK
         run: |
           cd bodymod_app
           keytool -genkey -v -keystore bodymod-release.keystore -alias bodymod_key -keyalg RSA -keysize 2048 -validity 10000 -storepass bodymod123456 -keypass bodymod123456 -dname "CN=Matin Mohammadi, OU=BodyMod, O=BodyMod, L=Urmia, S=WA, C=IR"
-          export CORDOVA_ANDROID_GRADLE_DISTRIBUTION_URL="https\://services.gradle.org/distributions/gradle-8.7-bin.zip"
-          cordova build android --release -- --keystore=bodymod-release.keystore --storePassword=bodymod123456 --password=bodymod123456 --alias=bodymod_key --packageType=apk
-          APK_PATH=$(find platforms/android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
-          cp "$APK_PATH" "../BodyMod-Myket-v7.7.4.apk"
+          
+          # استفاده از گریدل ۸.۷ که با اکشن نصب کردیم برای بیلد مستقیم!
+          cd platforms/android
+          gradle assembleRelease --stacktrace
+          
+          UNSIGNED_APK=$(find app/build/outputs/apk/release -name "*-unsigned.apk" | head -n 1)
+          ZIPALIGN="/usr/local/lib/android/sdk/build-tools/34.0.0/zipalign"
+          APKSIGNER="/usr/local/lib/android/sdk/build-tools/34.0.0/apksigner"
+
+          "$ZIPALIGN" -v -p 4 "$UNSIGNED_APK" aligned.apk
+          "$APKSIGNER" sign --ks ../../bodymod-release.keystore --ks-key-alias bodymod_key --ks-pass pass:bodymod123456 --key-pass pass:bodymod123456 --out "../../../BodyMod-Myket-v7.7.4.apk" aligned.apk
 
       - name: Upload Myket APK
         uses: actions/upload-artifact@v4
@@ -348,6 +360,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v7.7.4-release
-          name: "BodyMod v7.7.4 (Isolated Bazaar & Myket APKs)"
+          name: "BodyMod v7.7.4 (Isolated Myket APK)"
           files: BodyMod-Myket-v7.7.4.apk
           overwrite: true
