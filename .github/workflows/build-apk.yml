@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         include:
           - store: bazaar
@@ -36,11 +37,6 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Set up Gradle 8.7
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.7'
-
       - name: Set up Node.js 22
         uses: actions/setup-node@v4
         with:
@@ -54,7 +50,7 @@ jobs:
           echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
           SDKMANAGER=$(find $ANDROID_HOME/cmdline-tools -name "sdkmanager" | sort -V | tail -n 1)
           yes | "$SDKMANAGER" --sdk_root="$ANDROID_HOME" --licenses > /dev/null 2>&1 || true
-          "$SDKMANAGER" --sdk_root="$ANDROID_HOME" "platforms;android-34" "build-tools;34.0.0"
+          "$SDKMANAGER" --sdk_root="$ANDROID_HOME" "platforms;android-34" "build-tools;34.0.0" > /dev/null 2>&1
           echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
           echo "$ANDROID_HOME/build-tools/34.0.0" >> $GITHUB_PATH
 
@@ -94,13 +90,12 @@ jobs:
           else
             base64 -d <<< "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" > www/icon.png
           fi
-
+          
+          export CORDOVA_ANDROID_GRADLE_DISTRIBUTION_URL="https\://services.gradle.org/distributions/gradle-8.7-bin.zip"
           cordova platform add android@13.0.0
 
       - name: Inject Isolated ${{ matrix.store_title }} Billing Bridge & Permissions
         run: |
-          MANIFEST="bodymod_app/platforms/android/app/src/main/AndroidManifest.xml"
-          
           python3 - << 'PYEOF'
           import os
           with open("bodymod_app/platforms/android/app/src/main/AndroidManifest.xml", "r", encoding="utf-8") as f:
@@ -385,7 +380,7 @@ jobs:
           cd bodymod_app
           keytool -genkey -v -keystore bodymod-release.keystore -alias bodymod_key -keyalg RSA -keysize 2048 -validity 10000 -storepass bodymod123456 -keypass bodymod123456 -dname "CN=Matin Mohammadi, OU=BodyMod, O=BodyMod, L=Urmia, S=WA, C=IR"
           
-          # اجرای بیلد استاندارد کوردووا (که خودش app.html رو کپی و gradlew رو میسازه)
+          export CORDOVA_ANDROID_GRADLE_DISTRIBUTION_URL="https\://services.gradle.org/distributions/gradle-8.7-bin.zip"
           cordova build android --release -- --keystore=bodymod-release.keystore --storePassword=bodymod123456 --password=bodymod123456 --alias=bodymod_key --packageType=apk
           
           APK_PATH=$(find platforms/android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
