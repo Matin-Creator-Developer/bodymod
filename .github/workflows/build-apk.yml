@@ -36,18 +36,23 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Set up Node.js
+      - name: Set up Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install SDK Platform 34 & Build Tools
+      - name: Configure Preinstalled Android SDK (No Third-Party Action Bug)
         run: |
-          yes | sdkmanager --licenses || true
-          sdkmanager "platforms;android-34" "build-tools;34.0.0"
+          export ANDROID_HOME="/usr/local/lib/android/sdk"
+          export ANDROID_SDK_ROOT="/usr/local/lib/android/sdk"
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          SDKMANAGER=$(find $ANDROID_HOME/cmdline-tools -name "sdkmanager" | sort -V | tail -n 1)
+          echo "Using sdkmanager: $SDKMANAGER"
+          yes | "$SDKMANAGER" --sdk_root="$ANDROID_HOME" --licenses > /dev/null 2>&1 || true
+          "$SDKMANAGER" --sdk_root="$ANDROID_HOME" "platforms;android-34" "build-tools;34.0.0"
+          echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
+          echo "$ANDROID_HOME/build-tools/34.0.0" >> $GITHUB_PATH
 
       - name: Create Cordova Project for ${{ matrix.store_title }}
         run: |
@@ -55,8 +60,8 @@ jobs:
           cordova create bodymod_app ir.matinmohammadi.bodymod "BodyMod"
           cd bodymod_app
 
-          cat << 'EOF' > config.xml
-          <?xml version='1.0' encoding='utf-8'?>
+          python3 -c '
+          xml = """<?xml version="1.0" encoding="utf-8"?>
           <widget id="ir.matinmohammadi.bodymod" version="7.7.4" android-versionCode="774" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
               <name>BodyMod</name>
               <description>BodyMod AI Fitness &amp; Nutrition Coach</description>
@@ -75,10 +80,10 @@ jobs:
               <platform name="android">
                   <icon src="www/icon.png" />
               </platform>
-          </widget>
-          EOF
+          </widget>"""
+          open("config.xml", "w").write(xml.strip())
+          '
 
-          # کپی کردن app.html و تزریق نام مارکت ایزوله (bazaar یا myket)
           cp ../app.html www/index.html
           sed -i 's/__MARKET_FLAVOR__/${{ matrix.store }}/g' www/index.html
 
@@ -91,25 +96,53 @@ jobs:
           cordova platform add android@12.0.1
 
       - name: Inject Isolated ${{ matrix.store_title }} Billing Bridge & Permissions
+        env:
+          MATRIX_STORE: ${{ matrix.store }}
+          MATRIX_PERM: ${{ matrix.billing_perm }}
+          MATRIX_PKG: ${{ matrix.market_pkg }}
+          MATRIX_BIND: ${{ matrix.bind_action }}
         run: |
-          MANIFEST="bodymod_app/platforms/android/app/src/main/AndroidManifest.xml"
+          python3 - << 'PYEOF'
+          import os, glob
 
-          # تزریق فقط و فقط مجوز همان مارکت (بدون هیچ نامی از مارکت رقیب!)
-          sed -i 's/<\/manifest>/<uses-permission android:name="android.permission.INTERNET" \/>\n<uses-permission android:name="android.permission.POST_NOTIFICATIONS" \/>\n<uses-permission android:name="${{ matrix.billing_perm }}" \/>\n<queries>\n  <package android:name="${{ matrix.market_pkg }}" \/>\n  <intent>\n    <action android:name="${{ matrix.bind_action }}" \/>\n  <\/intent>\n<\/queries>\n<\/manifest>/g' "$MANIFEST"
+          store = os.environ["MATRIX_STORE"]
+          perm = os.environ["MATRIX_PERM"]
+          pkg = os.environ["MATRIX_PKG"]
+          bind = os.environ["MATRIX_BIND"]
 
-          # تزریق دیپ‌لینک بازگشت از گوگل
-          sed -i '/<\/activity>/i \
-            <intent-filter>\
-                <action android:name="android.intent.action.VIEW" />\
-                <category android:name="android.intent.category.DEFAULT" />\
-                <category android:name="android.intent.category.BROWSABLE" />\
-                <data android:scheme="bodymod" android:host="auth" />\
-            </intent-filter>' "$MANIFEST"
+          manifest_path = "bodymod_app/platforms/android/app/src/main/AndroidManifest.xml"
+          with open(manifest_path, "r", encoding="utf-8") as f:
+              m = f.read()
 
-          # ساخت پل ارتباطی جاوا (MainActivity.java) ایزوله‌شده برای همان مارکت
-          MAIN_JAVA=$(find bodymod_app/platforms/android/app/src/main/java -name "MainActivity.java" | head -n 1)
-          cat << 'EOF' > "$MAIN_JAVA"
-          package ir.matinmohammadi.bodymod;
+          perm_block = f"""
+              <uses-permission android:name="android.permission.INTERNET" />
+              <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+              <uses-permission android:name="{perm}" />
+              <queries>
+                  <package android:name="{pkg}" />
+                  <intent>
+                      <action android:name="{bind}" />
+                  </intent>
+              </queries>
+          </manifest>"""
+
+          m = m.replace("</manifest>", perm_block)
+
+          deep_link = """
+                  <intent-filter>
+                      <action android:name="android.intent.action.VIEW" />
+                      <category android:name="android.intent.category.DEFAULT" />
+                      <category android:name="android.intent.category.BROWSABLE" />
+                      <data android:scheme="bodymod" android:host="auth" />
+                  </intent-filter>
+              </activity>"""
+
+          m = m.replace("</activity>", deep_link, 1)
+          with open(manifest_path, "w", encoding="utf-8") as f:
+              f.write(m)
+
+          java_files = glob.glob("bodymod_app/platforms/android/app/src/main/java/**/MainActivity.java", recursive=True)
+          java_code = '''package ir.matinmohammadi.bodymod;
 
           import android.app.NotificationChannel;
           import android.app.NotificationManager;
@@ -204,7 +237,6 @@ jobs:
                   }
               }
 
-              // دریافت نتیجه مستقیم از پنجره پرداخت درون‌برنامه‌ای بازار یا مایکت
               @Override
               protected void onActivityResult(int requestCode, int resultCode, Intent data) {
                   if (requestCode == BILLING_REQ_CODE) {
@@ -235,7 +267,6 @@ jobs:
                   super.onActivityResult(requestCode, resultCode, data);
               }
 
-              // فراخوانی AIDL استاندارد استور (getBuyIntent = کد 3 در IInAppBillingService)
               private PendingIntent callMarketGetBuyIntent(String sku) throws Exception {
                   if (billingBinder == null) return null;
                   Parcel data = Parcel.obtain();
@@ -260,7 +291,6 @@ jobs:
                   }
               }
 
-              // فراخوانی AIDL استاندارد استور برای مصرف محصول (consumePurchase = کد 5 در IInAppBillingService)
               private int callMarketConsumePurchase(String purchaseToken) {
                   if (billingBinder == null || purchaseToken == null || purchaseToken.isEmpty()) return -1;
                   Parcel data = Parcel.obtain();
@@ -353,11 +383,12 @@ jobs:
                   super.onDestroy();
               }
           }
-          EOF
+          '''
 
-          sed -i 's/__MATRIX_STORE__/${{ matrix.store }}/g' "$MAIN_JAVA"
-          sed -i 's/__MATRIX_PKG__/${{ matrix.market_pkg }}/g' "$MAIN_JAVA"
-          sed -i 's/__MATRIX_BIND__/${{ matrix.bind_action }}/g' "$MAIN_JAVA"
+          java_code = java_code.replace("__MATRIX_STORE__", store).replace("__MATRIX_PKG__", pkg).replace("__MATRIX_BIND__", bind)
+          with open(java_files[0], "w", encoding="utf-8") as f:
+              f.write(java_code)
+          PYEOF
 
       - name: Build Signed Release APK for ${{ matrix.store_title }}
         run: |
