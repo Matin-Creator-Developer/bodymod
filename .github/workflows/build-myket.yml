@@ -1,0 +1,353 @@
+name: Build Isolated Myket APK (v7.7.4)
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-myket:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Configure Preinstalled Android SDK
+        run: |
+          export ANDROID_HOME="/usr/local/lib/android/sdk"
+          export ANDROID_SDK_ROOT="/usr/local/lib/android/sdk"
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          SDKMANAGER=$(find $ANDROID_HOME/cmdline-tools -name "sdkmanager" | sort -V | tail -n 1)
+          yes | "$SDKMANAGER" --sdk_root="$ANDROID_HOME" --licenses > /dev/null 2>&1 || true
+          "$SDKMANAGER" --sdk_root="$ANDROID_HOME" "platforms;android-34" "build-tools;34.0.0" > /dev/null 2>&1
+          echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
+          echo "$ANDROID_HOME/build-tools/34.0.0" >> $GITHUB_PATH
+
+      - name: Create Cordova Project for Myket
+        run: |
+          npm install -g cordova
+          cordova create bodymod_app ir.matinmohammadi.bodymod "BodyMod"
+          cd bodymod_app
+
+          cat << 'XML' > config.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <widget id="ir.matinmohammadi.bodymod" version="7.7.4" android-versionCode="774" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+              <name>BodyMod</name>
+              <description>BodyMod AI Fitness Coach</description>
+              <author email="info@matin-mohammadi.ir" href="https://matin-mohammadi.ir">Matin Mohammadi</author>
+              <content src="index.html" />
+              <access origin="*" />
+              <allow-intent href="http://*/*" />
+              <allow-intent href="https://*/*" />
+              <allow-navigation href="*" />
+              <preference name="AndroidPersistentFileLocation" value="Compatibility" />
+              <preference name="AndroidXEnabled" value="true" />
+              <preference name="android-minSdkVersion" value="24" />
+              <preference name="android-targetSdkVersion" value="34" />
+              <preference name="android-compileSdkVersion" value="34" />
+              <platform name="android">
+                  <icon src="www/icon.png" />
+              </platform>
+          </widget>
+          XML
+
+          cp ../app.html www/index.html
+          sed -i 's/__MARKET_FLAVOR__/myket/g' www/index.html
+
+          if [ -f "../icon.png" ]; then
+            cp ../icon.png www/icon.png
+          else
+            base64 -d <<< "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" > www/icon.png
+          fi
+          
+          export CORDOVA_ANDROID_GRADLE_DISTRIBUTION_URL="https\://services.gradle.org/distributions/gradle-8.7-bin.zip"
+          cordova platform add android@13.0.0
+
+      - name: Inject Isolated Myket Billing Bridge
+        run: |
+          python3 - << 'PYEOF'
+          import os, glob
+          with open("bodymod_app/platforms/android/app/src/main/AndroidManifest.xml", "r", encoding="utf-8") as f:
+              m = f.read()
+          
+          perm_block = """
+              <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+              <uses-permission android:name="ir.mservices.market.BILLING" />
+              <queries>
+                  <package android:name="ir.mservices.market" />
+                  <intent>
+                      <action android:name="ir.mservices.market.InAppBillingService.BIND" />
+                  </intent>
+              </queries>
+          </manifest>"""
+          m = m.replace("</manifest>", perm_block)
+          
+          deep_link = """
+                  <intent-filter>
+                      <action android:name="android.intent.action.VIEW" />
+                      <category android:name="android.intent.category.DEFAULT" />
+                      <category android:name="android.intent.category.BROWSABLE" />
+                      <data android:scheme="bodymod" android:host="auth" />
+                  </intent-filter>
+              </activity>"""
+          m = m.replace("</activity>", deep_link, 1)
+          
+          with open("bodymod_app/platforms/android/app/src/main/AndroidManifest.xml", "w", encoding="utf-8") as f:
+              f.write(m)
+
+          java_files = glob.glob("bodymod_app/platforms/android/app/src/main/java/**/MainActivity.java", recursive=True)
+          java_code = '''package ir.matinmohammadi.bodymod;
+          import android.app.NotificationChannel;
+          import android.app.NotificationManager;
+          import android.app.PendingIntent;
+          import android.content.ComponentName;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.content.ServiceConnection;
+          import android.content.pm.PackageManager;
+          import android.net.Uri;
+          import android.os.Build;
+          import android.os.Bundle;
+          import android.os.IBinder;
+          import android.os.Parcel;
+          import android.webkit.JavascriptInterface;
+          import android.webkit.WebView;
+          import androidx.core.app.ActivityCompat;
+          import androidx.core.app.NotificationCompat;
+          import androidx.core.content.ContextCompat;
+          import org.apache.cordova.*;
+          import org.json.JSONObject;
+          
+          public class MainActivity extends CordovaActivity {
+              private static final String MARKET_STORE = "myket";
+              private static final String MARKET_PKG = "ir.mservices.market";
+              private static final String MARKET_BIND = "ir.mservices.market.InAppBillingService.BIND";
+              private static final String AIDL_DESCRIPTOR = "com.android.vending.billing.IInAppBillingService";
+              private static final int BILLING_REQ_CODE = 10091;
+              private IBinder billingBinder = null;
+              private ServiceConnection billingConn = null;
+              private String pendingSku = "";
+          
+              @Override
+              public void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  Bundle extras = getIntent().getExtras();
+                  if (extras != null && extras.getBoolean("cdvStartInBackground", false)) moveTaskToBack(true);
+                  loadUrl(launchUrl);
+                  try {
+                      WebView webView = (WebView) this.appView.getEngine().getView();
+                      webView.getSettings().setDomStorageEnabled(true);
+                      webView.getSettings().setJavaScriptEnabled(true);
+                      webView.addJavascriptInterface(new AndroidNativeBridge(), "AndroidNative");
+                  } catch (Exception e) {}
+                  bindIsolatedMarketService();
+                  handleDeepLinkIntent(getIntent());
+              }
+          
+              private void bindIsolatedMarketService() {
+                  try {
+                      billingConn = new ServiceConnection() {
+                          @Override public void onServiceConnected(ComponentName name, IBinder service) { billingBinder = service; }
+                          @Override public void onServiceDisconnected(ComponentName name) { billingBinder = null; }
+                      };
+                      Intent serviceIntent = new Intent(MARKET_BIND);
+                      serviceIntent.setPackage(MARKET_PKG);
+                      bindService(serviceIntent, billingConn, Context.BIND_AUTO_CREATE);
+                  } catch (Exception e) {}
+              }
+          
+              @Override
+              protected void onNewIntent(Intent intent) {
+                  super.onNewIntent(intent);
+                  setIntent(intent);
+                  handleDeepLinkIntent(intent);
+              }
+          
+              private void handleDeepLinkIntent(Intent intent) {
+                  if (intent == null) return;
+                  Uri data = intent.getData();
+                  if (data != null && "bodymod".equals(data.getScheme())) {
+                      final String email = data.getQueryParameter("email") != null ? data.getQueryParameter("email") : "";
+                      final String name = data.getQueryParameter("name") != null ? data.getQueryParameter("name") : "";
+                      runOnUiThread(() -> {
+                          try {
+                              WebView webView = (WebView) MainActivity.this.appView.getEngine().getView();
+                              String js = "if(window.onGoogleChromeAuthSuccess){window.onGoogleChromeAuthSuccess('" + email.replace("'", "") + "','" + name.replace("'", "") + "');}";
+                              webView.evaluateJavascript(js, null);
+                          } catch (Exception e) {}
+                      });
+                  }
+              }
+          
+              @Override
+              protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+                  if (requestCode == BILLING_REQ_CODE) {
+                      final String purchaseData = (data != null) ? data.getStringExtra("INAPP_PURCHASE_DATA") : null;
+                      final String dataSignature = (data != null) ? data.getStringExtra("INAPP_DATA_SIGNATURE") : "";
+                      runOnUiThread(() -> {
+                          try {
+                              WebView webView = (WebView) MainActivity.this.appView.getEngine().getView();
+                              if (resultCode == RESULT_OK && purchaseData != null) {
+                                  JSONObject pJson = new JSONObject(purchaseData);
+                                  JSONObject resObj = new JSONObject();
+                                  resObj.put("ok", true);
+                                  resObj.put("storeName", MARKET_STORE);
+                                  resObj.put("sku", pJson.optString("productId", pendingSku));
+                                  resObj.put("purchaseToken", pJson.optString("purchaseToken", ""));
+                                  resObj.put("originalJson", purchaseData);
+                                  resObj.put("signature", dataSignature != null ? dataSignature : "");
+                                  String js = "if(window.onNativeMarketPurchaseResult){window.onNativeMarketPurchaseResult(" + resObj.toString() + ");}";
+                                  webView.evaluateJavascript(js, null);
+                              } else {
+                                  String js = "if(window.onNativeMarketPurchaseResult){window.onNativeMarketPurchaseResult({ok:false});}";
+                                  webView.evaluateJavascript(js, null);
+                              }
+                          } catch (Exception e) {}
+                      });
+                      return;
+                  }
+                  super.onActivityResult(requestCode, resultCode, data);
+              }
+          
+              @SuppressWarnings("deprecation")
+              private PendingIntent callMarketGetBuyIntent(String sku) throws Exception {
+                  if (billingBinder == null) return null;
+                  Parcel data = Parcel.obtain();
+                  Parcel reply = Parcel.obtain();
+                  try {
+                      data.writeInterfaceToken(AIDL_DESCRIPTOR);
+                      data.writeInt(3);
+                      data.writeString(getPackageName());
+                      data.writeString(sku);
+                      data.writeString("inapp");
+                      data.writeString("bm_payload_" + System.currentTimeMillis());
+                      billingBinder.transact(3, data, reply, 0);
+                      reply.readException();
+                      if (reply.readInt() != 0) {
+                          Bundle bundle = Bundle.CREATOR.createFromParcel(reply);
+                          return (PendingIntent) bundle.getParcelable("BUY_INTENT");
+                      }
+                      return null;
+                  } finally {
+                      reply.recycle();
+                      data.recycle();
+                  }
+              }
+          
+              private int callMarketConsumePurchase(String purchaseToken) {
+                  if (billingBinder == null || purchaseToken == null || purchaseToken.isEmpty()) return -1;
+                  Parcel data = Parcel.obtain();
+                  Parcel reply = Parcel.obtain();
+                  try {
+                      data.writeInterfaceToken(AIDL_DESCRIPTOR);
+                      data.writeInt(3);
+                      data.writeString(getPackageName());
+                      data.writeString(purchaseToken);
+                      billingBinder.transact(5, data, reply, 0);
+                      reply.readException();
+                      return reply.readInt();
+                  } catch (Exception e) {
+                      return -1;
+                  } finally {
+                      reply.recycle();
+                      data.recycle();
+                  }
+              }
+          
+              public class AndroidNativeBridge {
+                  @JavascriptInterface public String getMarketFlavor() { return MARKET_STORE; }
+                  @JavascriptInterface
+                  public void startMarketPurchase(final String sku, final String pubKey) {
+                      pendingSku = sku;
+                      runOnUiThread(() -> {
+                          try {
+                              if (billingBinder == null) bindIsolatedMarketService();
+                              PendingIntent buyIntent = callMarketGetBuyIntent(sku);
+                              if (buyIntent != null) {
+                                  MainActivity.this.startIntentSenderForResult(buyIntent.getIntentSender(), BILLING_REQ_CODE, new Intent(), 0, 0, 0);
+                              } else {
+                                  WebView webView = (WebView) MainActivity.this.appView.getEngine().getView();
+                                  webView.evaluateJavascript("alert('⚠️ لطفاً مطمئن شو برنامه مایکت روی گوشیت نصبه و وارد حسابت شدی رفیق!');", null);
+                              }
+                          } catch (Exception e) {
+                              try {
+                                  WebView webView = (WebView) MainActivity.this.appView.getEngine().getView();
+                                  webView.evaluateJavascript("alert('⛔ خطا در باز کردن درگاه پرداخت مارکت');", null);
+                              } catch (Exception ignored) {}
+                          }
+                      });
+                  }
+                  @JavascriptInterface
+                  public void consumePurchase(final String token) { new Thread(() -> callMarketConsumePurchase(token)).start(); }
+                  @JavascriptInterface
+                  public void requestNotificationPermission(String title, String message) {
+                      if (Build.VERSION.SDK_INT >= 33) {
+                          if (ContextCompat.checkSelfPermission(MainActivity.this, "android.permission.POST_NOTIFICATIONS") != PackageManager.PERMISSION_GRANTED) {
+                              ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.POST_NOTIFICATIONS"}, 101);
+                          }
+                      }
+                      showLocalNotification(title, message);
+                  }
+                  private void showLocalNotification(String title, String message) {
+                      try {
+                          String chId = "bodymod_alerts";
+                          NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                              NotificationChannel ch = new NotificationChannel(chId, "BodyMod Alerts", NotificationManager.IMPORTANCE_HIGH);
+                              nm.createNotificationChannel(ch);
+                          }
+                          NotificationCompat.Builder b = new NotificationCompat.Builder(MainActivity.this, chId).setSmallIcon(android.R.drawable.ic_dialog_info).setContentTitle(title).setContentText(message).setPriority(NotificationCompat.PRIORITY_HIGH).setAutoCancel(true);
+                          nm.notify((int) (System.currentTimeMillis() % 10000), b.build());
+                      } catch (Exception e) {}
+                  }
+              }
+          
+              @Override
+              public void onDestroy() {
+                  try { if (billingConn != null) unbindService(billingConn); } catch (Exception e) {}
+                  super.onDestroy();
+              }
+          }
+          '''
+          with open(java_files[0], "w", encoding="utf-8") as f:
+              f.write(java_code)
+          PYEOF
+
+      - name: Build & Sign Myket APK
+        run: |
+          cd bodymod_app
+          keytool -genkey -v -keystore bodymod-release.keystore -alias bodymod_key -keyalg RSA -keysize 2048 -validity 10000 -storepass bodymod123456 -keypass bodymod123456 -dname "CN=Matin Mohammadi, OU=BodyMod, O=BodyMod, L=Urmia, S=WA, C=IR"
+          export CORDOVA_ANDROID_GRADLE_DISTRIBUTION_URL="https\://services.gradle.org/distributions/gradle-8.7-bin.zip"
+          cordova build android --release -- --keystore=bodymod-release.keystore --storePassword=bodymod123456 --password=bodymod123456 --alias=bodymod_key --packageType=apk
+          APK_PATH=$(find platforms/android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          cp "$APK_PATH" "../BodyMod-Myket-v7.7.4.apk"
+
+      - name: Upload Myket APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: BodyMod-Myket-APK
+          path: BodyMod-Myket-v7.7.4.apk
+
+      - name: Publish Myket APK
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v7.7.4-release
+          name: "BodyMod v7.7.4 (Isolated Bazaar & Myket APKs)"
+          files: BodyMod-Myket-v7.7.4.apk
+          overwrite: true
