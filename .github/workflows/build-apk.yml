@@ -36,19 +36,23 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Set up Gradle 8.7 (Fix Gradle 9.8.2 Cordova Wrapper Error)
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
       - name: Set up Node.js 22
         uses: actions/setup-node@v4
         with:
           node-version: '22'
 
-      - name: Configure Preinstalled Android SDK (No Third-Party Action Bug)
+      - name: Configure Preinstalled Android SDK
         run: |
           export ANDROID_HOME="/usr/local/lib/android/sdk"
           export ANDROID_SDK_ROOT="/usr/local/lib/android/sdk"
           echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
           echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
           SDKMANAGER=$(find $ANDROID_HOME/cmdline-tools -name "sdkmanager" | sort -V | tail -n 1)
-          echo "Using sdkmanager: $SDKMANAGER"
           yes | "$SDKMANAGER" --sdk_root="$ANDROID_HOME" --licenses > /dev/null 2>&1 || true
           "$SDKMANAGER" --sdk_root="$ANDROID_HOME" "platforms;android-34" "build-tools;34.0.0"
           echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
