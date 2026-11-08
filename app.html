@@ -2956,6 +2956,94 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
       checkFirstInstallNotificationPrompt();
       if (appState.userKey) fetchUserProfileFromCloud(appState.userKey);
     });
+  
+
+
+
+    // ==================== ۱۱. ماژول ایزوله تشخیص مارکت (Bazaar / Myket v7.7.4) ====================
+    const BUILD_TARGET_STORE = "__MARKET_FLAVOR__";
+
+    function getActiveMarketStoreName() {
+      try {
+        if (window.AndroidNative && typeof window.AndroidNative.getMarketFlavor === "function") {
+          const nativeStore = window.AndroidNative.getMarketFlavor();
+          if (nativeStore === "bazaar" || nativeStore === "myket") return nativeStore;
+        }
+      } catch (e) {}
+      if (BUILD_TARGET_STORE === "bazaar" || BUILD_TARGET_STORE === "myket") {
+        return BUILD_TARGET_STORE;
+      }
+      return "myket";
+    }
+
+    // بازنویسی تابع دریافت کلید عمومی فقط برای مارکتِ همان نسخه (ایزوله ۱۰۰٪)
+    loadMarketBillingConfig = async function() {
+      const activeStore = getActiveMarketStoreName();
+      try {
+        const res = await fetch(`${WORKER_BASE_URL}/api/payment/market/config?store=${encodeURIComponent(activeStore)}`);
+        const data = await res.json();
+        if (res.ok && data.ok) {
+          marketRuntimeConfig = {
+            storeName: activeStore,
+            packageName: data.packageName || "ir.matinmohammadi.bodymod",
+            publicKey: data.publicKey || (activeStore === "bazaar" ? data.bazaarPublicKey : data.myketPublicKey) || "",
+            bazaarPublicKey: activeStore === "bazaar" ? (data.bazaarPublicKey || "") : "",
+            myketPublicKey: activeStore === "myket" ? (data.myketPublicKey || "") : ""
+          };
+        }
+      } catch (e) {}
+    };
+
+    // بازنویسی تابع خرید برای ارسال نام دقیق مارکت (storeName) و کلید RSA ایزوله
+    buyMarketPackage = async function(sku) {
+      if (!appState.userKey) { window.openAuthModal(); return; }
+
+      await loadMarketBillingConfig();
+      const activeStore = getActiveMarketStoreName();
+      const storeLabelFa = activeStore === "bazaar" ? "کافه بازار" : "مایکت";
+      const isolatedPubKey = marketRuntimeConfig.publicKey || "";
+
+      // ۱. فراخوانی پل بومی جاوا (AIDL مستقیم بازار یا مایکت که در build-apk.yml تزریق شده)
+      if (window.AndroidNative && typeof window.AndroidNative.startMarketPurchase === "function") {
+        window.onNativeMarketPurchaseResult = function(resObj) {
+          if (resObj && resObj.ok && resObj.purchaseToken) {
+            verifyPurchaseWithCloudServer(sku, {
+              purchaseToken: resObj.purchaseToken,
+              originalJson: resObj.originalJson || "",
+              signature: resObj.signature || "",
+              storeName: activeStore
+            });
+          } else {
+            alert(`⛔ خرید در درگاه ${storeLabelFa} لغو شد یا ناتمام ماند رفیق!`);
+          }
+        };
+        window.AndroidNative.startMarketPurchase(sku, isolatedPubKey);
+        return;
+      }
+
+      // ۲. حالت تست مخصوص مدیرعامل (متین عزیز) در صورتی که روی مرورگر یا بدون استور تست کند
+      if (appState.isCeo) {
+        if (confirm(`👑 متین جان! نسخه فعلی روی «${storeLabelFa}» تنظیم شده. می‌خوای به عنوان مدیرعامل این خرید رو تستی تایید و فعال کنم؟`)) {
+          await verifyPurchaseWithCloudServer(sku, {
+            purchaseToken: "CEO_TEST_TOKEN",
+            storeName: activeStore
+          });
+        }
+        return;
+      }
+
+      alert(`💳 رفیق گلم! برای خرید اشتراک یا حمایت مالی، لطفاً مطمئن شو که برنامه «${storeLabelFa}» روی گوشیت نصبه و داخلش لاگین هستی!`);
+    };
+
+    // بروزرسانی نوشته دکمه خرید بر اساس مارکت فعلی
+    window.addEventListener("DOMContentLoaded", () => {
+      const activeStore = getActiveMarketStoreName();
+      const storeLabelFa = activeStore === "bazaar" ? "کافه بازار" : "مایکت";
+      const vipBtn = document.getElementById("buyVipBetaBtn");
+      if (vipBtn) {
+        vipBtn.innerHTML = `🚀 خرید / تمدید اشتراک فاز بتا (درگاه ${storeLabelFa})`;
+      }
+    });
   </script>
 </body>
 </html>

@@ -1,113 +1,147 @@
-name: Build BodyMod Official Android APK
+name: Build Isolated Bazaar & Myket APKs (v7.7.4)
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
-  build-android:
+  build-isolated-apks:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - store: bazaar
+            store_title: "Bazaar"
+            billing_perm: "com.farsitel.bazaar.permission.PAY_THROUGH_BAZAAR"
+            market_pkg: "com.farsitel.bazaar"
+            bind_action: "ir.cafebazaar.pardakht.InAppBillingService.BIND"
+          - store: myket
+            store_title: "Myket"
+            billing_perm: "ir.mservices.market.BILLING"
+            market_pkg: "ir.mservices.market"
+            bind_action: "ir.mservices.market.InAppBillingService.BIND"
 
     steps:
-      - name: 📥 دریافت کدهای پروژه
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: ☕ نصب جاوا (JDK 17)
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: 🛠️ آماده‌سازی Android SDK
-        run: |
-          export ANDROID_SDK_ROOT=$ANDROID_HOME
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
-
-      - name: 🟢 نصب Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: 📦 ساخت APK با مدیریت اختیاری نوتیفیکیشن و مرورگر پیش‌فرض
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install SDK Platform 34 & Build Tools
         run: |
-          export ANDROID_SDK_ROOT=$ANDROID_HOME
+          yes | sdkmanager --licenses || true
+          sdkmanager "platforms;android-34" "build-tools;34.0.0"
+
+      - name: Create Cordova Project for ${{ matrix.store_title }}
+        run: |
           npm install -g cordova
-          cordova create bodymod_native ir.matinmohammadi.bodymod "BodyMod"
-          cd bodymod_native
-
-          rm -rf www/*
-          cp ../app.html www/index.html
-          [ -f "../earth_burn.mp4" ] && cp ../earth_burn.mp4 www/earth_burn.mp4
-          [ -f "../icon.png" ] && cp ../icon.png ./icon.png && cp ../icon.png www/icon.png
-
-          sed -i "s|window.open(\`\${WORKER_BASE_URL}/auth/google-direct\`, '_system');|if(window.AndroidNative \&\& window.AndroidNative.openExternal){window.AndroidNative.openExternal(\`\${WORKER_BASE_URL}/auth/google-direct\`);}else{window.location.href=\`\${WORKER_BASE_URL}/auth/google-direct\`;}|g" www/index.html
+          cordova create bodymod_app ir.matinmohammadi.bodymod "BodyMod"
+          cd bodymod_app
 
           cat << 'EOF' > config.xml
           <?xml version='1.0' encoding='utf-8'?>
-          <widget id="ir.matinmohammadi.bodymod" version="7.7.3" android-versionCode="773" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android">
+          <widget id="ir.matinmohammadi.bodymod" version="7.7.4" android-versionCode="774" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
               <name>BodyMod</name>
-              <description>سوپراپلیکیشن هوشمند بادی‌مود</description>
-              <author email="diaperloveradultbaby5@gmail.com" href="https://bodymod.matin-mohammadi.ir">Matin Mohammadi</author>
+              <description>BodyMod AI Fitness &amp; Nutrition Coach</description>
+              <author email="info@matin-mohammadi.ir" href="https://matin-mohammadi.ir">Matin Mohammadi</author>
               <content src="index.html" />
               <access origin="*" />
               <allow-intent href="http://*/*" />
               <allow-intent href="https://*/*" />
-              <allow-intent href="bodymod://*/*" />
-              <allow-navigation href="https://localhost/*" />
-              <allow-navigation href="http://localhost/*" />
-              <preference name="AndroidLaunchMode" value="singleTask" />
-              <preference name="Scheme" value="https" />
-              <preference name="Hostname" value="localhost" />
-              <preference name="MixedContentMode" value="0" />
-              <preference name="MediaPlaybackRequiresUserAction" value="false" />
-              <preference name="DisallowOverscroll" value="true" />
-              <icon src="icon.png" />
+              <allow-navigation href="*" />
+              <preference name="AndroidPersistentFileLocation" value="Compatibility" />
+              <preference name="AndroidXEnabled" value="true" />
+              <preference name="GradlePluginKotlinEnabled" value="true" />
+              <preference name="android-minSdkVersion" value="24" />
+              <preference name="android-targetSdkVersion" value="34" />
+              <preference name="android-compileSdkVersion" value="34" />
               <platform name="android">
-                  <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
-                      <application android:usesCleartextTraffic="true" />
-                  </edit-config>
-                  <config-file target="AndroidManifest.xml" parent="/manifest">
-                      <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-                      <uses-permission android:name="android.permission.VIBRATE" />
-                  </config-file>
-                  <config-file target="AndroidManifest.xml" parent="/manifest/application/activity[@android:name='MainActivity']">
-                      <intent-filter>
-                          <action android:name="android.intent.action.VIEW" />
-                          <category android:name="android.intent.category.DEFAULT" />
-                          <category android:name="android.intent.category.BROWSABLE" />
-                          <data android:scheme="bodymod" android:host="auth" />
-                      </intent-filter>
-                  </config-file>
+                  <icon src="www/icon.png" />
               </platform>
           </widget>
           EOF
 
-          cordova platform add android@13.0.0
+          # کپی کردن app.html و تزریق نام مارکت ایزوله (bazaar یا myket)
+          cp ../app.html www/index.html
+          sed -i 's/__MARKET_FLAVOR__/${{ matrix.store }}/g' www/index.html
 
-          # تزریق جاوا: پل اختیاری نوتیفیکیشن و مرورگر
-          MAIN_ACT="platforms/android/app/src/main/java/ir/matinmohammadi/bodymod/MainActivity.java"
-          cat << 'EOF' > "$MAIN_ACT"
+          if [ -f "../icon.png" ]; then
+            cp ../icon.png www/icon.png
+          else
+            base64 -d <<< "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" > www/icon.png
+          fi
+
+          cordova platform add android@12.0.1
+
+      - name: Inject Isolated ${{ matrix.store_title }} Billing Bridge & Permissions
+        run: |
+          MANIFEST="bodymod_app/platforms/android/app/src/main/AndroidManifest.xml"
+
+          # تزریق فقط و فقط مجوز همان مارکت (بدون هیچ نامی از مارکت رقیب!)
+          sed -i 's/<\/manifest>/<uses-permission android:name="android.permission.INTERNET" \/>\n<uses-permission android:name="android.permission.POST_NOTIFICATIONS" \/>\n<uses-permission android:name="${{ matrix.billing_perm }}" \/>\n<queries>\n  <package android:name="${{ matrix.market_pkg }}" \/>\n  <intent>\n    <action android:name="${{ matrix.bind_action }}" \/>\n  <\/intent>\n<\/queries>\n<\/manifest>/g' "$MANIFEST"
+
+          # تزریق دیپ‌لینک بازگشت از گوگل
+          sed -i '/<\/activity>/i \
+            <intent-filter>\
+                <action android:name="android.intent.action.VIEW" />\
+                <category android:name="android.intent.category.DEFAULT" />\
+                <category android:name="android.intent.category.BROWSABLE" />\
+                <data android:scheme="bodymod" android:host="auth" />\
+            </intent-filter>' "$MANIFEST"
+
+          # ساخت پل ارتباطی جاوا (MainActivity.java) ایزوله‌شده برای همان مارکت
+          MAIN_JAVA=$(find bodymod_app/platforms/android/app/src/main/java -name "MainActivity.java" | head -n 1)
+          cat << 'EOF' > "$MAIN_JAVA"
           package ir.matinmohammadi.bodymod;
-          import android.os.Bundle;
-          import android.os.Build;
-          import android.content.Intent;
-          import android.content.Context;
-          import android.content.pm.PackageManager;
-          import android.net.Uri;
-          import android.webkit.JavascriptInterface;
-          import android.webkit.WebView;
+
           import android.app.NotificationChannel;
           import android.app.NotificationManager;
-          import android.app.Notification;
           import android.app.PendingIntent;
+          import android.content.ComponentName;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.content.ServiceConnection;
+          import android.content.pm.PackageManager;
+          import android.net.Uri;
+          import android.os.Build;
+          import android.os.Bundle;
+          import android.os.IBinder;
+          import android.os.Parcel;
+          import android.webkit.JavascriptInterface;
+          import android.webkit.WebView;
           import androidx.core.app.ActivityCompat;
+          import androidx.core.app.NotificationCompat;
           import androidx.core.content.ContextCompat;
           import org.apache.cordova.*;
+          import org.json.JSONObject;
 
           public class MainActivity extends CordovaActivity {
-              private static final String CHANNEL_ID = "bodymod_optional_channel";
+              private static final String MARKET_STORE = "__MATRIX_STORE__";
+              private static final String MARKET_PKG = "__MATRIX_PKG__";
+              private static final String MARKET_BIND = "__MATRIX_BIND__";
+              private static final String AIDL_DESCRIPTOR = "com.android.vending.billing.IInAppBillingService";
+              private static final int BILLING_REQ_CODE = 10091;
+
+              private IBinder billingBinder = null;
+              private ServiceConnection billingConn = null;
+              private String pendingSku = "";
 
               @Override
               public void onCreate(Bundle savedInstanceState) {
@@ -117,149 +151,233 @@ jobs:
                       moveTaskToBack(true);
                   }
                   loadUrl(launchUrl);
-                  createNotificationChannel();
 
-                  if (appView != null && appView.getView() instanceof WebView) {
-                      WebView wv = (WebView) appView.getView();
-                      wv.addJavascriptInterface(new Object() {
-                          @JavascriptInterface
-                          public void openExternal(String url) {
-                              try {
-                                  Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                                  browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                  startActivity(browserIntent);
-                              } catch (Exception ignored) {}
-                          }
-
-                          @JavascriptInterface
-                          public void requestNotificationPermission(final String title, final String message) {
-                              runOnUiThread(new Runnable() {
-                                  @Override
-                                  public void run() {
-                                      if (Build.VERSION.SDK_INT >= 33) {
-                                          if (ContextCompat.checkSelfPermission(MainActivity.this, "android.permission.POST_NOTIFICATIONS") != PackageManager.PERMISSION_GRANTED) {
-                                              ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.POST_NOTIFICATIONS"}, 102);
-                                              return;
-                                          }
-                                      }
-                                      showNativeNotification(title, message);
-                                  }
-                              });
-                          }
-
-                          @JavascriptInterface
-                          public void sendLocalNotification(final String title, final String message) {
-                              runOnUiThread(new Runnable() {
-                                  @Override
-                                  public void run() {
-                                      showNativeNotification(title, message);
-                                  }
-                              });
-                          }
-                      }, "AndroidNative");
-                  }
-
-                  handleGoogleDeepLink(getIntent());
-              }
-
-              private void createNotificationChannel() {
-                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                      NotificationChannel channel = new NotificationChannel(
-                          CHANNEL_ID,
-                          "اعلان‌های اختیاری BodyMod",
-                          NotificationManager.IMPORTANCE_DEFAULT
-                      );
-                      NotificationManager manager = getSystemService(NotificationManager.class);
-                      if (manager != null) manager.createNotificationChannel(channel);
-                  }
-              }
-
-              private void showNativeNotification(String title, String message) {
                   try {
-                      NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                      if (manager == null) return;
-                      Intent intent = new Intent(this, MainActivity.class);
-                      PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+                      WebView webView = (WebView) this.appView.getEngine().getView();
+                      webView.getSettings().setDomStorageEnabled(true);
+                      webView.getSettings().setJavaScriptEnabled(true);
+                      webView.addJavascriptInterface(new AndroidNativeBridge(), "AndroidNative");
+                  } catch (Exception e) {}
 
-                      Notification.Builder builder;
-                      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                          builder = new Notification.Builder(this, CHANNEL_ID);
-                      } else {
-                          builder = new Notification.Builder(this);
-                      }
-                      builder.setContentTitle(title)
-                             .setContentText(message)
-                             .setSmallIcon(getApplicationInfo().icon)
-                             .setAutoCancel(true)
-                             .setContentIntent(pendingIntent);
-
-                      manager.notify((int) (System.currentTimeMillis() % 100000), builder.build());
-                  } catch (Exception ignored) {}
+                  bindIsolatedMarketService();
+                  handleDeepLinkIntent(getIntent());
               }
 
-              @Override
-              public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-                  super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-                  if (requestCode == 102 && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                      showNativeNotification("🔔 یادآورهای انتخابی فعال شدند", "از این پس در صورت تمایل یادآورهای تغذیه و تمرین برایتان ارسال می‌شود.");
-                  }
+              private void bindIsolatedMarketService() {
+                  try {
+                      billingConn = new ServiceConnection() {
+                          @Override
+                          public void onServiceConnected(ComponentName name, IBinder service) {
+                              billingBinder = service;
+                          }
+                          @Override
+                          public void onServiceDisconnected(ComponentName name) {
+                              billingBinder = null;
+                          }
+                      };
+                      Intent serviceIntent = new Intent(MARKET_BIND);
+                      serviceIntent.setPackage(MARKET_PKG);
+                      bindService(serviceIntent, billingConn, Context.BIND_AUTO_CREATE);
+                  } catch (Exception e) {}
               }
 
               @Override
               protected void onNewIntent(Intent intent) {
                   super.onNewIntent(intent);
                   setIntent(intent);
-                  handleGoogleDeepLink(intent);
+                  handleDeepLinkIntent(intent);
               }
 
-              private void handleGoogleDeepLink(Intent intent) {
+              private void handleDeepLinkIntent(Intent intent) {
                   if (intent == null) return;
                   Uri data = intent.getData();
                   if (data != null && "bodymod".equals(data.getScheme())) {
                       final String email = data.getQueryParameter("email") != null ? data.getQueryParameter("email") : "";
                       final String name = data.getQueryParameter("name") != null ? data.getQueryParameter("name") : "";
-                      if (!email.isEmpty() && appView != null) {
-                          appView.getView().postDelayed(new Runnable() {
-                              @Override
-                              public void run() {
-                                  String js = "if(window.onGoogleChromeAuthSuccess){window.onGoogleChromeAuthSuccess('" + email.replace("'", "") + "','" + name.replace("'", "") + "');}";
-                                  appView.loadUrl("javascript:" + js);
-                              }
-                          }, 600);
-                      }
+                      runOnUiThread(() -> {
+                          try {
+                              WebView webView = (WebView) MainActivity.this.appView.getEngine().getView();
+                              String js = "if(window.onGoogleChromeAuthSuccess){window.onGoogleChromeAuthSuccess('" + email.replace("'", "") + "','" + name.replace("'", "") + "');}";
+                              webView.evaluateJavascript(js, null);
+                          } catch (Exception e) {}
+                      });
                   }
+              }
+
+              // دریافت نتیجه مستقیم از پنجره پرداخت درون‌برنامه‌ای بازار یا مایکت
+              @Override
+              protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+                  if (requestCode == BILLING_REQ_CODE) {
+                      final String purchaseData = (data != null) ? data.getStringExtra("INAPP_PURCHASE_DATA") : null;
+                      final String dataSignature = (data != null) ? data.getStringExtra("INAPP_DATA_SIGNATURE") : "";
+                      runOnUiThread(() -> {
+                          try {
+                              WebView webView = (WebView) MainActivity.this.appView.getEngine().getView();
+                              if (resultCode == RESULT_OK && purchaseData != null) {
+                                  JSONObject pJson = new JSONObject(purchaseData);
+                                  JSONObject resObj = new JSONObject();
+                                  resObj.put("ok", true);
+                                  resObj.put("storeName", MARKET_STORE);
+                                  resObj.put("sku", pJson.optString("productId", pendingSku));
+                                  resObj.put("purchaseToken", pJson.optString("purchaseToken", ""));
+                                  resObj.put("originalJson", purchaseData);
+                                  resObj.put("signature", dataSignature != null ? dataSignature : "");
+                                  String js = "if(window.onNativeMarketPurchaseResult){window.onNativeMarketPurchaseResult(" + resObj.toString() + ");}";
+                                  webView.evaluateJavascript(js, null);
+                              } else {
+                                  String js = "if(window.onNativeMarketPurchaseResult){window.onNativeMarketPurchaseResult({ok:false});}";
+                                  webView.evaluateJavascript(js, null);
+                              }
+                          } catch (Exception e) {}
+                      });
+                      return;
+                  }
+                  super.onActivityResult(requestCode, resultCode, data);
+              }
+
+              // فراخوانی AIDL استاندارد استور (getBuyIntent = کد 3 در IInAppBillingService)
+              private PendingIntent callMarketGetBuyIntent(String sku) throws Exception {
+                  if (billingBinder == null) return null;
+                  Parcel data = Parcel.obtain();
+                  Parcel reply = Parcel.obtain();
+                  try {
+                      data.writeInterfaceToken(AIDL_DESCRIPTOR);
+                      data.writeInt(3);
+                      data.writeString(getPackageName());
+                      data.writeString(sku);
+                      data.writeString("inapp");
+                      data.writeString("bm_payload_" + System.currentTimeMillis());
+                      billingBinder.transact(3, data, reply, 0);
+                      reply.readException();
+                      if (reply.readInt() != 0) {
+                          Bundle bundle = Bundle.CREATOR.createFromParcel(reply);
+                          return bundle.getParcelable("BUY_INTENT");
+                      }
+                      return null;
+                  } finally {
+                      reply.recycle();
+                      data.recycle();
+                  }
+              }
+
+              // فراخوانی AIDL استاندارد استور برای مصرف محصول (consumePurchase = کد 5 در IInAppBillingService)
+              private int callMarketConsumePurchase(String purchaseToken) {
+                  if (billingBinder == null || purchaseToken == null || purchaseToken.isEmpty()) return -1;
+                  Parcel data = Parcel.obtain();
+                  Parcel reply = Parcel.obtain();
+                  try {
+                      data.writeInterfaceToken(AIDL_DESCRIPTOR);
+                      data.writeInt(3);
+                      data.writeString(getPackageName());
+                      data.writeString(purchaseToken);
+                      billingBinder.transact(5, data, reply, 0);
+                      reply.readException();
+                      return reply.readInt();
+                  } catch (Exception e) {
+                      return -1;
+                  } finally {
+                      reply.recycle();
+                      data.recycle();
+                  }
+              }
+
+              public class AndroidNativeBridge {
+                  @JavascriptInterface
+                  public String getMarketFlavor() {
+                      return MARKET_STORE;
+                  }
+
+                  @JavascriptInterface
+                  public void startMarketPurchase(final String sku, final String pubKey) {
+                      pendingSku = sku;
+                      runOnUiThread(() -> {
+                          try {
+                              if (billingBinder == null) {
+                                  bindIsolatedMarketService();
+                              }
+                              PendingIntent buyIntent = callMarketGetBuyIntent(sku);
+                              if (buyIntent != null) {
+                                  startIntentSenderForResult(buyIntent.getIntentSender(), BILLING_REQ_CODE, new Intent(), 0, 0, 0);
+                              } else {
+                                  WebView webView = (WebView) MainActivity.this.appView.getEngine().getView();
+                                  webView.evaluateJavascript("alert('⚠️ لطفاً مطمئن شو برنامه مارکت (" + (MARKET_STORE.equals("bazaar") ? "کافه بازار" : "مایکت") + ") روی گوشیت نصبه و وارد حسابت شدی رفیق!');", null);
+                              }
+                          } catch (Exception e) {
+                              try {
+                                  WebView webView = (WebView) MainActivity.this.appView.getEngine().getView();
+                                  webView.evaluateJavascript("alert('⛔ خطا در باز کردن درگاه پرداخت مارکت: " + e.getMessage() + "');", null);
+                              } catch (Exception ignored) {}
+                          }
+                      });
+                  }
+
+                  @JavascriptInterface
+                  public void consumePurchase(final String token) {
+                      new Thread(() -> callMarketConsumePurchase(token)).start();
+                  }
+
+                  @JavascriptInterface
+                  public void requestNotificationPermission(String title, String message) {
+                      if (Build.VERSION.SDK_INT >= 33) {
+                          if (ContextCompat.checkSelfPermission(MainActivity.this, "android.permission.POST_NOTIFICATIONS") != PackageManager.PERMISSION_GRANTED) {
+                              ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.POST_NOTIFICATIONS"}, 101);
+                          }
+                      }
+                      showLocalNotification(title, message);
+                  }
+
+                  private void showLocalNotification(String title, String message) {
+                      try {
+                          String chId = "bodymod_alerts";
+                          NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                              NotificationChannel ch = new NotificationChannel(chId, "BodyMod Alerts", NotificationManager.IMPORTANCE_HIGH);
+                              nm.createNotificationChannel(ch);
+                          }
+                          NotificationCompat.Builder b = new NotificationCompat.Builder(MainActivity.this, chId)
+                                  .setSmallIcon(android.R.drawable.ic_dialog_info)
+                                  .setContentTitle(title)
+                                  .setContentText(message)
+                                  .setPriority(NotificationCompat.PRIORITY_HIGH)
+                                  .setAutoCancel(true);
+                          nm.notify((int) (System.currentTimeMillis() % 10000), b.build());
+                      } catch (Exception e) {}
+                  }
+              }
+
+              @Override
+              public void onDestroy() {
+                  try {
+                      if (billingConn != null) unbindService(billingConn);
+                  } catch (Exception e) {}
+                  super.onDestroy();
               }
           }
           EOF
 
-          # جایگزینی کامل آیکون‌ها
-          if [ -f "../icon.png" ]; then
-            RES_DIR="platforms/android/app/src/main/res"
-            rm -rf $RES_DIR/mipmap-anydpi-v26
-            rm -rf $RES_DIR/drawable-v24
-            find "$RES_DIR" -name "ic_launcher*.xml" -delete
-            find "$RES_DIR" -name "ic_launcher*.webp" -delete
-            for dir in $RES_DIR/mipmap-*; do
-              if [ -d "$dir" ]; then
-                rm -f "$dir"/*.png "$dir"/*.webp "$dir"/*.xml
-                cp ../icon.png "$dir/ic_launcher.png"
-                cp ../icon.png "$dir/ic_launcher_round.png"
-                cp ../icon.png "$dir/ic_launcher_foreground.png"
-              fi
-            done
-          fi
+          sed -i 's/__MATRIX_STORE__/${{ matrix.store }}/g' "$MAIN_JAVA"
+          sed -i 's/__MATRIX_PKG__/${{ matrix.market_pkg }}/g' "$MAIN_JAVA"
+          sed -i 's/__MATRIX_BIND__/${{ matrix.bind_action }}/g' "$MAIN_JAVA"
 
-          cordova build android --release -- --packageType=apk
-
-      - name: 🔐 امضای دیجیتال APK با کلید ثابت
+      - name: Build Signed Release APK for ${{ matrix.store_title }}
         run: |
-          cd bodymod_native/platforms/android/app/build/outputs/apk/release
-          cp ${{ github.workspace }}/bodymod-release.keystore .
-          $ANDROID_HOME/build-tools/34.0.0/zipalign -v -p 4 app-release-unsigned.apk BodyMod-Aligned.apk
-          $ANDROID_HOME/build-tools/34.0.0/apksigner sign --ks bodymod-release.keystore --ks-key-alias bodymod_key --ks-pass pass:MatinBodyMod2026 --key-pass pass:MatinBodyMod2026 --out BodyMod-Official-Market.apk BodyMod-Aligned.apk
+          cd bodymod_app
+          keytool -genkey -v -keystore bodymod-release.keystore -alias bodymod_key -keyalg RSA -keysize 2048 -validity 10000 -storepass bodymod123456 -keypass bodymod123456 -dname "CN=Matin Mohammadi, OU=BodyMod, O=BodyMod, L=Urmia, S=WA, C=IR"
+          cordova build android --release -- --keystore=bodymod-release.keystore --storePassword=bodymod123456 --password=bodymod123456 --alias=bodymod_key --packageType=apk
+          APK_PATH=$(find platforms/android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          cp "$APK_PATH" "../BodyMod-${{ matrix.store_title }}-v7.7.4.apk"
 
-      - name: 🎁 آپلود فایل APK
+      - name: Upload Isolated ${{ matrix.store_title }} APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: BodyMod-Android-Package
-          path: bodymod_native/platforms/android/app/build/outputs/apk/release/BodyMod-Official-Market.apk
+          name: BodyMod-${{ matrix.store_title }}-APK
+          path: BodyMod-${{ matrix.store_title }}-v7.7.4.apk
+
+      - name: Publish Both Isolated APKs to GitHub Releases
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v7.7.4-release
+          name: "BodyMod v7.7.4 (Isolated Bazaar & Myket APKs)"
+          files: BodyMod-${{ matrix.store_title }}-v7.7.4.apk
+          overwrite: true
