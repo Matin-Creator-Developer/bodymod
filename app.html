@@ -2450,7 +2450,25 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
     }
 
     function startGoogleLogin() {
-      window.open(`${WORKER_BASE_URL}/auth/google-direct`, '_system');
+      const targetUrl = `${WORKER_BASE_URL}/auth/google-direct`;
+      const isAndroid = /Android/i.test(navigator.userAgent);
+      
+      // ۱. اگر پلاگین کوردوا نصب است از مرورگر سیستم استفاده کن
+      if (window.cordova && window.cordova.InAppBrowser) {
+        window.cordova.InAppBrowser.open(targetUrl, '_system');
+        return;
+      }
+      
+      // ۲. در اندروید: اجبار به باز شدن مستقیم در اپلیکیشن Google Chrome با Intent
+      if (isAndroid) {
+        const cleanUrl = targetUrl.replace(/^https?:\/\//, '');
+        const chromeIntent = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(targetUrl)};end`;
+        window.location.href = chromeIntent;
+        return;
+      }
+      
+      // ۳. حالت پشتیبان برای وب و سایر سیستم‌ها
+      window.open(targetUrl, '_blank');
     }
 
     window.onGoogleChromeAuthSuccess = async function(email, name) {
