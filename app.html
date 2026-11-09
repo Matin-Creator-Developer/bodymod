@@ -544,351 +544,43 @@
           <input type="text" id="aiFoodInput" placeholder="مثلاً: یک مشت اسمارتیز یا یک بشقاب قورمه‌سبزی...">
           <button class="btn" onclick="analyzeFoodByText()" style="white-space:nowrap;">✨ تحلیل (هفته‌ای ۳ بار)</button>
         </div>
-        <label class="btn btn-purple" style="width:100%; cursor:pointer; font-size:12px;">
-          📸 اسکن عکس غذا با AI (سهمیه: هفته‌ای ۱ بار)
-          <input type="file" accept="image/*" style="display:none;" onchange="analyzeFoodByImage(event)">
-        </label>
-        <div id="foodAiInlineLoader" style="display:none;"></div>
-      </div>
+        
+<!-- فرم یکپارچه حافظه هوش مصنوعی (وابسته به تم داخلی برنامه) -->
+<style>
+    .smart-ai-textarea {
+        width: 100%; border-radius: 12px; padding: 12px; 
+        font-weight: bold; font-size: 13px; resize: none; 
+        overflow: hidden; min-height: 210px; line-height: 1.8;
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+        transition: background 0.3s, color 0.3s, border-color 0.3s;
+        /* حالت پیش‌فرض (لایت) */
+        background: #fdfdfd; color: #333; border: 1px solid #ced4da;
+    }
+    
+    /* فقط زمانی که تم خود برنامه تاریک است تغییر رنگ بده */
+    .dark .smart-ai-textarea,
+    .theme-dark .smart-ai-textarea,
+    [data-theme="dark"] .smart-ai-textarea {
+        background: #1c1c1e !important; color: #ffffff !important; border: 1px solid #444 !important;
+    }
+</style>
 
-      <!-- بخش ثبت دستی و آفلاین که همیشه برای همه باز و رایگان است -->
-      <div class="card">
-        <div style="font-weight:900; font-size:13.5px; color:var(--neon-cyan); margin-bottom:6px;">
-          🆓 ثبت دستی و آفلاین خوراکی سفارشی (همیشه رایگان و بدون اینترنت)
-        </div>
-        <div style="display:grid; grid-template-columns:2fr 1fr; gap:6px; margin-bottom:6px;">
-          <input type="text" id="manualFoodName" placeholder="نام خوراکی (مثلاً: املت مخصوص من)">
-          <input type="number" id="manualFoodCal" placeholder="کالری (kcal)">
-        </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-bottom:8px;">
-          <input type="number" id="manualFoodProt" placeholder="پروتئین (g)">
-          <input type="number" id="manualFoodCarb" placeholder="کربوهیدرات (g)">
-          <input type="number" id="manualFoodFat" placeholder="چربی (g)">
-        </div>
-        <button class="btn btn-outline" style="width:100%;" onclick="addManualCustomFood()">
-          ➕ ثبت در وعده امروز + ذخیره دائمی در بانک غذاهای من
-        </button>
+<div id="ai-memory-section" style="margin: 15px 0;">
+    <label style="color: #00a884; font-size: 14px; font-weight: bold; margin-bottom: 8px; display: block;">
+        🧠 حافظه بلندمدت و نکات شخصی برای مربی هوش مصنوعی:
+    </label>
+    <textarea id="ai_memory_input" class="smart-ai-textarea"
+              oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
+              placeholder="مثال:
+۱. بیماری خاص یا زمینه‌ای داری؟ (دیابت، فشار خون...) داروی خاصی مصرف می‌کنی؟
+۲. به چه خوراکی‌هایی حساسیت داری یا اصلاً دوست نداری؟
+۳. وضعیت بودجه‌ات چطوره؟ (اقتصادی، متوسط، دست‌ودلباز)
+۴. هر اطلاعات دیگه‌ای که برای شخصی‌سازی رژیم و تمرینت لازمه بنویس...
 
-        <div style="margin-top:12px; padding-top:10px; border-top:1px solid rgba(148,163,184,0.15);">
-          <div style="font-size:12px; font-weight:900; margin-bottom:6px;">📚 بانک غذاهای ذخیره‌شده من (آفلاین - ثبت با ۱ کلیک):</div>
-          <div id="savedCustomFoodsList" style="display:flex; flex-direction:column; gap:6px;"></div>
-        </div>
+(خیالت راحت، این اطلاعات کاملاً امن هستن)"></textarea>
+</div>
+<!-- پایان فرم یکپارچه -->
 
-        <div style="margin-top:12px; padding-top:10px; border-top:1px solid rgba(148,163,184,0.15);">
-          <div style="font-size:12px; font-weight:900; margin-bottom:6px; color:var(--neon-cyan);">🍽️ خوراکی‌های ثبت‌شده در این روز (همراه با پروتئین، کربوهیدرات و چربی):</div>
-          <div id="todayFoodsList" style="display:flex; flex-direction:column; gap:6px;"></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-          <span style="font-weight:900; font-size:13px;">🔔 یادآور اختیاری ثبت صبحانه، ناهار و شام</span>
-          <label style="display:flex; align-items:center; gap:5px; font-size:11.5px; cursor:pointer;">
-            <input type="checkbox" id="mealNotifToggle" style="width:16px; height:16px;" onchange="toggleOptionalMealReminders()">
-            <span>فعالسازی به انتخاب من</span>
-          </label>
-        </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; font-size:11px;">
-          <div><span>🍳 صبحانه:</span><input type="time" id="timeBreakfast" value="08:30" onchange="saveMealReminderTimes()"></div>
-          <div><span>🍛 ناهار:</span><input type="time" id="timeLunch" value="13:30" onchange="saveMealReminderTimes()"></div>
-          <div><span>🥗 شام:</span><input type="time" id="timeDinner" value="20:30" onchange="saveMealReminderTimes()"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 🟢 صفحه ۳: لاگ هفتگی بدن و تحلیل هوش مصنوعی ۷ روز گذشته -->
-    <section id="sec-analysis" class="app-section">
-      <div class="fullpage-bar">
-        <div class="fullpage-title">📈 لاگ هفتگی بدن و تحلیل ۷ روزه AI</div>
-        <button class="back-home-btn" onclick="switchSection('dashboard')">🏠 داشبورد</button>
-      </div>
-
-      <!-- بنر قفل ۳ حالته هوشمند برای بخش تحلیل هفتگی AI -->
-      <div id="analysisSubLockBanner" class="sub-lock-banner" style="display:none;"></div>
-
-      <div class="card" id="analysisAiMainCard">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-          <span style="font-weight:900; font-size:14px; color:var(--neon-gold);">⚖️ گام اول: ثبت قد و وزن این هفته (هر ۷ روز یک‌بار)</span>
-          <span id="weeklyCheckinCountdownBadge" style="font-size:11px; color:var(--neon-cyan); font-weight:900;">بررسی موعد...</span>
-        </div>
-        <p style="font-size:11.5px; color:var(--text-muted); line-height:1.65; margin:0 0 10px 0;">
-          رفیق هر ۷ روز یک‌بار قد و وزن فعلیت رو اینجا وارد کن. سیستم به صورت <b>کاملاً اتوماتیک</b> تمام خوراکی‌ها و کالری‌های ۷ روز گذشته‌ت رو به همراه تغییر وزنت به هوش مصنوعی می‌فرسته تا تحلیل کنه و اگه به هدفت نزدیک نشده بودی، <b>استراتژی و هدف کالریت رو عوض کنه!</b>
-        </p>
-
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
-          <div>
-            <label style="font-size:11px; color:var(--text-muted);">وزن فعلی این هفته (کیلوگرم):</label>
-            <input type="number" step="0.1" id="weeklyNewWeightInput" placeholder="اینجا وزن خودتو بنویس">
-          </div>
-          <div>
-            <label style="font-size:11px; color:var(--text-muted);">قد فعلی (سانتی‌متر):</label>
-            <input type="number" id="weeklyNewHeightInput" placeholder="اینجا قد خودتو بنویس">
-          </div>
-        </div>
-
-        <div style="background:var(--inner-bg); border:1px solid var(--card-border); border-radius:13px; padding:10px; margin-bottom:12px;">
-          <div style="font-size:11.5px; font-weight:900; color:var(--neon-cyan); margin-bottom:4px;">🍽️ خلاصه اتوماتیک خوراکی‌های ۷ روز گذشته شما (آماده ارسال به AI):</div>
-          <div id="auto7DayFoodsPreview" style="font-size:11px; color:var(--text-muted); max-height:110px; overflow-y:auto; line-height:1.6; white-space:pre-wrap;">در حال استخراج خودکار...</div>
-        </div>
-
-        <button class="btn btn-purple" style="width:100%; padding:13px;" onclick="submitWeeklyBodyAndDietAnalysis()">
-          🚀 ثبت لاگ بدن + ارسال اتوماتیک ۷ روز گذشته برای تحلیل و تنظیم استراتژی
-        </button>
-
-        <div id="weeklyAnalysisInlineLoader" style="display:none;"></div>
-        <div id="weeklyAnalysisResultBox" style="display:none; margin-top:12px; background:var(--inner-bg); border:2px solid var(--neon-cyan); border-radius:14px; padding:13px; font-size:12.5px; line-height:1.75; white-space:pre-wrap;"></div>
-      </div>
-
-      <div class="card" id="analysisHistoryCard">
-        <div style="font-weight:900; font-size:13px; color:var(--neon-cyan); margin-bottom:8px;">📋 تاریخچه تغییرات هفتگی قد و وزن شما:</div>
-        <div id="bodyLogsHistoryList" style="display:flex; flex-direction:column; gap:6px; font-size:12px;"></div>
-      </div>
-    </section>
-    <!-- 🟢 صفحه ۴: باشگاه هوشمند -->
-    <section id="sec-workout" class="app-section">
-      <div class="fullpage-bar">
-        <div class="fullpage-title">🏋️ باشگاه هوشمند و راهنمای گام‌به‌گام تمرین</div>
-        <button class="back-home-btn" onclick="switchSection('dashboard')">🏠 داشبورد</button>
-      </div>
-
-      <!-- بنر قفل ۳ حالته هوشمند برای باشگاه AI -->
-      <div id="workoutSubLockBanner" class="sub-lock-banner" style="display:none;"></div>
-
-      <div id="gainWeightNoWorkoutCard" class="card" style="display:none; border-color:var(--neon-gold);">
-        <div style="font-weight:900; font-size:14px; color:var(--neon-gold); margin-bottom:6px;">💡 توصیه مربی برای هدف «افزایش وزن عمومی» شما:</div>
-        <p style="font-size:12px; line-height:1.7; margin:0 0 10px 0;">
-          رفیق گلم! چون هدفت <b>«افزایش وزن عمومی»</b> هست، اصولاً نیازی به ورزش و سوزوندن کالری نداری و تمرکزت باید روی برنامه غذایی ۷ روزه باشه. اما اگه خودت دوست داری کنارش ورزش هم بکنی، روی دکمه زیر بزن تا هوش مصنوعی برات برنامه کامل با توضیحات دقیق بسازه!
-        </p>
-        <div style="display:flex; gap:8px;">
-          <button class="btn" style="flex:1;" onclick="switchSection('diet')">🍱 برنامه غذایی ۷ روزه</button>
-          <button class="btn btn-outline" style="flex:1; font-size:11.5px;" onclick="unlockWorkoutBuilderForGainWeight()">🏋️ می‌خوام ورزش هم بکنم (طراحی با AI)</button>
-        </div>
-      </div>
-
-      <div class="card" id="workoutSetupCard">
-        <div style="background:var(--inner-bg); border:1px solid rgba(148,163,184,0.18); border-radius:13px; padding:10px; margin-bottom:10px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <span style="font-size:11.5px; font-weight:800;">🔔 روزهای تمرین و اعلان اختیاری (حفظ آتیش 🔥):</span>
-            <button class="btn" style="padding:4px 9px; font-size:10.5px;" onclick="enableWorkoutNotifications()">فعالسازی اختیاری اعلان 🔔</button>
-          </div>
-          <div class="weekday-selector" id="weekdaySelectorBox">
-            <span class="weekday-chip" data-day="6" onclick="toggleScheduleDay(6)">شنبه</span>
-            <span class="weekday-chip" data-day="0" onclick="toggleScheduleDay(0)">یکشنبه</span>
-            <span class="weekday-chip" data-day="1" onclick="toggleScheduleDay(1)">دوشنبه</span>
-            <span class="weekday-chip" data-day="2" onclick="toggleScheduleDay(2)">سه‌شنبه</span>
-            <span class="weekday-chip" data-day="3" onclick="toggleScheduleDay(3)">چهارشنبه</span>
-            <span class="weekday-chip" data-day="4" onclick="toggleScheduleDay(4)">پنجشنبه</span>
-            <span class="weekday-chip" data-day="5" onclick="toggleScheduleDay(5)">جمعه</span>
-          </div>
-        </div>
-
-        <div style="background:var(--inner-bg); border:1px solid var(--card-border); border-radius:13px; padding:10px; margin-bottom:12px;">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-size:11.5px; font-weight:800;">⏱️ استراحت بین هر ست و حرکت: <b id="restDurationLabel" style="color:var(--neon-cyan);">30 ثانیه</b></span>
-            <div style="display:flex; gap:4px;">
-              <button class="back-home-btn" onclick="adjustPreferredRest(-10)">-10s</button>
-              <button class="back-home-btn" onclick="adjustPreferredRest(10)">+10s</button>
-            </div>
-          </div>
-          <div id="restSmartWarning" class="rest-warning-banner"></div>
-        </div>
-
-        <div id="noWorkoutPlanYetBox" style="text-align:center; padding:14px; background:var(--inner-bg); border:1px dashed var(--neon-purple); border-radius:14px; margin-bottom:12px;">
-          <div style="font-size:28px; margin-bottom:4px;">📋</div>
-          <div style="font-weight:900; font-size:13px; color:var(--neon-cyan);">هنوز برنامه ورزشی فعالی نداری رفیق!</div>
-          <p style="font-size:11.5px; color:var(--text-muted); margin:4px 0 0 0;">
-            از کادر پایین محل تمرین و عضله هدفت رو انتخاب کن تا هوش مصنوعی برنامه کامل (شامل حرکات گرمایشی، ست‌های اصلی و حرکات کششی سرمایشی با توضیحات کامل) برات بسازه.
-          </p>
-        </div>
-
-        <div id="activeWorkoutPlanContainer" style="display:none;">
-          <div style="font-weight:900; font-size:13px; margin-bottom:6px; display:flex; justify-content:space-between;">
-            <span>🗓️ روزهای برنامه (فقط تمرین امروز باز است):</span>
-            <span id="unlockedDayBadge" style="color:var(--neon-cyan); font-size:11.5px;">روز ۱</span>
-          </div>
-          <div class="plan-days-grid" id="planDaysGrid"></div>
-          <div id="todayExercisesPreviewBox" style="margin-top:10px;"></div>
-          <button class="btn" style="width:100%; padding:13px; font-size:14px; margin-top:8px;" onclick="startLiveWorkoutPlayer()">
-            ▶️ شروع گام‌به‌گام تمرین امروز (با تایمر و راهنمای کامل)
-          </button>
-        </div>
-
-        <div style="margin-top:14px; padding-top:12px; border-top:1px dashed rgba(148,163,184,0.2);">
-          <div style="font-size:12px; font-weight:900; color:var(--neon-purple); margin-bottom:8px;">✨ طراحی برنامه ورزشی کامل با هوش مصنوعی (سهمیه: ماهی ۱ بار):</div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
-            <select id="woPlace">
-              <option value="در منزل (بدون تجهیزات)">🏠 ورزش در خانه</option>
-              <option value="باشگاه بدنسازی">🏋️ باشگاه بدنسازی</option>
-            </select>
-            <select id="woFocusMuscle">
-              <option value="کل بدن متوازن">⚖️ کل بدن متوازن</option>
-              <option value="فرم‌دهی تخصصی باسن و سینه">🍑 باسن و سینه</option>
-              <option value="حجم سینه، سرشانه و بازو">💪 سینه و بازو</option>
-              <option value="شکم، پهلو و زیربغل">🔥 شکم و زیربغل</option>
-            </select>
-          </div>
-          <button class="btn btn-purple" style="width:100%; font-size:12px;" onclick="generateAiCustomWorkout()">
-            🤖 ساخت برنامه تمرینی اختصاصی (گرم کردن + ست‌های اصلی + سرد کردن)
-          </button>
-          <div id="workoutInlineLoader" style="display:none;"></div>
-        </div>
-      </div>
-
-      <!-- پلیر گام‌به‌گام تمرین -->
-      <div class="card card-full-grow" id="liveWorkoutPlayerCard" style="display:none;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-          <span id="playerStepBadge" style="font-size:12px; font-weight:900; color:var(--neon-cyan);">حرکت ۱</span>
-          <button class="back-home-btn" onclick="exitLiveWorkoutPlayer()">✕ خروج</button>
-        </div>
-
-        <div id="playerActiveExerciseView">
-          <div class="coach-instruction-stage">
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
-              <span id="liveExPhaseBadge" class="phase-badge phase-warmup">🔥 مرحله گرم کردن</span>
-              <span id="liveExSetBadge" style="font-size:12px; font-weight:900; color:var(--neon-gold);">ست ۱ از ۳</span>
-            </div>
-
-            <div id="liveExTitle" style="font-size:19px; font-weight:900; margin:6px 0 4px 0; color:var(--text-main);">پروانه (Jumping Jacks)</div>
-            <div id="liveExMuscle" style="font-size:11.5px; color:var(--neon-purple); font-weight:800; margin-bottom:10px;">🎯 عضله درگیر: کل بدن و افزایش ضربان قلب</div>
-
-            <div style="background:var(--card-bg); border:1px solid var(--card-border); border-radius:14px; padding:12px; text-align:right;">
-              <div style="font-size:12px; font-weight:900; color:var(--neon-cyan); margin-bottom:4px;">📖 راهنمای دقیق اجرای حرکت:</div>
-              <div id="liveExHowTo" style="font-size:12.5px; line-height:1.75; color:var(--text-main);">توضیحات کامل اجرای حرکت...</div>
-              <div id="liveExBreathing" style="font-size:11.5px; color:var(--text-muted); margin-top:8px; padding-top:8px; border-top:1px dashed rgba(148,163,184,0.2);">💨 تنفس و نکته ایمنی...</div>
-            </div>
-
-            <div id="liveExTimer" style="font-size:46px; font-weight:900; color:var(--neon-cyan); text-align:center; margin:12px 0 4px 0; font-variant-numeric:tabular-nums;">00:35</div>
-          </div>
-
-          <div style="display:flex; gap:8px;">
-            <button class="btn btn-outline" style="flex:1;" onclick="prevExerciseStep()">⏮ قبلی</button>
-            <button class="btn" style="flex:2; font-size:14.5px;" id="pauseResumeBtn" onclick="togglePauseExercise()">⏸ توقف</button>
-            <button class="btn btn-purple" style="flex:1;" onclick="finishCurrentSetOrExercise()">اتمام ست ⏭</button>
-          </div>
-        </div>
-
-        <div id="playerRestView" style="display:none;">
-          <div class="rest-screen-box">
-            <div id="restHeaderTitle" style="font-size:13px; color:#93c5fd; font-weight:900;">💧 استراحت بین ست‌ها — نفس عمیق بکش!</div>
-            <div id="restCountdownNum" style="font-size:48px; font-weight:900; color:#fff; margin:8px 0;">00:30</div>
-            <div style="display:flex; justify-content:center; gap:8px; margin-bottom:10px;">
-              <button class="back-home-btn" onclick="changeActiveRestTimer(-10)">-10s</button>
-              <button class="btn btn-outline" style="padding:6px 14px; font-size:12px;" onclick="changeActiveRestTimer(20)">+20s</button>
-              <button class="btn" style="padding:6px 18px; font-size:12px;" onclick="skipRestAndContinue()">رد شدن ⏭</button>
-            </div>
-            <div id="liveRestWarningBox" class="rest-warning-banner" style="display:block;"></div>
-            <div style="margin-top:14px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.15); text-align:right;">
-              <div style="font-size:11px; color:#93c5fd;">مرحله بعدی:</div>
-              <div id="nextExPreviewTitle" style="font-size:14px; font-weight:900; color:var(--neon-cyan); margin-top:2px;">ادامه حرکت</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 🟢 صفحه ۵: چت صمیمی با مربی هوشمند -->
-    <section id="sec-coach" class="app-section">
-      <div class="fullpage-bar">
-        <div class="fullpage-title">🤖 چت صمیمی با مربی هوشمند BodyMod</div>
-        <button class="back-home-btn" onclick="switchSection('dashboard')">🏠 داشبورد</button>
-      </div>
-
-      <!-- بنر قفل ۳ حالته هوشمند برای چت با مربی AI -->
-      <div id="coachSubLockBanner" class="sub-lock-banner" style="display:none;"></div>
-
-      <div class="card card-full-grow" id="coachMainCard">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-          <span style="font-size:11.5px; color:var(--text-muted);">سهمیه فاز بتا: روزی ۳ پیام (بدون نیاز به سکه)</span>
-          <select id="aiModelSelect" style="width:auto; padding:6px 10px; font-size:11.5px; font-weight:800;">
-            <option value="lite">⚡ موتور سریع 3.5</option>
-            <option value="flash">🧠 موتور عمیق 3.8</option>
-          </select>
-        </div>
-        <div class="chat-messages-box" id="chatMessagesBox">
-          <div class="msg-bubble msg-ai">
-            سلام رفیق گلم! من مربی صمیمی بادی‌مودم و کل پرونده بدنی و هدفت رو بلدم. هر سوالی درباره تغذیه، خوراکی‌های روزانه یا فرم بدنت داری بپرس! 🔥😉
-          </div>
-        </div>
-        <div style="display:flex; gap:8px; margin-top:auto;">
-          <input type="text" id="chatPromptInput" placeholder="پیامت رو صمیمی بنویس (روزی ۳ پیام)..." onkeydown="if(event.key==='Enter') sendCoachMessage()">
-          <button class="btn" onclick="sendCoachMessage()" style="white-space:nowrap;">ارسال 🚀</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- 🟢 صفحه ۶: فرم ثبت‌نام و پرونده بدنی (بدون اشتراک‌های قفل‌شده اضافی!) -->
-    <section id="sec-profile" class="app-section">
-      <div class="fullpage-bar">
-        <div class="fullpage-title">👤 پرونده بدنی و فرم مشخصات</div>
-        <button class="back-home-btn" onclick="switchSection('dashboard')">🏠 داشبورد</button>
-      </div>
-      <div class="card card-full-grow">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
-          <div>
-            <label style="font-size:11px; color:var(--text-muted);">نام یا لقب:</label>
-            <input type="text" id="profNickname" placeholder="اینجا اسمتو بنویس">
-          </div>
-          <div>
-            <label style="font-size:11px; color:var(--text-muted);">شهر محل سکونت:</label>
-            <input type="text" id="profCity" placeholder="اینجا شهر محل زندگیت رو بنویس">
-          </div>
-        </div>
-
-        <div style="display:grid; grid-template-columns:2fr 1fr; gap:10px; margin-bottom:10px;">
-          <div>
-            <label style="font-size:11px; color:var(--text-muted);">تاریخ تولد (شمسی):</label>
-            <div style="display:grid; grid-template-columns:1fr 1fr 1.3fr; gap:5px;">
-              <input type="number" id="profBirthDay" placeholder="روز" min="1" max="31" style="text-align:center; padding:10px 6px;">
-              <input type="number" id="profBirthMonth" placeholder="ماه" min="1" max="12" style="text-align:center; padding:10px 6px;">
-              <input type="number" id="profBirthYear" placeholder="سال" min="1320" max="1400" style="text-align:center; padding:10px 6px;">
-            </div>
-          </div>
-          <div>
-            <label style="font-size:11px; color:var(--text-muted);">جنسیت:</label>
-            <select id="profGender">
-              <option value="male">آقا 👨</option>
-              <option value="female">خانم 👩</option>
-            </select>
-          </div>
-        </div>
-
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
-          <div>
-            <label style="font-size:11px; color:var(--text-muted);">قد (سانتی‌متر):</label>
-            <input type="number" id="profHeight" placeholder="اینجا قد خودتو بنویس">
-          </div>
-          <div>
-            <label style="font-size:11px; color:var(--text-muted);">وزن (کیلوگرم):</label>
-            <input type="number" id="profWeight" placeholder="اینجا وزن خودتو بنویس">
-          </div>
-        </div>
-
-        <div style="margin-bottom:10px;">
-          <label style="font-size:11px; color:var(--text-muted);">🎯 هدف اصلی اندام شما:</label>
-          <select id="profGoalMode">
-            <option value="maintain">⚖️ حفظ وزن و تناسب اندام فعلی</option>
-            <option value="lose">🔥 کاهش وزن و چربی‌سوزی شکم و پهلو</option>
-            <option value="muscle">💪 عضله‌سازی خشک و فرم‌دهی ورزشی</option>
-            <option value="gain_weight">📈 افزایش وزن عمومی (تمرکز روی خوراکی پرکالری - ورزش اختیاری)</option>
-            <option value="tone_glutes">🍑 فرم‌دهی و تقویت تخصصی باسن و سینه</option>
-            <option value="bulk_chest">🏋️ حجم‌دهی تخصصی سینه، بازو و سرشانه</option>
-          </select>
-        </div>
-
-        <div style="margin-bottom:10px;">
-          <label style="font-size:11px; color:var(--text-muted);">🏃 میزان تمرین و فعالیت بدنی هفتگی:</label>
-          <select id="profActivityLevel">
-            <option value="1.2">🛋️ کم‌تحرک (بدون ورزش منظم)</option>
-            <option value="1.375">🚶 فعالیت سبک (۱ تا ۲ روز تمرین در هفته)</option>
-            <option value="1.45" selected>🏋️ فعالیت متوسط (۳ تا ۴ روز تمرین در هفته)</option>
-            <option value="1.6">🔥 فعالیت زیاد و حرفه‌ای (۵ روز یا بیشتر در هفته)</option>
-          </select>
-        </div>
-
-        <div style="margin-bottom:12px;">
-          <label style="font-size:11.5px; color:var(--neon-cyan); font-weight:800;">🧠 حافظه بلندمدت و نکات شخصی برای مربی هوش مصنوعی:</label>
-          <textarea id="profCoachMemory" rows="2" placeholder="مثلاً: به لاکتوز حساسیت دارم یا زانوی راستم آسیب دیده..."></textarea>
-        </div>
 
         <div style="background:var(--inner-bg); border:1px solid var(--card-border); border-radius:12px; padding:10px 12px; margin-bottom:12px;">
           <div style="font-size:11.5px; font-weight:900; color:var(--neon-cyan); margin-bottom:4px;">📜 قوانین و شرایط استفاده از BodyMod:</div>
