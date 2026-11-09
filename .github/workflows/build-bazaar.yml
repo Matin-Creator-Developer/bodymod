@@ -59,6 +59,7 @@ jobs:
               <access origin="*" />
               <allow-intent href="http://*/*" />
               <allow-intent href="https://*/*" />
+              <allow-intent href="intent://*/*" />
               <allow-navigation href="*" />
               <preference name="AndroidPersistentFileLocation" value="Compatibility" />
               <preference name="AndroidXEnabled" value="true" />
@@ -81,6 +82,7 @@ jobs:
           fi
           
           # فقط اضافه کردن پلتفرم (بدون بیلد و بدون درگیری با باگ Gradle کوردووا)
+          cordova plugin add cordova-plugin-inappbrowser
           cordova platform add android@13.0.0 --no-telemetry
 
       - name: Inject Isolated Bazaar Billing Bridge
