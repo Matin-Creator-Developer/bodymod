@@ -2451,15 +2451,13 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
 
     function startGoogleLogin() {
       const targetUrl = `${WORKER_BASE_URL}/auth/google-direct`;
-      
-      // هک کلیک نامرئی برای دور زدن محدودیت‌های مرورگر داخلی
-      const a = document.createElement('a');
-      a.href = targetUrl;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+
+      // 🚀 شلیک مستقیم و قطعی به کروم اصلی گوشی با قدرت کوردوا (بدون کلیک نامرئی)
+      if (typeof cordova !== 'undefined' && cordova.InAppBrowser) {
+        cordova.InAppBrowser.open(targetUrl, '_system', 'location=yes');
+      } else {
+        window.open(targetUrl, '_system');
+      }
     }
 
     window.onGoogleChromeAuthSuccess = async function(email, name) {
