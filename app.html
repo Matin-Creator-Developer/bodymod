@@ -2469,8 +2469,19 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
         saveLocalState();
         await fetchUserProfileFromCloud(email);
         
+        // 🚀 احضار قطعی رابط کاربری (پایان دادن به سفیدی صفحه)
+        if (typeof renderAllUI === 'function') renderAllUI();
+        
+        // چک میکنیم اگه فرم ثبت‌نام رو هنوز پر نکرده (مثلا جنسیت یا وزنش خالیه)، شوتش کنیم تو فرم
+        if (!appState.userProfile.height || !appState.userProfile.weight) {
+            if (typeof switchSection === 'function') switchSection('profile');
+        } else {
+            // اگه از قبل اطلاعاتش کامل بود بره تو صفحه اصلی
+            if (typeof switchSection === 'function') switchSection('home');
+        }
+        
         // 🚀 شلیک به رابط کاربری: رفرش صفحه برای لود شدن فرم یا داشبورد با اکانت جدید
-        window.location.reload();
+        // window.location.reload(); // حذف شد چون گند میزد به لاگین
       } catch (err) {
         alert('🚨 خطا در دریافت اطلاعات از سرور: ' + err.message);
       }
