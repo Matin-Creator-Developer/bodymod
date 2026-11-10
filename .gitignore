@@ -1,3 +1,10 @@
 .cf_config
 worker.js
 cf.py
+
+clean.py
+patch_worker.py
+add_bodycoin.py
+fix_links.py
+fix_cordova_links.py
+worker.txt

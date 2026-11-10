@@ -60,7 +60,8 @@ jobs:
               <allow-intent href="http://*/*" />
               <allow-intent href="https://*/*" />
               <allow-intent href="intent://*/*" />
-              <allow-navigation href="*" />
+              <allow-navigation href="http://localhost/*" />
+          <allow-navigation href="bodymod://*" />
               <preference name="AndroidPersistentFileLocation" value="Compatibility" />
               <preference name="AndroidXEnabled" value="true" />
               <preference name="android-minSdkVersion" value="24" />
