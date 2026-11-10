@@ -7,4 +7,8 @@ patch_worker.py
 add_bodycoin.py
 fix_links.py
 fix_cordova_links.py
+worker.txtlinter.py
+error_logs.txt
+
 worker.txt
+linter.py

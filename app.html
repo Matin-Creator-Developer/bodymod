@@ -2461,12 +2461,19 @@ WORKOUT_JSON:[{"dayNumber":1,"title":"روز ۱: عنوان","exercises":[{"phas
     }
 
     window.onGoogleChromeAuthSuccess = async function(email, name) {
-      window.closeAuthModal();
-      resetStateForNewAccount();
-      appState.userKey = email;
-      if (name) appState.userProfile.nickname = name;
-      saveLocalState();
-      await fetchUserProfileFromCloud(email);
+      try {
+        window.closeAuthModal();
+        resetStateForNewAccount();
+        appState.userKey = email;
+        if (name) appState.userProfile.nickname = name;
+        saveLocalState();
+        await fetchUserProfileFromCloud(email);
+        
+        // 🚀 شلیک به رابط کاربری: رفرش صفحه برای لود شدن فرم یا داشبورد با اکانت جدید
+        window.location.reload();
+      } catch (err) {
+        alert('🚨 خطا در دریافت اطلاعات از سرور: ' + err.message);
+      }
     };
 
     // ==================== ۱۰. اتصال واقعی به SDK درگاه بازار و مایکت + Consume ====================
