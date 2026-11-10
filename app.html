@@ -2773,5 +2773,29 @@ if(chatSendBtn) {
 </script>
 -->
 
+
+<!-- 🚀 گارد محافظ: شوت کردن اجباری لینک‌های خارجی به مرورگر کروم -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.body.addEventListener('click', function(e) {
+    const link = e.target.closest('a');
+    if (!link || !link.href) return;
+    
+    const href = link.getAttribute('href');
+    // اگه لینک به سایت دیگه‌ای میره یا مسیر لاگین گوگله
+    if (href && (href.startsWith('http') || href.includes('/auth/google'))) {
+      e.preventDefault(); // جلوی باز شدن در مرورگر داخلی رو می‌گیریم
+      
+      // شوت با قدرت به مرورگر خارجی
+      window.open(link.href, '_blank', 'noopener,noreferrer');
+      
+      // اگه وب‌ویو اندرویدت خیلی لجبازه، میتونی بعداً این روش رو جایگزین خط بالا کنی:
+      // const intentUrl = link.href.replace(/^https?:\/\//, 'intent://') + '#Intent;scheme=https;action=android.intent.action.VIEW;end;';
+      // window.location.href = intentUrl;
+    }
+  });
+});
+</script>
+
 </body>
 </html>
