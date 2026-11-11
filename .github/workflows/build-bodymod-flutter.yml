@@ -41,32 +41,38 @@ jobs:
           cp /tmp/bm_pubspec.yaml pubspec.yaml
           if [ -f /tmp/bm_index.html ]; then cp /tmp/bm_index.html index.html; fi
 
-          # تنظیم نام برنامه به BodyMod و مجوز اینترنت
+          # تنظیم نام برنامه به BodyMod و افزودن مجوز اینترنت
           sed -i 's/android:label="bodymod"/android:label="BodyMod"/g' android/app/src/main/AndroidManifest.xml
           if ! grep -q "android.permission.INTERNET" android/app/src/main/AndroidManifest.xml; then
             sed -i 's/<application/<uses-permission android:name="android.permission.INTERNET"\/>\n    <application/g' android/app/src/main/AndroidManifest.xml
           fi
 
-      - name: Check Dart Syntax & Build Universal Native APK
+          # اطمینان از minSdk = 21 برای سازگاری کامل با google_sign_in
+          if [ -f android/app/build.gradle.kts ]; then
+            sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 21/g' android/app/build.gradle.kts
+          elif [ -f android/app/build.gradle ]; then
+            sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' android/app/build.gradle
+            sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 21/g' android/app/build.gradle
+          fi
+
+      - name: Verify Dart Code & Build Universal Release APK
         run: |
           flutter pub get
-          # اول کدهای دارت رو آنالیز می‌کنیم تا اگه خطایی بود دقیق چاپ بشه
-          flutter analyze --no-fatal-infos --no-fatal-warnings || true
+
+          echo "🔎 Checking Dart code for any compile errors..."
+          dart analyze lib/
 
           BUILD_NUM=$((200 + ${{ github.run_number }}))
-          # کامپایل مستقیم بدون دستکاری خطرناک فایل gradle و بدون فشرده‌ساز مشکل‌ساز R8
-          flutter build apk --release --no-shrink --target-platform android-arm,android-arm64 --build-name=8.0.${{ github.run_number }} --build-number=$BUILD_NUM -v
+          flutter build apk --release --no-shrink --target-platform android-arm,android-arm64 --build-name=8.0.${{ github.run_number }} --build-number=$BUILD_NUM
 
       - name: Sign APK with Permanent Master Keystore (apksigner)
         env:
           KEYSTORE_B64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
         run: |
-          # آماده‌سازی کلید دائمی از GitHub Secrets
           if [ -n "$KEYSTORE_B64" ]; then
             echo "$KEYSTORE_B64" | tr -d ' \n\r\t' | base64 --decode > bodymod.keystore
           fi
 
-          # اگر سکرت خالی بود یا فایل معتبر نبود، ساخت کلید پشتیبان تا بیلد هرگز فیل نشود
           if [ ! -s bodymod.keystore ]; then
             rm -f bodymod.keystore
             keytool -genkey -v -keystore bodymod.keystore \
@@ -78,7 +84,6 @@ jobs:
           APK_PATH="build/app/outputs/flutter-apk/app-release.apk"
           APKSIGNER=$(find $ANDROID_HOME/build-tools -name "apksigner" | sort -V | tail -n 1)
 
-          echo "Using apksigner: $APKSIGNER"
           "$APKSIGNER" sign --ks bodymod.keystore \
             --ks-key-alias bodymod_master_key \
             --ks-pass pass:Matin1383 \

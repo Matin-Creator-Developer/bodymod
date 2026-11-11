@@ -60,7 +60,7 @@ class _BodyLogTabState extends State<BodyLogTab> {
       st.bodyLogs = st.bodyLogs.sublist(0, 20);
     }
     await st.prefs?.setString('bm_body_logs', jsonEncode(st.bodyLogs));
-    st.notifyListeners();
+    st.refreshUI();
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

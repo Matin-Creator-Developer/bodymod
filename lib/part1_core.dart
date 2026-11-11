@@ -149,6 +149,8 @@ class AppState extends ChangeNotifier {
     return '${now.year}-W$weekOfYear';
   }
 
+  void refreshUI() { notifyListeners(); }
+
   void toggleTheme() {
     isDark = !isDark;
     prefs?.setBool('bm_dark', isDark);
