@@ -26,21 +26,24 @@ jobs:
         with:
           channel: 'stable'
 
-      - name: Generate Official Android Skeleton & Package Name
+      - name: Clean Legacy Web/Cordova Files & Create Official Flutter Skeleton
         run: |
-          # پشتیبان‌گیری از کدهای دارت و pubspec ما
+          # پشتیبان‌گیری از کدهای دارت و pubspec
           cp -r lib /tmp/bm_lib
           cp pubspec.yaml /tmp/bm_pubspec.yaml
 
-          # ساخت اسکلت استاندارد و کارخانه‌ای اندروید توسط خود فلاتر
-          flutter create --org ir.matinmohammadi --project-name bodymod .
+          # پاکسازی فایل‌های اضافی کوردوا از سرور بیلد (بدون دست زدن به index.html)
+          rm -rf android ios web build www platforms plugins app.html config.xml package.json
 
-          # بازگرداندن کدهای اصلی ما
+          # ساخت اسکلت استاندارد و کارخانه‌ای اندروید توسط فلاتر
+          flutter create --org ir.matinmohammadi --project-name bodymod --platforms=android .
+
+          # بازگرداندن کدهای ۴ پارت دارت ما
           rm -rf lib
           cp -r /tmp/bm_lib lib
           cp /tmp/bm_pubspec.yaml pubspec.yaml
 
-          # تنظیم نام برنامه به BodyMod در مانیفست اندروید و مجوز اینترنت
+          # تنظیم نام برنامه به BodyMod و افزودن مجوز اینترنت
           sed -i 's/android:label="bodymod"/android:label="BodyMod"/g' android/app/src/main/AndroidManifest.xml
           if ! grep -q "android.permission.INTERNET" android/app/src/main/AndroidManifest.xml; then
             sed -i 's/<application/<uses-permission android:name="android.permission.INTERNET"\/>\n    <application/g' android/app/src/main/AndroidManifest.xml
@@ -54,14 +57,12 @@ jobs:
           if [ -n "$KEYSTORE_B64" ]; then
             echo "$KEYSTORE_B64" | tr -d ' \n\r\t' | base64 --decode > android/app/bodymod.keystore
           else
-            echo "⚠️ RELEASE_KEYSTORE_BASE64 not set in Secrets! Generating fallback..."
             keytool -genkey -v -keystore android/app/bodymod.keystore \
               -alias bodymod_master_key -keyalg RSA -keysize 2048 -validity 10000 \
               -storepass Matin1383 -keypass Matin1383 \
               -dname "CN=Matin Mohammadi, OU=BodyMod, O=MatinTech, L=Urmia, S=WA, C=IR"
           fi
 
-          # اتصال کلید دائمی به build.gradle فلاتر برای جلوگیری همیشگی از خطای تداخل بسته در آپدیت‌ها
           cat << 'SIGN_SCRIPT' > patch_gradle.py
           import pathlib
 
@@ -103,16 +104,16 @@ jobs:
           python3 patch_gradle.py
           rm -f patch_gradle.py
 
-      - name: Build Signed Native Flutter APK
+      - name: Build Universal Signed Native Flutter APK (32-bit & 64-bit)
         run: |
           flutter pub get
-          BUILD_NUM=$((100 + ${{ github.run_number }}))
-          flutter build apk --release --build-name=8.0.${{ github.run_number }} --build-number=$BUILD_NUM
+          BUILD_NUM=$((200 + ${{ github.run_number }}))
+          flutter build apk --release --target-platform android-arm,android-arm64 --build-name=8.0.${{ github.run_number }} --build-number=$BUILD_NUM
 
       - name: Upload Signed BodyMod APK
         uses: actions/upload-artifact@v4
         with:
-          name: BodyMod-Native-Flutter-Signed-APK
+          name: BodyMod-v8-Native-Flutter-APK
           path: build/app/outputs/flutter-apk/app-release.apk
 
       - name: Publish Automatic Release
@@ -120,7 +121,7 @@ jobs:
         if: success()
         with:
           tag_name: v8.0.${{ github.run_number }}
-          name: "BodyMod v8.0.${{ github.run_number }} (100% Native Flutter + Permanent Keystore)"
+          name: "BodyMod v8.0.${{ github.run_number }} (100% Native Flutter)"
           files: build/app/outputs/flutter-apk/app-release.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
