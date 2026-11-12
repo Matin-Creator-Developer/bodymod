@@ -36,8 +36,8 @@ class _DashboardTabState extends State<DashboardTab> {
     FocusScope.of(context).unfocus();
   }
 
-  List> _getLast7DaysData() {
-    final List> list = [];
+  List<Map<String, dynamic>> _getLast7DaysData() {
+    final List<Map<String, dynamic>> list = [];
     final now = DateTime.now();
     const weekDaysFa = ['د', 'س', 'چ', 'پ', 'ج', 'ش', 'ی'];
     for (int i = 6; i >= 0; i--) {

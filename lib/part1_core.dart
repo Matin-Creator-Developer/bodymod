@@ -59,15 +59,15 @@ class AppState extends ChangeNotifier {
   int streakCount = 1;
   bool isBlueFire = false;
   int todayWaterGlasses = 0;
-  List> todayFoods = [];
+  List<Map<String, dynamic>> todayFoods = [];
   Map<String, int> weeklyCalories = {}; // YYYY-MM-DD -> kcal
 
   // داده‌های هوش مصنوعی ذخیره‌شده
   String savedMealPlan = '';
   String savedWorkoutPlan = '';
   String savedBodyAnalysis = '';
-  List> bodyLogs = [];
-  List> chatMessages = [];
+  List<Map<String, dynamic>> bodyLogs = [];
+  List<Map<String, String>> chatMessages = [];
   List<int> completedGymDays = [];
 
   // مدل‌های انتخابی بالای هر بخش
@@ -105,7 +105,7 @@ class AppState extends ChangeNotifier {
 
     final foodsRaw = prefs?.getString('bm_foods_${todayKey()}');
     if (foodsRaw != null) {
-      todayFoods = List>.from(jsonDecode(foodsRaw));
+      todayFoods = List<Map<String, dynamic>>.from(jsonDecode(foodsRaw));
     }
 
     final calMapRaw = prefs?.getString('bm_weekly_cal');
@@ -119,12 +119,12 @@ class AppState extends ChangeNotifier {
 
     final logsRaw = prefs?.getString('bm_body_logs');
     if (logsRaw != null) {
-      bodyLogs = List>.from(jsonDecode(logsRaw));
+      bodyLogs = List<Map<String, dynamic>>.from(jsonDecode(logsRaw));
     }
 
     final chatRaw = prefs?.getString('bm_chat_history');
     if (chatRaw != null) {
-      chatMessages = List>.from(
+      chatMessages = List<Map<String, String>>.from(
         (jsonDecode(chatRaw) as List).map((e) => Map<String, String>.from(e)),
       );
     }
