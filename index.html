@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>BodyMod | بادی‌مود: بدن مود شده</title>
+  <style>
+    :root {
+      --bg-dark: #070a12;
+      --card-bg: #0f1626;
+      --inner-bg: #080d18;
+      --card-border: rgba(0, 245, 212, 0.2);
+      --neon-cyan: #00f5d4;
+      --neon-purple: #9b5de5;
+      --neon-pink: #f15bb5;
+      --neon-blue: #38bdf8;
+      --neon-red: #ef4444;
+      --neon-orange: #f97316;
+      --neon-gold: #fbbf24;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --header-bg: rgba(7, 10, 18, 0.93);
+      --drawer-bg: #0b1120;
+    }
+
+    body.light-mode {
+      --bg-dark: #f1f5f9;
+      --card-bg: #ffffff;
+      --inner-bg: #f8fafc;
+      --card-border: rgba(13, 148, 136, 0.28);
+      --neon-cyan: #0d9488;
+      --neon-purple: #7c3aed;
+      --neon-pink: #db2777;
+      --neon-blue: #0284c7;
+      --neon-gold: #d97706;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --header-bg: rgba(255, 255, 255, 0.94);
+      --drawer-bg: #ffffff;
+      background-image: radial-gradient(circle at 50% 0%, rgba(13,148,136,0.1), transparent 60%);
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body {
+      margin: 0; padding: 0;
+      background-color: var(--bg-dark);
+      background-image: radial-gradient(circle at 50% 0%, rgba(155,93,229,0.15), transparent 60%);
+      color: var(--text-main);
+      min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden;
+      transition: background-color 0.25s, color 0.25s;
+    }
+
+    .top-sticky-shell {
+      position: sticky; top: 0; z-index: 900;
+      background: var(--header-bg); backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--card-border); padding: 10px 14px 8px 14px;
+    }
+    .bale-top-banner {
+      display: flex; align-items: center; justify-content: space-between;
+      background: linear-gradient(90deg, rgba(0,245,212,0.14), rgba(155,93,229,0.18));
+      border: 1px solid var(--card-border); border-radius: 12px;
+      padding: 7px 12px; margin-bottom: 8px; text-decoration: none; color: var(--text-main); font-size: 11.5px; font-weight: 800;
+    }
+    .bale-top-banner span.join-btn {
+      background: var(--neon-cyan); color: #fff; padding: 3px 9px; border-radius: 8px; font-weight: 900; font-size: 11px;
+    }
+    body:not(.light-mode) .bale-top-banner span.join-btn { color: #070a12; }
+
+    .app-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .header-right { display: flex; align-items: center; gap: 8px; }
+    .menu-btn {
+      background: var(--inner-bg); border: 1px solid var(--card-border); color: var(--neon-cyan);
+      width: 38px; height: 38px; border-radius: 11px; font-size: 19px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .brand-title {
+      font-size: 17px; font-weight: 900;
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .header-left { display: flex; align-items: center; gap: 6px; }
+    .download-app-top-btn {
+      background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple)); color: #fff;
+      padding: 6px 12px; border-radius: 10px; font-size: 11.5px; font-weight: 900; cursor: pointer; border: none;
+    }
+
+    .main-viewport {
+      flex: 1; width: 100%; max-width: 540px; margin: 0 auto;
+      padding: 12px 14px 24px 14px; display: flex; flex-direction: column;
+    }
+    .app-section { display: none; flex: 1; flex-direction: column; }
+    .app-section.active-section { display: flex; }
+
+    .card {
+      background: var(--card-bg); border: 1px solid var(--card-border);
+      border-radius: 18px; padding: 15px; margin-bottom: 12px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.18);
+    }
+    .btn {
+      background: linear-gradient(135deg, var(--neon-cyan), #00bbf9);
+      color: #060911; border: none; border-radius: 12px; padding: 11px 16px;
+      font-size: 13px; font-weight: 900; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    body.light-mode .btn { color: #ffffff; }
+    .btn-purple { background: linear-gradient(135deg, #9b5de5, #f15bb5); color: #fff !important; }
+    .btn-outline { background: rgba(0,245,212,0.08); border: 1px solid var(--neon-cyan); color: var(--neon-cyan) !important; }
+
+    input, select {
+      width: 100%; background: var(--inner-bg); border: 1px solid rgba(148,163,184,0.32);
+      color: var(--text-main); border-radius: 11px; padding: 10px 12px; font-size: 13px; outline: none;
+    }
+
+    .cal-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center; margin-top: 8px; }
+    .cal-circle-box { background: var(--inner-bg); border: 2px solid var(--card-border); border-radius: 16px; padding: 12px; text-align: center; }
+    .macro-bar-row { margin-bottom: 7px; font-size: 11.5px; }
+    .progress-track { width: 100%; height: 7px; background: rgba(148,163,184,0.25); border-radius: 6px; overflow: hidden; margin-top: 3px; }
+    .progress-fill { height: 100%; border-radius: 6px; }
+
+    /* منوی همبرگری */
+    .drawer-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.68); backdrop-filter: blur(4px); z-index: 2000; display: none; }
+    .drawer-panel {
+      position: fixed; top: 0; right: -295px; width: 280px; height: 100vh;
+      background: var(--drawer-bg); border-left: 1px solid var(--card-border);
+      z-index: 2001; padding: 18px 14px; transition: right 0.25s ease;
+      display: flex; flex-direction: column; justify-content: space-between; overflow-y: auto;
+    }
+    .drawer-panel.open { right: 0; }
+    .drawer-item {
+      display: flex; align-items: center; justify-content: space-between; width: 100%;
+      background: var(--inner-bg); border: 1px solid rgba(148,163,184,0.16);
+      color: var(--text-main); padding: 11px 12px; border-radius: 12px; margin-bottom: 8px;
+      font-size: 12.8px; font-weight: 800; cursor: pointer; text-align: right;
+    }
+    .drawer-item.locked-online { border-color: rgba(239,68,68,0.35); opacity: 0.85; }
+
+    /* مودال دانلود از مارکت‌ها */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(4,7,14,0.88); backdrop-filter: blur(8px);
+      z-index: 3000; display: none; align-items: center; justify-content: center; padding: 16px;
+    }
+    .modal-card {
+      background: var(--card-bg); border: 2px solid var(--neon-cyan); border-radius: 22px;
+      padding: 22px; width: 100%; max-width: 380px; text-align: center;
+    }
+
+    .app-footer { width: 100%; max-width: 540px; margin: 0 auto 14px auto; padding: 0 14px; }
+    .footer-inner { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 12px; text-align: center; }
+  </style>
+</head>
+<body>
+
+  <!-- هدر بالا -->
+  <header class="top-sticky-shell">
+    <div class="app-header">
+      <div class="header-right">
+        <button class="menu-btn" onclick="toggleDrawer(true)">☰</button>
+        <div class="brand-title">⚡ BodyMod Web</div>
+      </div>
+      <div class="header-left">
+        <button class="download-app-top-btn" onclick="openMarketModal()">📥 دانلود اپلیکیشن</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- منوی همبرگری (بخش‌های آنلاین قفل هستند و پاپ‌آپ دانلود می‌دهند) -->
+  <div class="drawer-backdrop" id="drawerBackdrop" onclick="toggleDrawer(false)"></div>
+  <aside class="drawer-panel" id="drawerPanel">
+    <div>
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; border-bottom:1px solid var(--card-border); padding-bottom:10px;">
+        <span style="font-weight:900; font-size:14.5px; color:var(--neon-cyan);">⚡ منوی وبسایت بادی‌مود</span>
+        <button onclick="toggleDrawer(false)" style="background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer;">✕</button>
+      </div>
+
+      <button class="drawer-item" onclick="cycleThemeMode()" style="border-color:var(--neon-purple);">
+        <span>🌓 تم نمایش:</span>
+        <b id="themeStatusLabel" style="color:var(--neon-cyan); font-size:11.5px;">📱 سیستم</b>
+      </button>
+
+      <button class="drawer-item" onclick="toggleDrawer(false); switchSection('dashboard')">
+        <span>📊 داشبورد و کالری‌شمار آفلاین</span>
+        <span>✅</span>
+      </button>
+
+      <button class="drawer-item locked-online" onclick="openMarketModal()">
+        <span>🍱 برنامه غذایی هوشمند AI</span>
+        <span>🔒 بازار/مایکت</span>
+      </button>
+      <button class="drawer-item locked-online" onclick="openMarketModal()">
+        <span>🏋️ باشگاه سه‌بعدی و پلیر تمرین</span>
+        <span>🔒 بازار/مایکت</span>
+      </button>
+      <button class="drawer-item locked-online" onclick="openMarketModal()">
+        <span>🤖 چت با مربی هوشمند</span>
+        <span>🔒 بازار/مایکت</span>
+      </button>
+      <button class="drawer-item locked-online" onclick="openMarketModal()">
+        <span>💎 تمدید اشتراک و خرید پلن</span>
+        <span>🔒 بازار/مایکت</span>
+      </button>
+    </div>
+
+    <div style="border-top:1px solid var(--card-border); padding-top:12px;">
+      <button class="btn btn-purple" style="width:100%; font-size:12px;" onclick="openMarketModal()">📥 دانلود نسخه کامل از بازار / مایکت</button>
+    </div>
+  </aside>
+
+  <!-- محتوای وبسایت (صرفاً ابزارهای آفلاین و کالری‌شمار) -->
+  <main class="main-viewport">
+    <section id="sec-dashboard" class="app-section active-section">
+      <div class="card" style="background:linear-gradient(135deg, rgba(0,245,212,0.12), rgba(155,93,229,0.12)); text-align:center; padding:16px;">
+        <h2 style="margin:0 0 6px 0; font-size:16px; color:var(--neon-cyan);">نسخه وب بادی‌مود (امکانات آفلاین)</h2>
+        <p style="font-size:11.5px; color:var(--text-muted); margin:0 0 12px 0;">برای استفاده از مربی هوشمند، باشگاه سه‌بعدی و برنامه‌های ابری، اپلیکیشن را نصب کنید.</p>
+        <button class="btn" onclick="openMarketModal()">🚀 دانلود رایگان از بازار و مایکت</button>
+      </div>
+
+      <!-- کالری‌شمار آفلاین و ثبت دستی خوراکی در وب -->
+      <div class="card">
+        <div style="font-weight:900; font-size:14px; margin-bottom:8px;">🎯 کالری‌شمار و ثبت دستی آفلاین</div>
+        <div class="cal-summary-grid" style="margin-bottom:12px;">
+          <div class="cal-circle-box">
+            <div style="font-size:11px; color:var(--text-muted);">کالری امروز</div>
+            <div style="font-size:20px; font-weight:900; color:var(--neon-cyan);" id="calEatenNum">0</div>
+          </div>
+          <div>
+            <div style="font-size:11.5px;">💧 آب: <b id="waterCountText" style="color:var(--neon-blue);">0</b> لیوان</div>
+            <button class="btn btn-outline" style="padding:4px 8px; font-size:11px; margin-top:6px;" onclick="addWater(1)">➕ اضافه کردن آب</button>
+          </div>
+        </div>
+
+        <div style="font-size:12px; font-weight:900; margin-bottom:6px;">ثبت خوراکی دستی:</div>
+        <div style="display:grid; grid-template-columns:2fr 1fr; gap:6px; margin-bottom:6px;">
+          <input type="text" id="manualFoodName" placeholder="نام خوراکی">
+          <input type="number" id="manualFoodCal" placeholder="کالری (kcal)">
+        </div>
+        <button class="btn" style="width:100%; font-size:12px;" onclick="addManualFoodWeb()">➕ ثبت در کالری‌شمار امروز</button>
+
+        <div id="todayFoodsList" style="margin-top:10px; display:flex; flex-direction:column; gap:6px;"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <div class="footer-inner">
+      <div style="font-weight:900; font-size:13px; color:var(--neon-cyan); margin-bottom:4px;">⚡ BodyMod | بادی‌مود</div>
+      <div style="font-size:11px; color:var(--text-muted);">توسعه‌دهنده: Matin Mohammadi — انتشار رسمی در فروشگاه‌ها © ۲۰۲۶</div>
+    </div>
+  </footer>
+
+  <!-- مودال پاپ‌آپ دانلود از بازار و مایکت -->
+  <div class="modal-overlay" id="marketModal">
+    <div class="modal-card">
+      <div style="font-size:38px; margin-bottom:6px;">🚀</div>
+      <h3 style="margin:0 0 8px 0; color:var(--neon-cyan); font-size:16px;">نصب نسخه کامل BodyMod</h3>
+      <p style="font-size:12px; color:var(--text-muted); line-height:1.6; margin:0 0 16px 0;">
+        این بخش به صورت آنلاین و هوشمند در اپلیکیشن موبایل فعال است. برای دسترسی به مربی هوشمند و باشگاه سه‌بعدی، برنامه را از مارکت‌های رسمی دانلود کنید:
+      </p>
+      <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px;">
+        <a href="https://cafebazaar.ir/app/ir.matinmohammadi.bodymod" target="_blank" class="btn btn-purple" style="text-decoration:none; justify-content:center;">📥 دانلود مستقیم از کافه بازار</a>
+        <a href="https://myket.ir/app/ir.matinmohammadi.bodymod" target="_blank" class="btn btn-outline" style="text-decoration:none; justify-content:center;">📥 دانلود مستقیم از مایکت</a>
+      </div>
+      <button class="back-home-btn" style="width:100%; padding:10px;" onclick="closeMarketModal()">بستن پنجره</button>
+    </div>
+  </div>
+
+  <script>
+    let webState = {
+      themeMode: localStorage.getItem("bm_web_theme") || "system",
+      daysLog: {}
+    };
+
+    function getEffectiveTheme() {
+      const mode = webState.themeMode || "system";
+      if (mode === "light") return "light";
+      if (mode === "dark") return "dark";
+      if (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) return "light";
+      return "dark";
+    }
+
+    function applyThemeMode() {
+      const mode = webState.themeMode || "system";
+      const effective = getEffectiveTheme();
+      if (effective === "light") document.body.classList.add("light-mode");
+      else document.body.classList.remove("light-mode");
+
+      const lbl = document.getElementById("themeStatusLabel");
+      if (lbl) {
+        lbl.textContent = mode === "system" ? `📱 سیستم (${effective === "light" ? "روشن" : "تاریک"})` : (mode === "dark" ? "🌙 دارک" : "☀️ لایت");
+      }
+    }
+
+    function cycleThemeMode() {
+      const current = webState.themeMode || "system";
+      if (current === "system") webState.themeMode = "dark";
+      else if (current === "dark") webState.themeMode = "light";
+      else webState.themeMode = "system";
+      localStorage.setItem("bm_web_theme", webState.themeMode);
+      applyThemeMode();
+    }
+
+    function toggleDrawer(open) {
+      const panel = document.getElementById("drawerPanel");
+      const bd = document.getElementById("drawerBackdrop");
+      if (open) { bd.style.display = "block"; setTimeout(() => panel.classList.add("open"), 10); }
+      else { panel.classList.remove("open"); setTimeout(() => (bd.style.display = "none"), 240); }
+    }
+
+    function openMarketModal() { toggleDrawer(false); document.getElementById("marketModal").style.display = "flex"; }
+    function closeMarketModal() { document.getElementById("marketModal").style.display = "none"; }
+
+    function switchSection(secId) {
+      document.querySelectorAll(".app-section").forEach(el => el.classList.remove("active-section"));
+      const t = document.getElementById("sec-" + secId);
+      if (t) t.classList.add("active-section");
+      toggleDrawer(false);
+    }
+
+    function getDateKey() { return new Date().toISOString().split("T")[0]; }
+
+    function renderWebUI() {
+      applyThemeMode();
+      const dKey = getDateKey();
+      const dayData = webState.daysLog[dKey] || { foods: [], water: 0 };
+      let eaten = 0;
+      (dayData.foods || []).forEach(f => eaten += Number(f.cal) || 0);
+
+      document.getElementById("calEatenNum").textContent = Math.round(eaten);
+      document.getElementById("waterCountText").textContent = dayData.water || 0;
+
+      const list = document.getElementById("todayFoodsList");
+      list.innerHTML = "";
+      (dayData.foods || []).forEach((f, idx) => {
+        const row = document.createElement("div");
+        row.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:var(--inner-bg); padding:8px 11px; border-radius:10px; font-size:12px; border:1px solid rgba(148,163,184,0.15);";
+        row.innerHTML = `<div><b>${f.name}</b> <span style="color:var(--neon-cyan);">(${f.cal} kcal)</span></div><button onclick="removeWebFood(${idx})" style="background:none; border:none; color:var(--neon-red); cursor:pointer;">🗑️</button>`;
+        list.appendChild(row);
+      });
+    }
+
+    function addWater(d) {
+      const dKey = getDateKey();
+      if (!webState.daysLog[dKey]) webState.daysLog[dKey] = { foods: [], water: 0 };
+      webState.daysLog[dKey].water = Math.max(0, (webState.daysLog[dKey].water || 0) + d);
+      renderWebUI();
+    }
+
+    function addManualFoodWeb() {
+      const name = document.getElementById("manualFoodName").value.trim();
+      const cal = Number(document.getElementById("manualFoodCal").value) || 0;
+      if (!name || cal <= 0) return alert("نام خوراکی و کالری را وارد کنید.");
+      const dKey = getDateKey();
+      if (!webState.daysLog[dKey]) webState.daysLog[dKey] = { foods: [], water: 0 };
+      webState.daysLog[dKey].foods.push({ name, cal });
+      document.getElementById("manualFoodName").value = "";
+      document.getElementById("manualFoodCal").value = "";
+      renderWebUI();
+    }
+
+    function removeWebFood(idx) {
+      const dKey = getDateKey();
+      if (webState.daysLog[dKey]?.foods) {
+        webState.daysLog[dKey].foods.splice(idx, 1);
+        renderWebUI();
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      renderWebUI();
+    });
+  </script>
+</body>
+</html>
