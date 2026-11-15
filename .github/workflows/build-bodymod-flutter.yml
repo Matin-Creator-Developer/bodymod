@@ -46,7 +46,6 @@ jobs:
             sed -i 's/<application/<uses-permission android:name="android.permission.INTERNET"\/>\n    <application/g' android/app/src/main/AndroidManifest.xml
           fi
 
-          # غیرفعال کردن کامل تسک باگ‌دار lintVitalAnalyzeRelease در تمام پکیج‌ها (از جمله google_sign_in_android)
           if [ -f android/build.gradle.kts ]; then
             cat << 'KTS_EOF' >> android/build.gradle.kts
 
@@ -75,20 +74,22 @@ jobs:
           BUILD_NUM=$((200 + ${{ github.run_number }}))
           flutter build apk --release --no-shrink --target-platform android-arm,android-arm64 --build-name=8.0.${{ github.run_number }} --build-number=$BUILD_NUM
 
-      - name: Sign APK with Permanent Master Keystore (apksigner)
+      - name: Strictly Sign APK ONLY with Secret Keystore (No Fallback!)
         env:
           KEYSTORE_B64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
         run: |
-          if [ -n "$KEYSTORE_B64" ]; then
-            echo "$KEYSTORE_B64" | tr -d ' \n\r\t' | base64 --decode > bodymod.keystore
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "❌ خطا: سکرت RELEASE_KEYSTORE_BASE64 در گیت‌هاب خالی است! بیلد متوقف شد."
+            exit 1
           fi
 
-          if [ ! -s bodymod.keystore ]; then
+          echo "$KEYSTORE_B64" | tr -d ' \n\r\t' | base64 --decode > bodymod.keystore
+
+          echo "🔎 بررسی اعتبار کلید اختصاصی متین..."
+          if ! keytool -list -v -keystore bodymod.keystore -alias bodymod_master_key -storepass Matin1383 | grep -E "SHA1:|SHA256:"; then
+            echo "❌ خطا: کلید داخل سکرت گیت‌هاب معتبر نیست یا رمز/نام مستعار آن اشتباه است! تحت هیچ شرایطی کلید جایگزین ساخته نمی‌شود."
             rm -f bodymod.keystore
-            keytool -genkey -v -keystore bodymod.keystore \
-              -alias bodymod_master_key -keyalg RSA -keysize 2048 -validity 10000 \
-              -storepass Matin1383 -keypass Matin1383 \
-              -dname "CN=Matin Mohammadi, OU=BodyMod, O=MatinTech, L=Urmia, S=WA, C=IR"
+            exit 1
           fi
 
           APK_PATH="build/app/outputs/flutter-apk/app-release.apk"
@@ -100,7 +101,8 @@ jobs:
             --key-pass pass:Matin1383 \
             "$APK_PATH"
 
-          "$APKSIGNER" verify -v "$APK_PATH"
+          echo "✅ بررسی نهایی امضای روی فایل APK:"
+          "$APKSIGNER" verify --print-certs "$APK_PATH" | grep -E "SHA-1|SHA-256"
           rm -f bodymod.keystore
 
       - name: Upload Signed BodyMod APK
