@@ -27,3 +27,9 @@ fix_links.py
 fix_cordova_links.py
 worker.txt
 error_logs.txt
+# Cloudflare & Local Private Files
+deploy_worker.py
+all_dart.txt
+AI_HANDOVER.txt
+bodymod.keystore
+bodymod-release.keystore
