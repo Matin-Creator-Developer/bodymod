@@ -33,3 +33,11 @@ all_dart.txt
 AI_HANDOVER.txt
 bodymod.keystore
 bodymod-release.keystore
+
+worker.js
+cf.py
+deploy_worker.py
+all_dart.txt
+AI_HANDOVER.txt
+*.keystore
+key_b64.txt

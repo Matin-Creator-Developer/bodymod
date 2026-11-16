@@ -7,6 +7,9 @@ environment:
   sdk: '>=3.2.0 <4.0.0'
 
 dependencies:
+  image_picker: any
+  permission_handler: any
+  video_player: any
   flutter:
     sdk: flutter
   http: ^1.2.0
