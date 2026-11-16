@@ -19,3 +19,11 @@ build/
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
+
+clean.py
+patch_worker.py
+add_bodycoin.py
+fix_links.py
+fix_cordova_links.py
+worker.txt
+error_logs.txt
