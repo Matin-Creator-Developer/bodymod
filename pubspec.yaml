@@ -21,5 +21,4 @@ flutter:
   uses-material-design: true
   assets:
     - assets/earth_burn.mp4
-    - earth_burn.mp4
     - assets/icon.png
