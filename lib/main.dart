@@ -1,5 +1,5 @@
 // ============================================================================
-// BodyMod AI (بادی‌مُد) — v8.2 Production Market Launch Edition
+// BodyMod AI (بادی‌مود) — v8.2 Production Market Launch Edition
 // Package: ir.matinmohammadi.bodymod
 // Backend: Cloudflare Worker (https://server.matin-mohammadi.ir)
 // Unified Single-File Native Flutter Architecture: lib/main.dart
@@ -54,7 +54,7 @@ class AppConfig {
   static const String packageName = 'ir.matinmohammadi.bodymod';
   static const String serverBaseUrl = 'https://server.matin-mohammadi.ir';
 
-  // آیدی کانال رسمی بادی‌مُد (بالای تمام صفحات نمایش داده می‌شود)
+  // آیدی کانال رسمی بادی‌مود (بالای تمام صفحات نمایش داده می‌شود)
   static const String channelId = '@bodymod_channel';
   static const String channelUrlBale = 'https://ble.ir/bodymod_channel';
   static const String channelUrlTelegram = 'https://t.me/bodymod_channel';
@@ -96,7 +96,7 @@ class AppConfig {
       'sku': 'donate_1m',
       'amount': 1000000,
       'label': '۱ میلیون تومن 👑💎',
-      'desc': 'حامی طلایی و اسطوره‌ای بادی‌مُد',
+      'desc': 'حامی طلایی و اسطوره‌ای بادی‌مود',
     },
   ];
 
@@ -107,6 +107,20 @@ class AppConfig {
   static const MethodChannel marketBillingChannel = MethodChannel(
     'ir.matinmohammadi.bodymod/billing',
   );
+  static const MethodChannel nativeNotificationChannel = MethodChannel(
+    'ir.matinmohammadi.bodymod/notifications',
+  );
+
+  static String normalizeDigits(String input) {
+    const persian = '۰۱۲۳۴۵۶۷۸۹';
+    const arabic = '٠١٢٣٤٥٦٧٨٩';
+    var out = input;
+    for (int i = 0; i < 10; i++) {
+      out = out.replaceAll(persian[i], i.toString());
+      out = out.replaceAll(arabic[i], i.toString());
+    }
+    return out.trim();
+  }
 
   // متن راهنمای داخل کادر حافظه هوش مصنوعی (با تایپ کردن کاربر خودکار پاک می‌شود)
   static const String aiMemoryHintText =
@@ -2689,9 +2703,34 @@ class BodyModController extends ChangeNotifier {
 
     if (shouldAsk == true) {
       try {
-        await Permission.notification.request();
+        PermissionStatus status = await Permission.notification.request();
+        if (status.isGranted) {
+          await triggerImmediateWelcomeNotification();
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('🔔 سیستم اطلاع‌رسانی بادی‌مود با موفقیت فعال شد رفیق! 🔥'),
+              ),
+            );
+          }
+        } else if (status.isPermanentlyDenied || status.isDenied) {
+          // اگر قبلاً بسته شده بود یا اندروید پنجره رو باز نکرد، مستقیم صفحه مجوز اعلان برنامه در تنظیمات اندروید رو باز کن
+          await openAppSettings();
+        }
       } catch (_) {}
     }
+  }
+
+  Future<void> triggerImmediateWelcomeNotification() async {
+    try {
+      await AppConfig.nativeNotificationChannel.invokeMethod(
+        'showImmediateNotification',
+        {
+          'title': 'بادی‌مود | BodyMod 🔔🔥',
+          'body': 'سیستم اطلاع‌رسانی بادی‌مود با موفقیت فعال شد رفیق! از این به بعد یادآور وعده‌ها و استریک رو به موقع دریافت می‌کنی 💪',
+        },
+      );
+    } catch (_) {}
   }
 
   // ==========================================================================
@@ -2896,6 +2935,8 @@ class BodyModController extends ChangeNotifier {
     return null;
   }
 
+  String _lastOtpStatelessToken = '';
+
   // مرحله الف-۲: ارسال کد تایید ۴ رقمی به شماره موبایل (سفیر بله)
   Future<Map<String, dynamic>> sendPhoneOtp(
     BuildContext context,
@@ -2904,18 +2945,20 @@ class BodyModController extends ChangeNotifier {
     final online = await ensureOnlineOrShowEarthBurn(context);
     if (!online) return {'ok': false, 'message': 'اتصال اینترنت برقرار نیست!'};
 
+    final cleanPhone = AppConfig.normalizeDigits(rawPhone);
     try {
       final uri = Uri.parse('${AppConfig.serverBaseUrl}/api/auth/otp/send');
       final res = await http
           .post(
             uri,
             headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({'phone': rawPhone.trim()}),
+            body: jsonEncode({'phone': cleanPhone}),
           )
           .timeout(const Duration(seconds: 12));
 
       final data = jsonDecode(utf8.decode(res.bodyBytes));
       if (res.statusCode == 200 && data['success'] == true) {
+        _lastOtpStatelessToken = (data['otpToken'] ?? '').toString();
         return {
           'ok': true,
           'message':
@@ -2944,6 +2987,8 @@ class BodyModController extends ChangeNotifier {
     final online = await ensureOnlineOrShowEarthBurn(context);
     if (!online) return {'ok': false, 'message': 'اتصال اینترنت برقرار نیست!'};
 
+    final cleanPhone = AppConfig.normalizeDigits(rawPhone);
+    final cleanCode = AppConfig.normalizeDigits(otpCode);
     try {
       final uri = Uri.parse('${AppConfig.serverBaseUrl}/api/auth/otp/verify');
       final res = await http
@@ -2951,8 +2996,9 @@ class BodyModController extends ChangeNotifier {
             uri,
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({
-              'phone': rawPhone.trim(),
-              'code': otpCode.trim(),
+              'phone': cleanPhone,
+              'code': cleanCode,
+              'otpToken': _lastOtpStatelessToken,
             }),
           )
           .timeout(const Duration(seconds: 12));
@@ -3898,9 +3944,32 @@ class _TwoStepAuthBottomSheetState extends State<TwoStepAuthBottomSheet> {
   bool _otpSent = false;
   bool _busy = false;
   String? _statusMsg;
+  int _resendSecondsLeft = 0;
+  Timer? _resendTimer;
+
+  void _startResendCountdown() {
+    _resendTimer?.cancel();
+    setState(() {
+      _resendSecondsLeft = 30;
+    });
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      if (_resendSecondsLeft > 0) {
+        setState(() {
+          _resendSecondsLeft -= 1;
+        });
+      } else {
+        timer.cancel();
+      }
+    });
+  }
 
   @override
   void dispose() {
+    _resendTimer?.cancel();
     _phoneCtrl.dispose();
     _otpCtrl.dispose();
     super.dispose();
@@ -3925,7 +3994,7 @@ class _TwoStepAuthBottomSheetState extends State<TwoStepAuthBottomSheet> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
-                  '🔐 ورود یا ثبت‌نام در بادی‌مُد',
+                  '🔐 ورود یا ثبت‌نام در بادی‌مود',
                   style: TextStyle(
                     fontWeight: FontWeight.w900,
                     fontSize: 17,
@@ -4036,11 +4105,15 @@ class _TwoStepAuthBottomSheetState extends State<TwoStepAuthBottomSheet> {
                         if (!_otpSent) {
                           final res = await c.sendPhoneOtp(context, phone);
                           if (!mounted) return;
+                          final sentOk = res['ok'] == true;
                           setState(() {
                             _busy = false;
-                            _otpSent = res['ok'] == true;
+                            _otpSent = sentOk;
                             _statusMsg = res['message']?.toString();
                           });
+                          if (sentOk) {
+                            _startResendCountdown();
+                          }
                         } else {
                           final code = _otpCtrl.text.trim();
                           if (code.isEmpty) {
@@ -4075,12 +4148,69 @@ class _TwoStepAuthBottomSheetState extends State<TwoStepAuthBottomSheet> {
                 ),
                 label: Text(
                   _otpSent
-                      ? 'تایید کد و ورود به بادی‌مُد 🚀'
+                      ? 'تایید کد و ورود به بادی‌مود 🚀'
                       : 'دریافت کد تایید ۴ رقمی 📩',
                   style: const TextStyle(fontWeight: FontWeight.w900),
                 ),
               ),
             ),
+            if (_otpSent) ...[
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton.icon(
+                    onPressed: (_busy || _resendSecondsLeft > 0)
+                        ? null
+                        : () async {
+                            final phone = _phoneCtrl.text.trim();
+                            if (phone.isEmpty) return;
+                            setState(() => _busy = true);
+                            final res = await c.sendPhoneOtp(context, phone);
+                            if (!mounted) return;
+                            setState(() {
+                              _busy = false;
+                              _statusMsg = res['message']?.toString();
+                            });
+                            if (res['ok'] == true) {
+                              _otpCtrl.clear();
+                              _startResendCountdown();
+                            }
+                          },
+                    icon: const Icon(Icons.refresh_rounded, size: 17),
+                    label: Text(
+                      _resendSecondsLeft > 0
+                          ? 'ارسال مجدد کد ($_resendSecondsLeft ثانیه) ⏳'
+                          : 'ارسال مجدد کد تایید 🔄',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12.5,
+                        color: _resendSecondsLeft > 0
+                            ? Colors.white54
+                            : BMColors.neonCyan,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _busy
+                        ? null
+                        : () {
+                            _resendTimer?.cancel();
+                            setState(() {
+                              _otpSent = false;
+                              _resendSecondsLeft = 0;
+                              _otpCtrl.clear();
+                              _statusMsg = null;
+                            });
+                          },
+                    child: const Text(
+                      'ویرایش شماره ✏️',
+                      style: TextStyle(fontSize: 12, color: Colors.white70),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
@@ -4591,7 +4721,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
             const SizedBox(width: 8),
             const Flexible(
               child: Text(
-                'بادی‌مُد | BodyMod',
+                'بادی‌مود | BodyMod',
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
               ),
@@ -4793,7 +4923,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
                           children: [
                             Text(
                               c.profile.displayName.isEmpty
-                                  ? 'قهرمان بادی‌مُد'
+                                  ? 'قهرمان بادی‌مود'
                                   : c.profile.displayName,
                               style: const TextStyle(
                                 color: Colors.white,
@@ -4882,7 +5012,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'فلسفه آتیش استریک بادی‌مُد 🔥💙💀',
+              'فلسفه آتیش استریک بادی‌مود 🔥💙💀',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w900,
@@ -6703,7 +6833,7 @@ class _BodyAndAiCoachTabState extends State<BodyAndAiCoachTab> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                '🤖 گفتگو با مربی هوشمند بادی‌مُد',
+                '🤖 گفتگو با مربی هوشمند بادی‌مود',
                 style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
               ),
               const SizedBox(height: 6),
@@ -7074,7 +7204,7 @@ class _ProfileAndBillingTabState extends State<ProfileAndBillingTab> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                '💎 اشتراک ۱ ماهه بادی‌مُد (۱۸۹,۰۰۰ تومان در ماه)',
+                '💎 اشتراک ۱ ماهه بادی‌مود (۱۸۹,۰۰۰ تومان در ماه)',
                 style: TextStyle(
                   fontWeight: FontWeight.w900,
                   fontSize: 15,
@@ -7215,7 +7345,7 @@ class _ProfileAndBillingTabState extends State<ProfileAndBillingTab> {
               ),
               const SizedBox(height: 6),
               const Text(
-                'برای اینکه سریع‌تر سرورهای اختصاصی و API نامحدود بگیریم و از فاز بتا خارج بشیم، می‌تونی هر چند بار که دوست داشتی از بادی‌مُد حمایت کنی (مبالغ زیر بدون محدودیت و قابل خرید چندباره هستن!): 🙏🔥',
+                'برای اینکه سریع‌تر سرورهای اختصاصی و API نامحدود بگیریم و از فاز بتا خارج بشیم، می‌تونی هر چند بار که دوست داشتی از بادی‌مود حمایت کنی (مبالغ زیر بدون محدودیت و قابل خرید چندباره هستن!): 🙏🔥',
                 style: TextStyle(fontSize: 12.2, color: Colors.grey, height: 1.55),
               ),
               const SizedBox(height: 12),
