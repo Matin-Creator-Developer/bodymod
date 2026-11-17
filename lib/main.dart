@@ -218,7 +218,7 @@ Future<void> bmLoadSavedAiWorkouts() async {
         if (v.contains('بدون تجهیزات') || v.contains('وزن بدن') || v.contains('باشگاه') || v.contains('دمبل')) bmGlobalEquipment = v;
         if (v.contains('عضله') || v.contains('چربی') || v.contains('کاهش وزن') || v.contains('تناسب') || v.contains('افزایش وزن')) bmGlobalGoal = v;
         if (v.contains('روز در هفته')) {
-          final dm = RegExp(r'\d+').firstMatch(_bmNormalizeDigits(v));
+          final dm = RegExp(r'\d+').firstMatch(v.replaceAll('۱','1').replaceAll('۲','2').replaceAll('۳','3').replaceAll('۴','4').replaceAll('۵','5').replaceAll('۶','6').replaceAll('۷','7'));
           if (dm != null) bmGlobalDaysPerWeek = int.tryParse(dm.group(0)!) ?? 3;
         }
       } else if (v is double || v is int) {
