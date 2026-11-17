@@ -21,6 +21,66 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 
+List<int> _bmG2J(int gy, int gm, int gd) {
+  const m = [0,31,59,90,120,151,181,212,243,273,304,334];
+  int g2 = (gm > 2) ? (gy + 1) : gy;
+  int d = 355666 + (365 * gy) + ((g2 + 3) ~/ 4) - ((g2 + 99) ~/ 100) + ((g2 + 399) ~/ 400) + gd + m[gm - 1];
+  int jy = -1595 + (33 * (d ~/ 12053)); d %= 12053;
+  jy += 4 * (d ~/ 1461); d %= 1461;
+  if (d > 365) { jy += (d - 1) ~/ 365; d = (d - 1) % 365; }
+  return [jy, (d < 186) ? 1 + (d ~/ 31) : 7 + ((d - 186) ~/ 30), 1 + ((d < 186) ? (d % 31) : ((d - 186) % 30))];
+}
+int? bmCalculateAgeFromBirthDate(String raw) {
+  String s = raw;
+  const fa = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'], ar = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+  for (int i = 0; i < 10; i++) { s = s.replaceAll(fa[i], '$i').replaceAll(ar[i], '$i'); }
+  final p = RegExp(r'\d+').allMatches(s).map((m) => int.tryParse(m.group(0)!) ?? 0).where((n) => n > 0).toList();
+  if (p.isEmpty) return null;
+  final now = DateTime.now(); final jn = _bmG2J(now.year, now.month, now.day);
+  final int cy = jn[0], cm = jn[1], cd = jn[2];
+  if (p.length == 1) return (p[0] >= 1300 && p[0] <= cy) ? (cy - p[0]).clamp(8, 100) : (p[0] >= 8 && p[0] <= 100 ? p[0] : null);
+  int by = 0, bm = 1, bd = 1;
+  if (p.length >= 3) {
+    if (p[2] >= 1300) { bd = p[0]; bm = p[1]; by = p[2]; }
+    else if (p[0] >= 1300) { by = p[0]; bm = p[1]; bd = p[2]; }
+    else if (p[2] >= 30 && p[2] <= 99) { bd = p[0]; bm = p[1]; by = 1300 + p[2]; }
+  } else if (p.length == 2) {
+    if (p[1] >= 1300) { bm = p[0]; by = p[1]; } else if (p[0] >= 1300) { by = p[0]; bm = p[1]; }
+  }
+  if (by < 1300 || by > cy) return null;
+  int age = cy - by; if (cm < bm || (cm == bm && cd < bd)) age -= 1;
+  return age.clamp(8, 100);
+}
+Future<T?> bmShowResponsiveSheet<T>({
+  required BuildContext context, required WidgetBuilder builder,
+  Color? backgroundColor, double? elevation, ShapeBorder? shape, Clip? clipBehavior,
+  BoxConstraints? constraints, Color? barrierColor, bool isScrollControlled = true,
+  bool useRootNavigator = false, bool isDismissible = true, bool enableDrag = true,
+  bool? showDragHandle, bool useSafeArea = true, RouteSettings? routeSettings,
+  AnimationController? transitionAnimationController, Offset? anchorPoint,
+}) {
+  final rmq = MediaQuery.of(context);
+  double sb = rmq.viewPadding.bottom > rmq.padding.bottom ? rmq.viewPadding.bottom : rmq.padding.bottom;
+  if (sb < 48.0) sb = 48.0;
+  return showModalBottomSheet<T>(
+    context: context, isScrollControlled: true, useSafeArea: true,
+    backgroundColor: backgroundColor ?? const Color(0xFF151922), elevation: elevation,
+    shape: shape ?? const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+    clipBehavior: clipBehavior ?? Clip.antiAlias, barrierColor: barrierColor,
+    useRootNavigator: useRootNavigator, isDismissible: isDismissible, enableDrag: enableDrag,
+    showDragHandle: showDragHandle, routeSettings: routeSettings,
+    transitionAnimationController: transitionAnimationController, anchorPoint: anchorPoint,
+    constraints: constraints ?? BoxConstraints(maxHeight: rmq.size.height * 0.88, maxWidth: rmq.size.width > 560 ? 520 : rmq.size.width),
+    builder: (ctx) {
+      final mq = MediaQuery.of(ctx);
+      final bp = (mq.viewPadding.bottom > sb ? mq.viewPadding.bottom : sb) + mq.viewInsets.bottom + 20.0;
+      return SafeArea(top: false, bottom: true, child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: mq.size.height * 0.86),
+        child: SingleChildScrollView(physics: const BouncingScrollPhysics(), padding: EdgeInsets.only(bottom: bp), child: builder(ctx)),
+      ));
+    },
+  );
+}
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -330,7 +390,7 @@ class BodyModTopChannelBanner extends StatelessWidget {
   const BodyModTopChannelBanner({super.key});
 
   Future<void> _openChannel(BuildContext context) async {
-    showModalBottomSheet(
+    bmShowResponsiveSheet(
       context: context,
       backgroundColor: BMColors.cardDark,
       shape: const RoundedRectangleBorder(
@@ -2741,7 +2801,7 @@ class BodyModController extends ChangeNotifier {
     BuildContext context, {
     VoidCallback? onNavigateHome,
   }) async {
-    final result = await showModalBottomSheet<Map<String, dynamic>>(
+    final result = await bmShowResponsiveSheet<Map<String, dynamic>>(
       context: context,
       isScrollControlled: true,
       backgroundColor: const Color(0xFF121A2D),
@@ -2876,7 +2936,7 @@ class BodyModController extends ChangeNotifier {
                 controller: nameCtrl,
                 style: const TextStyle(color: Colors.white),
                 decoration: const InputDecoration(
-                  labelText: 'نام شما (اختیاری)',
+                  labelText: 'نام شما (اختیاری)', hintText: 'رفیق ورزشکار', floatingLabelBehavior: FloatingLabelBehavior.always,
                   prefixIcon: Icon(Icons.person_outline_rounded),
                 ),
               ),
@@ -4325,8 +4385,8 @@ class _EditableBodyProfileFormWidgetState
   void initState() {
     super.initState();
     final p = widget.controller.profile;
-    _nameCtrl = TextEditingController(text: p.displayName);
-    _ageCtrl = TextEditingController(text: p.age.toString());
+    _nameCtrl = TextEditingController(text: ((p.displayName).toString().trim() == 'رفیق ورزشکار' || (p.displayName).toString().trim() == 'ورزشکار') ? '' : (p.displayName).toString());
+    _ageCtrl = TextEditingController(text: ''));
     _heightCtrl = TextEditingController(text: p.heightCm.toString());
     _weightCtrl = TextEditingController(text: p.weightKg.toString());
     _targetWeightCtrl = TextEditingController(
@@ -4369,7 +4429,7 @@ class _EditableBodyProfileFormWidgetState
         TextField(
           controller: _nameCtrl,
           decoration: const InputDecoration(
-            labelText: 'نام یا لقب قهرمانی شما',
+            labelText: 'نام یا لقب قهرمانی شما', hintText: 'رفیق ورزشکار', floatingLabelBehavior: FloatingLabelBehavior.always,
             prefixIcon: Icon(Icons.badge_outlined),
           ),
         ),
@@ -4382,7 +4442,7 @@ class _EditableBodyProfileFormWidgetState
               child: TextField(
                 controller: _ageCtrl,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'سن شما'),
+                decoration: const InputDecoration(labelText: 'تاریخ تولد (محاسبه خودکار سن با تقویم رسمی)', hintText: 'روز ماه سال', floatingLabelBehavior: FloatingLabelBehavior.always,),
               ),
             ),
             const SizedBox(width: 10),
@@ -4591,7 +4651,7 @@ class _EditableBodyProfileFormWidgetState
               await c.saveAndSyncBodyProfileForm(
                 context,
                 displayName: _nameCtrl.text,
-                age: int.tryParse(_ageCtrl.text) ?? 21,
+                age: (bmCalculateAgeFromBirthDate(_ageCtrl.text) ?? int.tryParse(_ageCtrl.text)) ?? 21,
                 gender: _selectedGender,
                 heightCm: double.tryParse(_heightCtrl.text) ?? 175,
                 weightKg: double.tryParse(_weightCtrl.text) ?? 70,
@@ -4999,7 +5059,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
   }
 
   void _showStreakPhilosophySheet(BuildContext context, BodyModController c) {
-    showModalBottomSheet(
+    bmShowResponsiveSheet(
       context: context,
       backgroundColor: BMColors.cardDark,
       shape: const RoundedRectangleBorder(
@@ -5094,9 +5154,9 @@ class SmartAiLockBanner extends StatelessWidget {
       icon = Icons.login_rounded;
       accent = BMColors.neonCyan;
     } else if (stage == 2) {
-      title = 'قفل مرحله ۲ از ۳: تکمیل فرم مشخصات و حافظه مربی 📋';
+      title = 'قفل مرحله ۲ از ۳: تکمیل فرم مشخصات بدنی 📋';
       subtitle =
-          'ایول وارد شدی! حالا قد، وزن، هدف، روزهای تمرین و حافظه هوش مصنوعی رو پر کن تا قفل مرحله دوم باز بشه.';
+          'ایول وارد شدی! حالا قد، وزن، تاریخ تولد و هدفت رو پر کن تا قفل مرحله دوم باز بشه (حافظه هوش مصنوعی کاملاً اختیاریه).';
       btnText = 'باز کردن فرم مشخصات بدنی ✍️';
       icon = Icons.assignment_ind_rounded;
       accent = BMColors.warningAmber;
@@ -5279,7 +5339,7 @@ class _HomeDashboardTabState extends State<HomeDashboardTab> {
       12.0,
     ];
 
-    showModalBottomSheet(
+    bmShowResponsiveSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: BMColors.cardDark,
@@ -6743,7 +6803,7 @@ class _BodyAndAiCoachTabState extends State<BodyAndAiCoachTab> {
   @override
   void initState() {
     super.initState();
-    _weightInputCtrl.text = widget.controller.profile.weightKg.toString();
+    _weightInputCtrl.text = (('75' == (widget.controller.profile.weightKg.toString()).toString().trim() || '75.0' == (widget.controller.profile.weightKg.toString()).toString().trim() || '60' == (widget.controller.profile.weightKg.toString()).toString().trim() || '60.0' == (widget.controller.profile.weightKg.toString()).toString().trim() || '0' == (widget.controller.profile.weightKg.toString()).toString().trim()) ? '' : (widget.controller.profile.weightKg.toString()).toString());
   }
 
   @override
@@ -6946,7 +7006,7 @@ class _BodyAndAiCoachTabState extends State<BodyAndAiCoachTab> {
                   ),
                   const SizedBox(width: 8),
                   GestureDetector(
-                    onLongPress: () => _showBodyCoinLongPressPreview(context),
+                    /* onLongPress: () => _showBodyCoinLongPressPreview(context), */
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: BMColors.neonCyan,
