@@ -165,8 +165,171 @@ class _BmBirthDateThreeBoxesState extends State<BmBirthDateThreeBoxes> {
     ]);
   }
 }
+// --- [BODYMOD SMART WORKOUT, HIDDEN NEAT/TDEE & SURPLUS AI ENGINE] ---
+String bmGlobalEquipment = 'در خانه بدون تجهیزات (وزن بدن)';
+String bmGlobalGoal = 'افزایش وزن و عضله سازی';
+double bmGlobalWeight = 60.0;
+double bmGlobalHeight = 175.0;
+int bmGlobalAge = 21;
+int bmGlobalDaysPerWeek = 3;
+int bmWorkoutBurnKcal = 0;
+String bmAiSurplusSnack = '';
+List<Map<String, String>> bmAiCustomWorkouts = [];
+bool bmIsGeneratingWorkout = false;
+
+// محاسبه مخفی در پس‌زمینه: متابولیسم پایه + کارهای عادی روزانه (راه رفتن، صحبت کردن و...) + ضریب تمرین هفتگی
+int _bmComputeHiddenDailyBurn() {
+  final double bmr = (10 * bmGlobalWeight) + (6.25 * bmGlobalHeight) - (5 * bmGlobalAge) + 5;
+  // ضریب تحرک پایه و کارهای روزمره (راه رفتن، صحبت کردن، فعالیت‌های عادی) + روزهای تمرین در هفته
+  final double neatAndActivityFactor = 1.25 + (bmGlobalDaysPerWeek.clamp(1, 7) * 0.055);
+  return (bmr * neatAndActivityFactor).round();
+}
+
+// محاسبه کالری مصرفی جلسه تمرین در باشگاه زنده (تنها عددی که در باشگاه زنده نمایش داده می‌شود)
+int bmGetVisibleWorkoutCalories() {
+  if (bmWorkoutBurnKcal > 50) return bmWorkoutBurnKcal;
+  final bool isBw = bmGlobalEquipment.contains('بدون تجهیزات') || bmGlobalEquipment.contains('وزن بدن');
+  final double met = isBw ? 5.2 : 6.2;
+  // حدود ۴۵ دقیقه تمرین مفید بر اساس وزن کاربر
+  return ((met * 3.5 * bmGlobalWeight / 200.0) * 45.0).round().clamp(160, 550);
+}
+
+// پیشنهاد هوشمند خوراکی و میان‌وعده برای ایجاد «کالری مازاد» (بیشتر از کالری سوخته شده)
+String bmGetSurplusRecommendation() {
+  final int wBurn = bmGetVisibleWorkoutCalories();
+  final int hiddenTotal = _bmComputeHiddenDailyBurn() + wBurn;
+  final bool isGain = bmGlobalGoal.contains('افزایش') || bmGlobalGoal.contains('عضله') || bmGlobalGoal.contains('حجم');
+  if (bmAiSurplusSnack.trim().isNotEmpty) return bmAiSurplusSnack.trim();
+  if (isGain) {
+    final int surplusSnackKcal = wBurn + 260;
+    final int dailyTargetWithSurplus = hiddenTotal + 450;
+    return 'برای جبران این $wBurn کالریِ تمرین (و کالری کارهای عادی روزانه که مربی توی دلش حساب کرده 😉) و رفتن به فاز «کالری مازاد»، پیشنهاد مربی بعد از تمرین یک میان‌وعده حدود $surplusSnackKcal کالری (مثل شیک شیر و موز و کره بادام‌زمینی یا شیره انگور و گردو + تخم‌مرغ) هست تا مجموع دریافتی روزانه‌ات از $dailyTargetWithSurplus کالری رد بشه و عضله بسازی! 🍌🥜💪';
+  }
+  return 'در این جلسه حدود $wBurn کالری می‌سوزونی! بعد از تمرین برای ریکاوری عضلات یک میان‌وعده پروتئینی سبک (مثل سفیده تخم‌مرغ، سینه مرغ یا ماست ایسلندی) به همراه آب کافی نوش جان کن! 🥚💧';
+}
+
+Future<void> bmLoadSavedAiWorkouts() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    for (final k in prefs.getKeys()) {
+      final v = prefs.get(k);
+      final kl = k.toLowerCase();
+      if (v is String) {
+        if (v.contains('بدون تجهیزات') || v.contains('وزن بدن') || v.contains('باشگاه') || v.contains('دمبل')) bmGlobalEquipment = v;
+        if (v.contains('عضله') || v.contains('چربی') || v.contains('کاهش وزن') || v.contains('تناسب') || v.contains('افزایش وزن')) bmGlobalGoal = v;
+        if (v.contains('روز در هفته')) {
+          final dm = RegExp(r'\d+').firstMatch(_bmNormalizeDigits(v));
+          if (dm != null) bmGlobalDaysPerWeek = int.tryParse(dm.group(0)!) ?? 3;
+        }
+      } else if (v is double || v is int) {
+        final double dv = (v as num).toDouble();
+        if (kl.contains('weight') && !kl.contains('target') && dv >= 30 && dv <= 200) bmGlobalWeight = dv;
+        if (kl.contains('height') && dv >= 120 && dv <= 230) bmGlobalHeight = dv;
+        if (kl.contains('age') && dv >= 10 && dv <= 95) bmGlobalAge = dv.round();
+      }
+    }
+    bmWorkoutBurnKcal = prefs.getInt('bm_ai_workout_burn_kcal') ?? 0;
+    bmAiSurplusSnack = prefs.getString('bm_ai_surplus_snack') ?? '';
+    final savedJson = prefs.getString('bm_ai_custom_workouts_v1');
+    if (savedJson != null && savedJson.isNotEmpty) {
+      final List<dynamic> decoded = jsonDecode(savedJson);
+      bmAiCustomWorkouts = decoded.map((e) => Map<String, String>.from((e as Map).map((k, v) => MapEntry(k.toString(), v.toString())))).toList();
+    }
+  } catch (_) {}
+}
+
+String bmExStr(int idx, String role, String orig) {
+  if (idx >= 0 && idx < bmAiCustomWorkouts.length) {
+    final ai = bmAiCustomWorkouts[idx];
+    final v = ai[role];
+    if (v != null && v.trim().isNotEmpty) return v.trim();
+  }
+  final eq = bmGlobalEquipment;
+  final bool isBw = eq.contains('بدون تجهیزات') || eq.contains('وزن بدن') || (!eq.contains('دمبل') && !eq.contains('باشگاه'));
+  if (!isBw) return orig;
+  String out = orig;
+  if (out.contains('پرس سینه یا سرشانه با دمبل')) return 'شنا سوئدی استاندارد و دست‌باز با وزن بدن (کنترل ۳ ثانیه‌ای)';
+  if (out.contains('زیربغل') && (out.contains('دمبل') || out.contains('هالتر') || out.contains('سیم'))) return 'حرکت سوپرمن و کشش معکوس کتف روی زمین (وزن بدن)';
+  if (out.contains('اسکات') && (out.contains('دمبل') || out.contains('هالتر') || out.contains('وزنه'))) return 'اسکات عمیق و لانج متناوب با وزن بدن (کنترل ۳ ثانیه‌ای)';
+  if ((out.contains('جلوبازو') || out.contains('پشت‌بازو') || out.contains('پشت بازو') || out.contains('بازو')) && out.contains('دمبل')) return 'دیپ پشت‌بازو روی لبه صندلی و شنا الماسی (وزن بدن)';
+  if (out.contains('سرشانه') && out.contains('دمبل')) return 'شنا پایک (Pike Push-up) مخصوص سرشانه با وزن بدن';
+  out = out.replaceAll('پایین آوردن وزنه', 'پایین بردن کنترل‌شده بدن');
+  out = out.replaceAll('پرس به بالا', 'فشار قدرتی با وزن بدن به بالا');
+  out = out.replaceAll('با دمبل یا هالتر', 'با وزن بدن');
+  out = out.replaceAll('با دمبل', 'با وزن بدن');
+  out = out.replaceAll('دمبل‌ها', 'دست‌ها');
+  out = out.replaceAll('دمبل', 'وزن بدن');
+  out = out.replaceAll('وزنه', 'وزن بدن');
+  return out;
+}
+
+Future<bool> bmGenerateAiWorkoutPlan(BuildContext context, {VoidCallback? onDone}) async {
+  if (bmIsGeneratingWorkout) return false;
+  bmIsGeneratingWorkout = true;
+  if (onDone != null) onDone();
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    await bmLoadSavedAiWorkouts();
+    final eq = bmGlobalEquipment;
+    final gl = bmGlobalGoal;
+    final int hiddenRoutineKcal = _bmComputeHiddenDailyBurn();
+    final int estWorkoutKcal = bmGetVisibleWorkoutCalories();
+    final bool isBw = eq.contains('بدون تجهیزات') || eq.contains('وزن بدن');
+    final eqRule = isBw
+        ? 'کاربر هیچ وسیله‌ای ندارد (فقط وزن بدن در خانه). اکیداً هیچ حرکتی با دمبل، هالتر، وزنه یا دستگاه نده! تمام ۷ حرکت باید ۱۰۰٪ با وزن بدن باشند.'
+        : 'تجهیزات کاربر: ' + eq + '. تمام حرکات را دقیقاً متناسب با همین تجهیزات طراحی کن.';
+    final prompt = 'تو مربی حرفه‌ای بادیمود هستی. مشخصات کاربر: وزن ' + bmGlobalWeight.round().toString() + ' کیلو، قد ' + bmGlobalHeight.round().toString() + '، سن ' + bmGlobalAge.toString() + '، تمرین در هفته: ' + bmGlobalDaysPerWeek.toString() + ' روز، هدف: ' + gl + '. '
+        + 'محاسبه مخفی پس‌زمینه (فقط برای اطلاع خودت جهت ایجاد تعادل کالری؛ این عدد روزمره را به کاربر نگو): کالری کارهای عادی روزانه مثل راه رفتن و صحبت کردن و تحرک هفتگی = ' + hiddenRoutineKcal.toString() + ' کالری. '
+        + 'قانون تجهیزات: ' + eqRule + ' '
+        + 'فقط و فقط یک آبجکت JSON خالص با این ۳ کلید برگردان: '
+        + '{"workout_calories": ' + estWorkoutKcal.toString() + ', "surplus_snack": "پیشنهاد دقیق خوراکی و میان‌وعده پرکالری (بیشتر از کالری سوخته شده) برای ایجاد کالری مازاد و تعادل با تمرین و فعالیت روزانه", "exercises": [۷ آبجکت حرکت ورزشی به ترتیب گرم کردن، ست اصلی، سرد کردن با کلیدهای title و muscle و breath و tip]}';
+    final res = await http.post(
+      Uri.parse('https://bodymod-core.matin-mohammadi.workers.dev/api/chat'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'message': prompt, 'prompt': prompt, 'model': 'gemini-3.5-flash-lite'}),
+    ).timeout(const Duration(seconds: 25));
+    String rawReply = res.body;
+    try {
+      final d = jsonDecode(res.body);
+      rawReply = (d['reply'] ?? d['response'] ?? d['text'] ?? d['message'] ?? res.body).toString();
+    } catch (_) {}
+    final objS = rawReply.indexOf('{');
+    final objE = rawReply.lastIndexOf('}');
+    if (objS != -1 && objE != -1 && objE > objS) {
+      final dynamic parsed = jsonDecode(rawReply.substring(objS, objE + 1));
+      if (parsed is Map) {
+        if (parsed['workout_calories'] != null) {
+          bmWorkoutBurnKcal = int.tryParse(parsed['workout_calories'].toString()) ?? estWorkoutKcal;
+          await prefs.setInt('bm_ai_workout_burn_kcal', bmWorkoutBurnKcal);
+        }
+        if (parsed['surplus_snack'] != null && parsed['surplus_snack'].toString().trim().isNotEmpty) {
+          bmAiSurplusSnack = parsed['surplus_snack'].toString().trim();
+          await prefs.setString('bm_ai_surplus_snack', bmAiSurplusSnack);
+        }
+        if (parsed['exercises'] is List && (parsed['exercises'] as List).isNotEmpty) {
+          final List<dynamic> arr = parsed['exercises'];
+          bmAiCustomWorkouts = arr.map((e) => Map<String, String>.from((e as Map).map((k, v) => MapEntry(k.toString(), v.toString())))).toList();
+          await prefs.setString('bm_ai_custom_workouts_v1', jsonEncode(bmAiCustomWorkouts));
+        }
+        bmIsGeneratingWorkout = false;
+        if (onDone != null) onDone();
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ برنامه تمرینی، کالری‌سوزی و میان‌وعده کالری مازاد توسط هوش مصنوعی تنظیم شد! 💪🔥'), backgroundColor: Color(0xFF00C896)));
+        }
+        return true;
+      }
+    }
+  } catch (_) {}
+  bmIsGeneratingWorkout = false;
+  if (onDone != null) onDone();
+  if (context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ برنامه تمرینی و تعادل کالری مازاد بر اساس فرم تو بروزرسانی شد! 💪🔥'), backgroundColor: Color(0xFF00C896)));
+  }
+  return false;
+}
+// --- [END SMART WORKOUT ENGINE] ---
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized(); bmLoadSavedAiWorkouts();
 
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -4662,7 +4825,7 @@ class _EditableBodyProfileFormWidgetState
         AppConfig.workoutDaysOptions.containsKey(p.workoutDaysPerWeek)
         ? p.workoutDaysPerWeek
         : 'd3';
-    _selectedWorkoutPlace = p.workoutPlace;
+    _selectedWorkoutPlace = p.workoutPlace; bmGlobalEquipment = _selectedWorkoutPlace.toString(); bmAiCustomWorkouts.clear(); bmWorkoutBurnKcal = 0; bmAiSurplusSnack = '';
     _selectedBudgetTier = AppConfig.budgetTierOptions.containsKey(p.budgetTier)
         ? p.budgetTier
         : AppConfig.budgetBase;
@@ -4918,7 +5081,7 @@ class _EditableBodyProfileFormWidgetState
                 budgetTier: _selectedBudgetTier,
                 supplementPreference: _selectedSupplementMode,
                 aiCoachMemory: _memoryCtrl.text,
-              );
+              ); bmGlobalEquipment = _selectedWorkoutPlace.toString(); bmAiCustomWorkouts.clear(); bmWorkoutBurnKcal = 0; bmAiSurplusSnack = '';
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -6769,7 +6932,7 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 6, 16, 95),
       children: [
-        Row(
+        Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: const Color(0xFF151922), borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFF00E5A3).withOpacity(0.4))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Row(children: [const Icon(Icons.local_fire_department_rounded, color: Colors.orangeAccent, size: 20), const SizedBox(width: 6), Text('کالری مصرفی این تمرین: ${bmGetVisibleWorkoutCalories()} کالری 🔥', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white))]),InkWell(onTap: () => bmGenerateAiWorkoutPlan(context, onDone: () => setState(() {})), borderRadius: BorderRadius.circular(8), child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5), decoration: BoxDecoration(color: const Color(0xFF00E5A3).withOpacity(0.18), borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFF00E5A3))), child: Text(bmIsGeneratingWorkout ? 'در حال محاسبه AI... ⏳' : '🤖 بروزرسانی با AI', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF00E5A3))))),]),const SizedBox(height: 8),Text(bmGetSurplusRecommendation(), style: const TextStyle(fontSize: 11.5, color: Colors.white70, height: 1.45)),])), Row(
           children: [
             _buildPhaseBadge(
               title: '۱. گرم کردن 🔥',
@@ -6789,7 +6952,7 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
               color: BMColors.electricBlue,
             ),
           ],
-        ),
+        )]),
         const SizedBox(height: 12),
         Container(
           padding: const EdgeInsets.all(16),
