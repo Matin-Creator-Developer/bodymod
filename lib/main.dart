@@ -81,6 +81,90 @@ Future<T?> bmShowResponsiveSheet<T>({
     },
   );
 }
+String _bmSavedBirthStr = '';
+class BmBirthDateThreeBoxes extends StatefulWidget {
+  final TextEditingController controller;
+  const BmBirthDateThreeBoxes({super.key, required this.controller});
+  @override
+  State<BmBirthDateThreeBoxes> createState() => _BmBirthDateThreeBoxesState();
+}
+class _BmBirthDateThreeBoxesState extends State<BmBirthDateThreeBoxes> {
+  int? _day, _month, _year;
+  static const List<String> _mNames = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+  @override
+  void initState() { super.initState(); _parseInitial(); }
+  void _parseInitial() {
+    String raw = widget.controller.text.trim();
+    if (raw.isEmpty || !raw.contains('/')) raw = _bmSavedBirthStr;
+    if (raw.contains('/')) {
+      final p = raw.split('/').map((e) => int.tryParse(e.trim()) ?? 0).toList();
+      if (p.length >= 3) {
+        if (p[2] >= 1300) { _day = p[0]; _month = p[1]; _year = p[2]; }
+        else if (p[0] >= 1300) { _year = p[0]; _month = p[1]; _day = p[2]; }
+      }
+    }
+  }
+  void _updateCtrl() {
+    if (_day != null && _month != null && _year != null) {
+      _bmSavedBirthStr = '$_day/$_month/$_year';
+      widget.controller.text = _bmSavedBirthStr;
+    }
+    setState(() {});
+  }
+  Future<void> _pickNum(String title, int minV, int maxV, int? cur, ValueChanged<int> onPick, {bool isM = false, bool rev = false}) async {
+    final items = <int>[];
+    if (rev) { for (int i = maxV; i >= minV; i--) items.add(i); } else { for (int i = minV; i <= maxV; i++) items.add(i); }
+    await bmShowResponsiveSheet(
+      context: context,
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
+          const SizedBox(height: 12),
+          Wrap(spacing: 8, runSpacing: 8, alignment: WrapAlignment.center, children: items.map((val) {
+            final sel = val == cur;
+            final lbl = isM ? '$val (${_mNames[val - 1]})' : '$val';
+            return InkWell(
+              onTap: () { onPick(val); Navigator.pop(ctx); },
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: isM ? 12 : 14, vertical: 9),
+                decoration: BoxDecoration(color: sel ? const Color(0xFF00E5A3) : const Color(0xFF1E2638), borderRadius: BorderRadius.circular(10), border: Border.all(color: sel ? const Color(0xFF00E5A3) : Colors.white24)),
+                child: Text(lbl, style: TextStyle(color: sel ? Colors.black : Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+              ),
+            );
+          }).toList()),
+        ]),
+      ),
+    );
+  }
+  Widget _box(String lbl, String? val, VoidCallback onTap) {
+    final ok = val != null && val.isNotEmpty;
+    return Expanded(child: InkWell(onTap: onTap, borderRadius: BorderRadius.circular(12), child: Container(
+      padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 2),
+      decoration: BoxDecoration(color: const Color(0xFF151922), borderRadius: BorderRadius.circular(12), border: Border.all(color: ok ? const Color(0xFF00E5A3).withOpacity(0.75) : Colors.white24)),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Text(lbl, style: const TextStyle(fontSize: 10, color: Colors.white54)),
+        const SizedBox(height: 2),
+        Text(ok ? val : 'انتخاب', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: ok ? Colors.white : Colors.white38)),
+      ]),
+    )));
+  }
+  @override
+  Widget build(BuildContext context) {
+    final age = (_day != null && _month != null && _year != null) ? bmCalculateAgeFromBirthDate('$_day/$_month/$_year') : null;
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+      Padding(padding: const EdgeInsets.only(bottom: 5, right: 2), child: Text(age != null ? 'تاریخ تولد (سن: $age سال 🎂)' : 'تاریخ تولد (کادر روز / ماه / سال)', style: const TextStyle(fontSize: 11, color: Colors.white70))),
+      Row(children: [
+        _box('روز', _day?.toString(), () => _pickNum('انتخاب روز تولد', 1, 31, _day, (v) { _day = v; _updateCtrl(); })),
+        const SizedBox(width: 5),
+        _box('ماه', _month?.toString(), () => _pickNum('انتخاب ماه تولد', 1, 12, _month, (v) { _month = v; _updateCtrl(); }, isM: true)),
+        const SizedBox(width: 5),
+        _box('سال', _year?.toString(), () => _pickNum('انتخاب سال تولد (شمسی)', 1325, 1396, _year, (v) { _year = v; _updateCtrl(); }, rev: true)),
+      ]),
+    ]);
+  }
+}
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -1374,7 +1458,7 @@ class ComprehensiveFoodBankCatalog {
     FoodBankUnitItem(
       id: 'br_dushab_syrup',
       category: 'نان و صبحانه 🍳',
-      title: 'شیره انگور (دوشاب) یا شیره خرما',
+      title: 'شیره انگور یا شیره خرما',
       baseUnitName: 'قاشق مرباخوری',
       caloriesPerUnit: 22,
       proteinPerUnit: 0.1,
@@ -1626,6 +1710,198 @@ class ComprehensiveFoodBankCatalog {
         'مشت (۲۰ عدد)': 20.0,
       },
     ),
+      FoodBankUnitItem(
+      id: 'nt_almond_pistachio',
+      category: 'آجیل و خشکبار 🥜',
+      title: 'بادام زمینی (خام یا بوداده) 🥜',
+      baseUnitName: 'عدد (۱ دانه)',
+      caloriesPerUnit: 7,
+      proteinPerUnit: 0.3,
+      carbsPerUnit: 0.3,
+      fatPerUnit: 0.6,
+      emoji: '🥜',
+      alternateUnitsMultiplier: {
+        'عدد (۱ دانه)': 1.0,
+        'قاشق غذاخوری (۱۰ عدد)': 10.0,
+        'مشت (۲۰ عدد)': 20.0,
+      },
+    ),
+      FoodBankUnitItem(
+      id: 'nt_almond_pistachio',
+      category: 'آجیل و خشکبار 🥜',
+      title: 'پسته (خام یا شور) 🌰',
+      baseUnitName: 'عدد (۱ دانه)',
+      caloriesPerUnit: 7,
+      proteinPerUnit: 0.3,
+      carbsPerUnit: 0.3,
+      fatPerUnit: 0.6,
+      emoji: '🥜',
+      alternateUnitsMultiplier: {
+        'عدد (۱ دانه)': 1.0,
+        'قاشق غذاخوری (۱۰ عدد)': 10.0,
+        'مشت (۲۰ عدد)': 20.0,
+      },
+    ),
+      FoodBankUnitItem(
+      id: 'nt_almond_pistachio',
+      category: 'آجیل و خشکبار 🥜',
+      title: 'مغز گردو کامل 🧠',
+      baseUnitName: 'عدد (۱ دانه)',
+      caloriesPerUnit: 7,
+      proteinPerUnit: 0.3,
+      carbsPerUnit: 0.3,
+      fatPerUnit: 0.6,
+      emoji: '🥜',
+      alternateUnitsMultiplier: {
+        'عدد (۱ دانه)': 1.0,
+        'قاشق غذاخوری (۱۰ عدد)': 10.0,
+        'مشت (۲۰ عدد)': 20.0,
+      },
+    ),
+      FoodBankUnitItem(
+      id: 'nt_almond_pistachio',
+      category: 'آجیل و خشکبار 🥜',
+      title: 'فندق 🌰',
+      baseUnitName: 'عدد (۱ دانه)',
+      caloriesPerUnit: 7,
+      proteinPerUnit: 0.3,
+      carbsPerUnit: 0.3,
+      fatPerUnit: 0.6,
+      emoji: '🥜',
+      alternateUnitsMultiplier: {
+        'عدد (۱ دانه)': 1.0,
+        'قاشق غذاخوری (۱۰ عدد)': 10.0,
+        'مشت (۲۰ عدد)': 20.0,
+      },
+    ),
+      FoodBankUnitItem(
+      id: 'nt_almond_pistachio',
+      category: 'آجیل و خشکبار 🥜',
+      title: 'بادام هندی (کاجو) 🥜',
+      baseUnitName: 'عدد (۱ دانه)',
+      caloriesPerUnit: 7,
+      proteinPerUnit: 0.3,
+      carbsPerUnit: 0.3,
+      fatPerUnit: 0.6,
+      emoji: '🥜',
+      alternateUnitsMultiplier: {
+        'عدد (۱ دانه)': 1.0,
+        'قاشق غذاخوری (۱۰ عدد)': 10.0,
+        'مشت (۲۰ عدد)': 20.0,
+      },
+    ),
+      FoodBankUnitItem(
+      id: 'nt_almond_pistachio',
+      category: 'آجیل و خشکبار 🥜',
+      title: 'تخمه آفتابگردان یا کدو 🌻',
+      baseUnitName: 'عدد (۱ دانه)',
+      caloriesPerUnit: 7,
+      proteinPerUnit: 0.3,
+      carbsPerUnit: 0.3,
+      fatPerUnit: 0.6,
+      emoji: '🥜',
+      alternateUnitsMultiplier: {
+        'عدد (۱ دانه)': 1.0,
+        'قاشق غذاخوری (۱۰ عدد)': 10.0,
+        'مشت (۲۰ عدد)': 20.0,
+      },
+    ),
+      FoodBankUnitItem(
+      id: 'nt_almond_pistachio',
+      category: 'آجیل و خشکبار 🥜',
+      title: 'آجیل چهارمغز مخلوط 🥣',
+      baseUnitName: 'عدد (۱ دانه)',
+      caloriesPerUnit: 7,
+      proteinPerUnit: 0.3,
+      carbsPerUnit: 0.3,
+      fatPerUnit: 0.6,
+      emoji: '🥜',
+      alternateUnitsMultiplier: {
+        'عدد (۱ دانه)': 1.0,
+        'قاشق غذاخوری (۱۰ عدد)': 10.0,
+        'مشت (۲۰ عدد)': 20.0,
+      },
+    ),
+      FoodBankUnitItem(
+      id: 'nt_almond_pistachio',
+      category: 'تنقلات و دسر 🍫',
+      title: 'کیک خانگی یا اسفنجی ساده 🍰',
+      baseUnitName: 'عدد (۱ دانه)',
+      caloriesPerUnit: 7,
+      proteinPerUnit: 0.3,
+      carbsPerUnit: 0.3,
+      fatPerUnit: 0.6,
+      emoji: '🥜',
+      alternateUnitsMultiplier: {
+        'عدد (۱ دانه)': 1.0,
+        'قاشق غذاخوری (۱۰ عدد)': 10.0,
+        'مشت (۲۰ عدد)': 20.0,
+      },
+    ),
+      FoodBankUnitItem(
+      id: 'nt_almond_pistachio',
+      category: 'تنقلات و دسر 🍫',
+      title: 'کیک شکلاتی یا خامه‌ای 🎂',
+      baseUnitName: 'عدد (۱ دانه)',
+      caloriesPerUnit: 7,
+      proteinPerUnit: 0.3,
+      carbsPerUnit: 0.3,
+      fatPerUnit: 0.6,
+      emoji: '🥜',
+      alternateUnitsMultiplier: {
+        'عدد (۱ دانه)': 1.0,
+        'قاشق غذاخوری (۱۰ عدد)': 10.0,
+        'مشت (۲۰ عدد)': 20.0,
+      },
+    ),
+      FoodBankUnitItem(
+      id: 'nt_almond_pistachio',
+      category: 'تنقلات و دسر 🍫',
+      title: 'شیرینی خشک یا دانمارکی 🥐',
+      baseUnitName: 'عدد (۱ دانه)',
+      caloriesPerUnit: 7,
+      proteinPerUnit: 0.3,
+      carbsPerUnit: 0.3,
+      fatPerUnit: 0.6,
+      emoji: '🥜',
+      alternateUnitsMultiplier: {
+        'عدد (۱ دانه)': 1.0,
+        'قاشق غذاخوری (۱۰ عدد)': 10.0,
+        'مشت (۲۰ عدد)': 20.0,
+      },
+    ),
+      FoodBankUnitItem(
+      id: 'nt_almond_pistachio',
+      category: 'تنقلات و دسر 🍫',
+      title: 'شیرینی تر خامه‌ای 🧁',
+      baseUnitName: 'عدد (۱ دانه)',
+      caloriesPerUnit: 7,
+      proteinPerUnit: 0.3,
+      carbsPerUnit: 0.3,
+      fatPerUnit: 0.6,
+      emoji: '🥜',
+      alternateUnitsMultiplier: {
+        'عدد (۱ دانه)': 1.0,
+        'قاشق غذاخوری (۱۰ عدد)': 10.0,
+        'مشت (۲۰ عدد)': 20.0,
+      },
+    ),
+      FoodBankUnitItem(
+      id: 'nt_almond_pistachio',
+      category: 'تنقلات و دسر 🍫',
+      title: 'کلوچه یا کاپ‌کیک 🧁',
+      baseUnitName: 'عدد (۱ دانه)',
+      caloriesPerUnit: 7,
+      proteinPerUnit: 0.3,
+      carbsPerUnit: 0.3,
+      fatPerUnit: 0.6,
+      emoji: '🥜',
+      alternateUnitsMultiplier: {
+        'عدد (۱ دانه)': 1.0,
+        'قاشق غذاخوری (۱۰ عدد)': 10.0,
+        'مشت (۲۰ عدد)': 20.0,
+      },
+    ),
     FoodBankUnitItem(
       id: 'nt_raisins',
       category: 'آجیل و خشکبار 🥜',
@@ -1808,7 +2084,7 @@ class ComprehensiveFoodBankCatalog {
     FoodBankUnitItem(
       id: 'dr_protein_majoon',
       category: 'نوشیدنی و شیک ☕',
-      title: 'شیک پروتئین و معجون خانگی (شیر، موز، گردو و دوشاب)',
+      title: 'شیک پروتئین و معجون خانگی (شیر، موز، گردو و شیره انگور و شیره خرما)',
       baseUnitName: 'لیوان',
       caloriesPerUnit: 310,
       proteinPerUnit: 14.0,
@@ -3646,7 +3922,7 @@ class BodyModController extends ChangeNotifier {
             : isMid
             ? '۱۸۰ گرم سینه مرغ زعفرانی + ۸ قاشق برنج کته و سالاد شیرازی'
             : '۱ کاسه پرپروتئین عدسی با ۱ قاشق روغن زیتون + ۲ کف دست سنگک',
-        's2': 'معجون ۲ قاشق شیره انگور (دوشاب) و گردو + ۱ فنجان قهوه قبل تمرین',
+        's2': 'معجون ۲ قاشق شیره انگور و گردو + ۱ فنجان قهوه قبل تمرین',
         'd': isVipOrFlagship
             ? '۱۸۰ گرم استیک فیله گوساله + سالاد کینوا و سبزیجات گریل'
             : isMid
@@ -3659,7 +3935,7 @@ class BodyModController extends ChangeNotifier {
             ? 'پنکیک جو دوسر پرک با کره بادام‌زمینی، موز و شیره افرا'
             : isMid
             ? 'کاسه اوتمیل (جو دوسر با شیر، ۱ عدد موز و ۱ قاشق عسل)'
-            : '۲ قاشق غذاخوری ارده و شیره انگور (دوشاب) + ۲ کف دست نان بربری',
+            : '۲ قاشق غذاخوری ارده و شیره انگور + ۲ کف دست نان بربری',
         's1': '۱ پیاله ماست یونانی کم‌چرب با نعناع خشک و ۵ عدد بادام',
         'l': isVipOrFlagship
             ? '۲ سیخ کباب برگ گوسفندی کم‌چرب + ۸ قاشق چلوی زعفرانی و گوجه کبابی'
@@ -4438,12 +4714,8 @@ class _EditableBodyProfileFormWidgetState
         // حداکثر ۲ فیلد در هر ردیف تا هیچ عنوانی بریده نشود!
         Row(
           children: [
-            Expanded(
-              child: TextField(
-                controller: _ageCtrl,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'تاریخ تولد (محاسبه خودکار سن با تقویم رسمی)', hintText: 'روز ماه سال', floatingLabelBehavior: FloatingLabelBehavior.always,),
-              ),
+            Expanded(flex: 2, 
+              child: BmBirthDateThreeBoxes(controller: _ageCtrl),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -5906,7 +6178,7 @@ class _HomeDashboardTabState extends State<HomeDashboardTab> {
                 onChanged: (_) => setState(() {}),
                 decoration: InputDecoration(
                   hintText:
-                      'جستجوی سریع خوراکی (مثلاً: تخم‌مرغ، قورمه‌سبزی، خرما، دوشاب، پیتزا...)',
+                      'جستجوی سریع خوراکی (مثلاً: تخم‌مرغ، قورمه‌سبزی، خرما، شیره انگور و شیره خرما، پیتزا...)',
                   prefixIcon: const Icon(Icons.search_rounded),
                   suffixIcon: _bankSearchCtrl.text.isNotEmpty
                       ? IconButton(
