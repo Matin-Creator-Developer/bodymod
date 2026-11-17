@@ -22,3 +22,6 @@ flutter:
   assets:
     - assets/earth_burn.mp4
     - assets/icon.png
+
+dependency_overrides:
+  permission_handler_android: 12.0.13
