@@ -2,17 +2,23 @@
 import os, re, shutil, sys
 
 F = "lib/main.dart"
+BAK2 = "lib/main.dart.bak2"
+
 if not os.path.exists(F):
     sys.exit("❌ فایل lib/main.dart پیدا نشد!")
 
-shutil.copyfile(F, F + ".bak2")
+if os.path.exists(BAK2):
+    shutil.copyfile(BAK2, F)
+    print("✅ نسخه پایه از lib/main.dart.bak2 بازیابی شد تا تکراری‌ها کامل پاک شوند.")
+else:
+    shutil.copyfile(F, BAK2)
+
 with open(F, "r", encoding="utf-8") as f:
     c = f.read()
 
 c = c.replace("TextEditingController(text: ''));", "TextEditingController(text: '');")
 orig_parens = c.count("(") - c.count(")")
 orig_braces = c.count("{") - c.count("}")
-orig_bracks = c.count("[") - c.count("]")
 
 BIRTH_WIDGET = "\n".join([
     "String _bmSavedBirthStr = '';",
@@ -127,14 +133,12 @@ for marker in ["تاریخ تولد (محاسبه خودکار سن", "hintText:
                     esub = c[es:abs_s]
                     if "Expanded(" in esub and "flex:" not in esub:
                         c = c[:es] + esub.replace("Expanded(", "Expanded(flex: 2, ", 1) + c[abs_s:]
-                    print("✅ کادر تاریخ تولد به ۳ کادر مجزا (روز | ماه | سال) تبدیل شد!")
                     break
 
 c = re.sub(r"\s*\(\s*دوشاب\s*\)", "", c)
 c = re.sub(r"دوشاب\s*\(\s*شیره انگور و خرما\s*\)", "شیره انگور و شیره خرما", c)
 c = re.sub(r"شیره انگور\s*(?:و|یا|/)\s*خرما\s*(?:\(\s*دوشاب\s*\))?", "شیره انگور و شیره خرما", c)
 c = c.replace("دوشاب", "شیره انگور و شیره خرما")
-print("✅ کلمه «دوشاب» حذف شد!")
 
 def extract_item(text, pos):
     pre = text[max(0, pos - 280):pos]
@@ -160,38 +164,50 @@ def extract_item(text, pos):
     return -1, -1, None
 
 apos = c.find("بادام درختی")
-if apos != -1 and "بادام زمینی" not in c:
+if apos != -1:
     si, ei, tpl = extract_item(c, apos)
     if tpl:
         tm = re.search(r"(['\"][^'\"]*بادام درختی[^'\"]*['\"])", tpl)
         if tm:
             ot = tm.group(1)
             q = ot[0]
-            nuts = [
-                f"{q}بادام زمینی (خام یا بوداده) 🥜{q}",
-                f"{q}پسته (خام یا شور) 🌰{q}",
-                f"{q}مغز گردو کامل 🧠{q}",
-                f"{q}فندق 🌰{q}",
-                f"{q}بادام هندی (کاجو) 🥜{q}",
-                f"{q}تخمه آفتابگردان یا کدو 🌻{q}",
-                f"{q}آجیل چهارمغز مخلوط 🥣{q}",
+            base_almond = tpl.replace(ot, f"{q}بادام درختی (خام یا بوداده){q}", 1).replace("'🥜'", "'🌰'").replace('"🥜"', '"🌰"')
+
+            def build_cloned_item(new_title, big_emoji, cat_override=None):
+                item = tpl.replace(ot, f"{q}{new_title}{q}", 1)
+                item = item.replace("'🥜'", f"'{big_emoji}'").replace('"🥜"', f'"{big_emoji}"')
+                if cat_override:
+                    item = re.sub(r"(['\"])[^'\"]*آجیل[^'\"]*(['\"])", rf"\1{cat_override}\2", item, count=1)
+                    item = item.replace("۱ عدد (۱ دانه)", "۱ برش (متوسط)")
+                return item
+
+            nut_defs = [
+                ("بادام زمینی (خام یا بوداده)", "🥜"),
+                ("پسته (خام یا شور)", "🌰"),
+                ("فندق (خام یا بوداده)", "🌰"),
+                ("بادام هندی (کاجو)", "🥜"),
+                ("تخمه آفتابگردان یا کدو", "🌻"),
+                ("آجیل چهارمغز مخلوط", "🥣"),
             ]
-            cloned = [tpl.replace(ot, nt, 1) for nt in nuts]
+            all_items = [base_almond]
+            for n_title, n_icon in nut_defs:
+                all_items.append(build_cloned_item(n_title, n_icon))
+
             scm = re.search(r"['\"]([^'\"]*تنقلات[^'\"]*)['\"]", c)
-            sc_name = scm.group(1) if scm else "تنقلات"
-            snacks = [
-                f"{q}کیک خانگی یا اسفنجی ساده 🍰{q}",
-                f"{q}کیک شکلاتی یا خامه‌ای 🎂{q}",
-                f"{q}شیرینی خشک یا دانمارکی 🥐{q}",
-                f"{q}شیرینی تر خامه‌ای 🧁{q}",
-                f"{q}کلوچه یا کاپ‌کیک 🧁{q}",
+            sc_name = scm.group(1) if scm else "تنقلات و دسر"
+
+            snack_defs = [
+                ("کیک خانگی یا اسفنجی ساده", "🍰"),
+                ("کیک شکلاتی یا خامه‌ای", "🎂"),
+                ("شیرینی خشک یا دانمارکی", "🥐"),
+                ("شیرینی تر خامه‌ای", "🧁"),
+                ("کلوچه یا کاپ‌کیک", "🍪"),
             ]
-            for sn in snacks:
-                sc = tpl.replace(ot, sn, 1)
-                sc = re.sub(r"(['\"])[^'\"]*آجیل[^'\"]*(['\"])", rf"\1{sc_name}\2", sc, count=1)
-                cloned.append(sc)
-            c = c[:ei] + ",\n      " + ",\n      ".join(cloned) + c[ei:]
-            print("✅ آجیل‌ها (بادام زمینی، پسته، گردو، فندق، بادام هندی، تخمه، چهارمغز) و کیک و شیرینی در تنقلات اضافه شدند!")
+            for s_title, s_icon in snack_defs:
+                all_items.append(build_cloned_item(s_title, s_icon, cat_override=sc_name))
+
+            c = c[:si] + ",\n      ".join(all_items) + c[ei:]
+            print("✅ گردوی تکراری حذف شد و ایموجی بزرگ سمت راست برای هر آیتم جایگزین بادام‌زمینی شد!")
 
 if (c.count("(") - c.count(")")) != orig_parens or (c.count("{") - c.count("}")) != orig_braces:
     sys.exit("❌ خطا در توازن پرانتز/آکولاد! فایل تغییر نکرد.")
@@ -199,4 +215,4 @@ if (c.count("(") - c.count(")")) != orig_parens or (c.count("{") - c.count("}"))
 with open(F, "w", encoding="utf-8") as f:
     f.write(c)
 
-print("🎉 تمام تغییرات با بررسی ۱۰۰٪ سلامت سینتکس در lib/main.dart ذخیره شد!")
+print("🎉 تمام اصلاحات با موفقیت در lib/main.dart ذخیره شد!")
