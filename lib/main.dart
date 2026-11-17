@@ -4386,7 +4386,7 @@ class _EditableBodyProfileFormWidgetState
     super.initState();
     final p = widget.controller.profile;
     _nameCtrl = TextEditingController(text: ((p.displayName).toString().trim() == 'رفیق ورزشکار' || (p.displayName).toString().trim() == 'ورزشکار') ? '' : (p.displayName).toString());
-    _ageCtrl = TextEditingController(text: ''));
+    _ageCtrl = TextEditingController(text: '');
     _heightCtrl = TextEditingController(text: p.heightCm.toString());
     _weightCtrl = TextEditingController(text: p.weightKg.toString());
     _targetWeightCtrl = TextEditingController(
