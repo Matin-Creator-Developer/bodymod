@@ -64,7 +64,7 @@ Future<T?> bmShowResponsiveSheet<T>({
   if (sb < 48.0) sb = 48.0;
   return showModalBottomSheet<T>(
     context: context, isScrollControlled: true, useSafeArea: true,
-    backgroundColor: backgroundColor ?? const Color(0xFF151922), elevation: elevation,
+    backgroundColor: backgroundColor ?? bmCardColor, elevation: elevation,
     shape: shape ?? const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
     clipBehavior: clipBehavior ?? Clip.antiAlias, barrierColor: barrierColor,
     useRootNavigator: useRootNavigator, isDismissible: isDismissible, enableDrag: enableDrag,
@@ -119,7 +119,7 @@ class _BmBirthDateThreeBoxesState extends State<BmBirthDateThreeBoxes> {
       builder: (ctx) => Padding(
         padding: const EdgeInsets.all(16),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
+          Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: bmTextColor)),
           const SizedBox(height: 12),
           Wrap(spacing: 8, runSpacing: 8, alignment: WrapAlignment.center, children: items.map((val) {
             final sel = val == cur;
@@ -129,7 +129,7 @@ class _BmBirthDateThreeBoxesState extends State<BmBirthDateThreeBoxes> {
               borderRadius: BorderRadius.circular(10),
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: isM ? 12 : 14, vertical: 9),
-                decoration: BoxDecoration(color: sel ? const Color(0xFF00E5A3) : const Color(0xFF1E2638), borderRadius: BorderRadius.circular(10), border: Border.all(color: sel ? const Color(0xFF00E5A3) : Colors.white24)),
+                decoration: BoxDecoration(color: sel ? const Color(0xFF00E5A3) : bmSurfaceColor, borderRadius: BorderRadius.circular(10), border: Border.all(color: sel ? const Color(0xFF00E5A3) : bmBorderColor)),
                 child: Text(lbl, style: TextStyle(color: sel ? Colors.black : Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
               ),
             );
@@ -142,11 +142,11 @@ class _BmBirthDateThreeBoxesState extends State<BmBirthDateThreeBoxes> {
     final ok = val != null && val.isNotEmpty;
     return Expanded(child: InkWell(onTap: onTap, borderRadius: BorderRadius.circular(12), child: Container(
       padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 2),
-      decoration: BoxDecoration(color: const Color(0xFF151922), borderRadius: BorderRadius.circular(12), border: Border.all(color: ok ? const Color(0xFF00E5A3).withOpacity(0.75) : Colors.white24)),
+      decoration: BoxDecoration(color: bmCardColor, borderRadius: BorderRadius.circular(12), border: Border.all(color: ok ? const Color(0xFF00E5A3).withOpacity(0.75) : bmBorderColor)),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
-        Text(lbl, style: const TextStyle(fontSize: 10, color: Colors.white54)),
+        Text(lbl, style: TextStyle(fontSize: 10, color: bmTextMutedColor)),
         const SizedBox(height: 2),
-        Text(ok ? val : 'انتخاب', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: ok ? Colors.white : Colors.white38)),
+        Text(ok ? val : 'انتخاب', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: ok ? Colors.white : bmTextMutedColor)),
       ]),
     )));
   }
@@ -154,7 +154,7 @@ class _BmBirthDateThreeBoxesState extends State<BmBirthDateThreeBoxes> {
   Widget build(BuildContext context) {
     final age = (_day != null && _month != null && _year != null) ? bmCalculateAgeFromBirthDate('$_day/$_month/$_year') : null;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-      Padding(padding: const EdgeInsets.only(bottom: 5, right: 2), child: Text(age != null ? 'تاریخ تولد (سن: $age سال 🎂)' : 'تاریخ تولد (کادر روز / ماه / سال)', style: const TextStyle(fontSize: 11, color: Colors.white70))),
+      Padding(padding: const EdgeInsets.only(bottom: 5, right: 2), child: Text(age != null ? 'تاریخ تولد (سن: $age سال 🎂)' : 'تاریخ تولد (کادر روز / ماه / سال)', style: TextStyle(fontSize: 11, color: bmTextSubColor))),
       Row(children: [
         _box('روز', _day?.toString(), () => _pickNum('انتخاب روز تولد', 1, 31, _day, (v) { _day = v; _updateCtrl(); })),
         const SizedBox(width: 5),
@@ -328,6 +328,20 @@ Future<bool> bmGenerateAiWorkoutPlan(BuildContext context, {VoidCallback? onDone
   return false;
 }
 // --- [END SMART WORKOUT ENGINE] ---
+// --- [BODYMOD HIGH-CONTRAST DARK & LIGHT THEME ENGINE] ---
+bool bmIsDarkTheme = true;
+Color get bmBgColor => bmIsDarkTheme ? const Color(0xFF0B0F17) : const Color(0xFFF1F5F9);
+Color get bmCardColor => bmIsDarkTheme ? const Color(0xFF151B26) : const Color(0xFFFFFFFF);
+Color get bmSurfaceColor => bmIsDarkTheme ? const Color(0xFF1E2638) : const Color(0xFFE2E8F0);
+Color get bmTextColor => bmIsDarkTheme ? const Color(0xFFFFFFFF) : const Color(0xFF0F172A);
+Color get bmTextSubColor => bmIsDarkTheme ? const Color(0xFFE2E8F0) : const Color(0xFF1E293B);
+Color get bmTextMutedColor => bmIsDarkTheme ? const Color(0xFFCBD5E1) : const Color(0xFF334155);
+Color get bmBorderColor => bmIsDarkTheme ? const Color(0xFF334155) : const Color(0xFFCBD5E1);
+Color get bmAccentColor => bmIsDarkTheme ? const Color(0xFF00E5A3) : const Color(0xFF059669);
+Color get bmOnAccentColor => bmIsDarkTheme ? const Color(0xFF000000) : const Color(0xFFFFFFFF);
+Color get bmYellowBoxColor => const Color(0xFFFBBF24);
+Color get bmOnYellowBoxColor => const Color(0xFF0F172A);
+// --- [END THEME ENGINE] ---
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); bmLoadSavedAiWorkouts();
 
@@ -337,10 +351,10 @@ void main() async {
   ]);
 
   SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
+    SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: Color(0xFF090D16),
+      systemNavigationBarColor: bmBgColor,
       systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
@@ -510,7 +524,7 @@ class AppConfig {
 // ============================================================================
 
 class BMColors {
-  static const Color bgDark = Color(0xFF090D16);
+  Color get bgDark => bmBgColor;
   static const Color surfaceDark = Color(0xFF121826);
   static const Color cardDark = Color(0xFF1A2235);
   static const Color cardBorderDark = Color(0xFF28344E);
@@ -545,14 +559,14 @@ class BMTheme {
       ),
       cardColor: BMColors.cardDark,
       dividerColor: BMColors.cardBorderDark,
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: BMColors.bgDark,
         elevation: 0,
         centerTitle: false,
         titleTextStyle: TextStyle(
           fontSize: 17.5,
           fontWeight: FontWeight.w900,
-          color: Colors.white,
+          color: bmTextColor,
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -649,7 +663,7 @@ class BodyModTopChannelBanner extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
+            Row(
               children: [
                 Text('📢🎁 ', style: TextStyle(fontSize: 24)),
                 Expanded(
@@ -658,16 +672,16 @@ class BodyModTopChannelBanner extends StatelessWidget {
                     style: TextStyle(
                       fontWeight: FontWeight.w900,
                       fontSize: 16.5,
-                      color: Colors.white,
+                      color: bmTextColor,
                     ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'کدهای تخفیف اشتراک، اطلاعیه‌های مهم و نکات طلایی فقط توی کانال رسمی منتشر میشه رفیق! از کدوم پیام‌رسان می‌خوای وارد بشی؟ 👇',
-              style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.55),
+              style: TextStyle(color: bmTextSubColor, fontSize: 13, height: 1.55),
             ),
             const SizedBox(height: 16),
             SizedBox(
@@ -798,15 +812,15 @@ class BodyModTopChannelBanner extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: Colors.black38,
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.white24),
+                            border: Border.all(color: bmBorderColor),
                           ),
-                          child: const Text(
+                          child: Text(
                             '@bodymod_channel',
                             textDirection: TextDirection.ltr,
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w800,
-                              color: Colors.white,
+                              color: bmTextColor,
                             ),
                           ),
                         ),
@@ -3134,14 +3148,14 @@ class BodyModController extends ChangeNotifier {
           borderRadius: BorderRadius.circular(22),
           side: const BorderSide(color: BMColors.neonCyan, width: 1.4),
         ),
-        title: const Row(
+        title: Row(
           children: [
             Text('🔔🔥 ', style: TextStyle(fontSize: 22)),
             Expanded(
               child: Text(
                 'خوش اومدی به BodyMod رفیق!',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: bmTextColor,
                   fontSize: 17,
                   fontWeight: FontWeight.w900,
                 ),
@@ -3160,9 +3174,9 @@ class BodyModController extends ChangeNotifier {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text(
+            child: Text(
               'بعداً یادم بنداز',
-              style: TextStyle(color: Colors.white60),
+              style: TextStyle(color: bmTextSubColor),
             ),
           ),
           ElevatedButton.icon(
@@ -3332,23 +3346,23 @@ class BodyModController extends ChangeNotifier {
             borderRadius: BorderRadius.circular(20),
             side: const BorderSide(color: BMColors.neonCyan),
           ),
-          title: const Text(
+          title: Text(
             'ورود با جیمیل (Google Account) 🔐',
-            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15.5, color: Colors.white),
+            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15.5, color: bmTextColor),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
+              Text(
                 'آدرس جیمیلت رو وارد کن تا مستقیم به سرور کلودفلر متصل بشی:',
-                style: TextStyle(fontSize: 12.5, color: Colors.white70),
+                style: TextStyle(fontSize: 12.5, color: bmTextSubColor),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: emailCtrl,
                 keyboardType: TextInputType.emailAddress,
                 textDirection: TextDirection.ltr,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: bmTextColor),
                 decoration: const InputDecoration(
                   labelText: 'آدرس جیمیل (مثلاً name@gmail.com)',
                   prefixIcon: Icon(Icons.email_outlined),
@@ -3357,7 +3371,7 @@ class BodyModController extends ChangeNotifier {
               const SizedBox(height: 10),
               TextField(
                 controller: nameCtrl,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: bmTextColor),
                 decoration: const InputDecoration(
                   labelText: 'نام شما (اختیاری)', hintText: 'رفیق ورزشکار', floatingLabelBehavior: FloatingLabelBehavior.always,
                   prefixIcon: Icon(Icons.person_outline_rounded),
@@ -4476,24 +4490,24 @@ class _TwoStepAuthBottomSheetState extends State<TwoStepAuthBottomSheet> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   '🔐 ورود یا ثبت‌نام در بادی‌مود',
                   style: TextStyle(
                     fontWeight: FontWeight.w900,
                     fontSize: 17,
-                    color: Colors.white,
+                    color: bmTextColor,
                   ),
                 ),
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close_rounded, color: Colors.white70),
+                  icon: Icon(Icons.close_rounded, color: bmTextSubColor),
                 ),
               ],
             ),
             const SizedBox(height: 6),
-            const Text(
+            Text(
               'با اکانت گوگل یا شماره موبایلت وارد شو؛ اگر قبلاً فرم مشخصاتت رو پر کرده باشی مستقیم میری داخل برنامه! 🚀',
-              style: TextStyle(fontSize: 12.8, color: Colors.white70, height: 1.5),
+              style: TextStyle(fontSize: 12.8, color: bmTextSubColor, height: 1.5),
             ),
             const SizedBox(height: 16),
 
@@ -4528,10 +4542,10 @@ class _TwoStepAuthBottomSheetState extends State<TwoStepAuthBottomSheet> {
               ),
             ),
             const SizedBox(height: 16),
-            const Center(
+            Center(
               child: Text(
                 '— یا ورود با شماره موبایل (کد تایید بله) —',
-                style: TextStyle(fontSize: 12, color: Colors.white54),
+                style: TextStyle(fontSize: 12, color: bmTextMutedColor),
               ),
             ),
             const SizedBox(height: 12),
@@ -4669,7 +4683,7 @@ class _TwoStepAuthBottomSheetState extends State<TwoStepAuthBottomSheet> {
                         fontWeight: FontWeight.w800,
                         fontSize: 12.5,
                         color: _resendSecondsLeft > 0
-                            ? Colors.white54
+                            ? bmTextMutedColor
                             : BMColors.neonCyan,
                       ),
                     ),
@@ -4686,9 +4700,9 @@ class _TwoStepAuthBottomSheetState extends State<TwoStepAuthBottomSheet> {
                               _statusMsg = null;
                             });
                           },
-                    child: const Text(
+                    child: Text(
                       'ویرایش شماره ✏️',
-                      style: TextStyle(fontSize: 12, color: Colors.white70),
+                      style: TextStyle(fontSize: 12, color: bmTextSubColor),
                     ),
                   ),
                 ],
@@ -4732,22 +4746,22 @@ class RegistrationProfileFormDialog extends StatelessWidget {
               child: Row(
                 children: [
                   const Text('📋✨ ', style: TextStyle(fontSize: 20)),
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'تکمیل پرونده بدنی و حافظه مربی (مرحله ۲)',
                       style: TextStyle(
                         fontWeight: FontWeight.w900,
                         fontSize: 15,
-                        color: Colors.white,
+                        color: bmTextColor,
                       ),
                     ),
                   ),
                   IconButton(
                     tooltip: 'بستن و تکمیل در زمان دیگر',
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.close_rounded,
-                      color: Colors.white70,
+                      color: bmTextSubColor,
                     ),
                   ),
                 ],
@@ -5035,12 +5049,12 @@ class _EditableBodyProfileFormWidgetState
         const SizedBox(height: 16),
 
         // کادر حافظه بلندمدت هوش مصنوعی داخل فرم ثبت‌نام (و قابل ویرایش در پروفایل!)
-        const Text(
+        Text(
           '🧠 حافظه بلندمدت هوش مصنوعی (برای شخصی‌سازی دقیق برنامه غذایی و تمرین):',
           style: TextStyle(
             fontWeight: FontWeight.w900,
             fontSize: 13.5,
-            color: Colors.white,
+            color: bmTextColor,
           ),
         ),
         const SizedBox(height: 8),
@@ -5126,7 +5140,7 @@ class BodyModApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           theme: BMTheme.light(),
           darkTheme: BMTheme.dark(),
-          themeMode: controller.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          themeMode: controller.(bmIsDarkTheme = isDarkMode) ? ThemeMode.dark : ThemeMode.light,
           builder: (context, child) {
             return Directionality(
               textDirection: TextDirection.rtl,
@@ -5227,7 +5241,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
                       ? BMColors.flameOrange
                       : c.currentStreakState == StreakVisualState.blueFrozen
                       ? BMColors.electricBlue
-                      : Colors.white38,
+                      : bmTextMutedColor,
                 ),
               ),
               child: Row(
@@ -5308,8 +5322,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
         decoration: BoxDecoration(
           border: Border(
             top: BorderSide(
-              color: c.isDarkMode
-                  ? BMColors.cardBorderDark
+              color: c.(bmIsDarkTheme = isDarkMode) ? BMColors.cardBorderDark
                   : BMColors.cardBorderLight,
             ),
           ),
@@ -5317,8 +5330,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
         child: NavigationBar(
           selectedIndex: _currentTab,
           onDestinationSelected: _jumpToTab,
-          backgroundColor: c.isDarkMode
-              ? BMColors.surfaceDark
+          backgroundColor: c.(bmIsDarkTheme = isDarkMode) ? BMColors.surfaceDark
               : BMColors.surfaceLight,
           indicatorColor: BMColors.neonCyan.withOpacity(0.2),
           destinations: const [
@@ -5371,7 +5383,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
 
   Widget _buildAppDrawer(BuildContext context, BodyModController c) {
     return Drawer(
-      backgroundColor: c.isDarkMode ? BMColors.surfaceDark : Colors.white,
+      backgroundColor: c.(bmIsDarkTheme = isDarkMode) ? BMColors.surfaceDark : Colors.white,
       child: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -5379,8 +5391,8 @@ class _MainShellScreenState extends State<MainShellScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+                gradient: LinearGradient(
+                  colors: [Color(0xFF0F172A), bmSurfaceColor],
                 ),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: BMColors.neonCyan.withOpacity(0.45)),
@@ -5404,8 +5416,8 @@ class _MainShellScreenState extends State<MainShellScreen> {
                               c.profile.displayName.isEmpty
                                   ? 'قهرمان بادی‌مود'
                                   : c.profile.displayName,
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: bmTextColor,
                                 fontWeight: FontWeight.w900,
                                 fontSize: 15.5,
                               ),
@@ -5415,8 +5427,8 @@ class _MainShellScreenState extends State<MainShellScreen> {
                               c.profile.isLoggedIn
                                   ? c.profile.userKey
                                   : 'حالت آفلاین (بدون ثبت‌نام)',
-                              style: const TextStyle(
-                                color: Colors.white70,
+                              style: TextStyle(
+                                color: bmTextSubColor,
                                 fontSize: 12,
                               ),
                             ),
@@ -5490,12 +5502,12 @@ class _MainShellScreenState extends State<MainShellScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'فلسفه آتیش استریک بادی‌مود 🔥💙💀',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w900,
-                color: Colors.white,
+                color: bmTextColor,
               ),
             ),
             const SizedBox(height: 10),
@@ -5508,12 +5520,12 @@ class _MainShellScreenState extends State<MainShellScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
+            Text(
               '• 🔥 آتیش قرمز/نارنجی: یعنی امروز کالری یا لیوان آبت رو ثبت کردی و استریکت داغ و فعاله!\n'
               '• 💙 آتیش آبی (یخ‌زده): یعنی امروز هنوز چیزی ثبت نکردی و آتیشت داره از سرما یخ می‌زنه!\n'
               '• 💀 جمجمه خاموش: یعنی هنوز استریکت رو روشن نکردی یا بیش از ۲۴ ساعت غیبت داشتی!',
               style: TextStyle(
-                color: Colors.white70,
+                color: bmTextSubColor,
                 fontSize: 13,
                 height: 1.65,
               ),
@@ -5791,10 +5803,10 @@ class _HomeDashboardTabState extends State<HomeDashboardTab> {
                     Expanded(
                       child: Text(
                         item.title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.w900,
                           fontSize: 16,
-                          color: Colors.white,
+                          color: bmTextColor,
                         ),
                       ),
                     ),
@@ -5805,9 +5817,9 @@ class _HomeDashboardTabState extends State<HomeDashboardTab> {
                   ],
                 ),
                 const SizedBox(height: 10),
-                const Text(
+                Text(
                   '۱. واحد اندازه‌گیری رو انتخاب کن (از کمترین واحد تا پرس کامل):',
-                  style: TextStyle(fontSize: 12.5, color: Colors.white70),
+                  style: TextStyle(fontSize: 12.5, color: bmTextSubColor),
                 ),
                 const SizedBox(height: 8),
                 Wrap(
@@ -5832,9 +5844,9 @@ class _HomeDashboardTabState extends State<HomeDashboardTab> {
                   }).toList(),
                 ),
                 const SizedBox(height: 14),
-                const Text(
+                Text(
                   '۲. چقدر از این واحد خوردی؟ (تعداد / ضریب):',
-                  style: TextStyle(fontSize: 12.5, color: Colors.white70),
+                  style: TextStyle(fontSize: 12.5, color: bmTextSubColor),
                 ),
                 const SizedBox(height: 8),
                 Wrap(
@@ -5931,7 +5943,7 @@ class _HomeDashboardTabState extends State<HomeDashboardTab> {
   Widget _miniNutrient(String label, String val) {
     return Column(
       children: [
-        Text(label, style: const TextStyle(fontSize: 11, color: Colors.white70)),
+        Text(label, style: TextStyle(fontSize: 11, color: bmTextSubColor)),
         const SizedBox(height: 3),
         Text(
           val,
@@ -5977,9 +5989,9 @@ class _HomeDashboardTabState extends State<HomeDashboardTab> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: c.currentStreakState == StreakVisualState.redFire
-                  ? [const Color(0xFF431407), const Color(0xFF1E293B)]
+                  ? [const Color(0xFF431407), bmSurfaceColor]
                   : c.currentStreakState == StreakVisualState.blueFrozen
-                  ? [const Color(0xFF0C4A6E), const Color(0xFF1E293B)]
+                  ? [const Color(0xFF0C4A6E), bmSurfaceColor]
                   : [const Color(0xFF1F2937), const Color(0xFF111827)],
             ),
             borderRadius: BorderRadius.circular(20),
@@ -5988,7 +6000,7 @@ class _HomeDashboardTabState extends State<HomeDashboardTab> {
                   ? BMColors.flameOrange
                   : c.currentStreakState == StreakVisualState.blueFrozen
                   ? BMColors.electricBlue
-                  : Colors.white24,
+                  : bmBorderColor,
             ),
           ),
           child: Row(
@@ -6001,18 +6013,18 @@ class _HomeDashboardTabState extends State<HomeDashboardTab> {
                   children: [
                     Text(
                       'استریک فعلی: ${c.streakCount} روز پیوسته',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w900,
                         fontSize: 15,
-                        color: Colors.white,
+                        color: bmTextColor,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       c.streakStatusMessage,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12.2,
-                        color: Colors.white70,
+                        color: bmTextSubColor,
                         height: 1.45,
                       ),
                     ),
@@ -6046,7 +6058,7 @@ class _HomeDashboardTabState extends State<HomeDashboardTab> {
                       child: CircularProgressIndicator(
                         value: calRatio,
                         strokeWidth: 9,
-                        backgroundColor: Colors.white12,
+                        backgroundColor: bmBorderColor,
                         valueColor: const AlwaysStoppedAnimation<Color>(
                           BMColors.neonCyan,
                         ),
@@ -6376,7 +6388,7 @@ class _HomeDashboardTabState extends State<HomeDashboardTab> {
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.03),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.white10),
+                    border: Border.all(color: bmBorderColor),
                   ),
                   child: Row(
                     children: [
@@ -6515,7 +6527,7 @@ class _HomeDashboardTabState extends State<HomeDashboardTab> {
           child: LinearProgressIndicator(
             value: ratio,
             minHeight: 7,
-            backgroundColor: Colors.white10,
+            backgroundColor: bmBorderColor,
             valueColor: AlwaysStoppedAnimation<Color>(color),
           ),
         ),
@@ -6564,7 +6576,7 @@ class WeeklyMealPlanTab extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Row(
+              Row(
                 children: [
                   Text('🥗📅 ', style: TextStyle(fontSize: 22)),
                   Expanded(
@@ -6573,7 +6585,7 @@ class WeeklyMealPlanTab extends StatelessWidget {
                       style: TextStyle(
                         fontWeight: FontWeight.w900,
                         fontSize: 15.5,
-                        color: Colors.white,
+                        color: bmTextColor,
                       ),
                     ),
                   ),
@@ -6582,7 +6594,7 @@ class WeeklyMealPlanTab extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 'هدف: ${AppConfig.goalLabel(c.profile.goal)} • بودجه: ${AppConfig.budgetLabel(c.profile.budgetTier)}',
-                style: const TextStyle(fontSize: 12, color: Colors.white70),
+                style: TextStyle(fontSize: 12, color: bmTextSubColor),
               ),
               const SizedBox(height: 12),
               SizedBox(
@@ -6767,9 +6779,9 @@ class WeeklyMealPlanTab extends StatelessWidget {
                       Flexible(
                         child: Text(
                           '🥩 پروتئین: ${slot.proteinG}g | 🍚 کربو: ${slot.carbsG}g | 🥑 چربی: ${slot.fatG}g',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 11.2,
-                            color: Colors.white70,
+                            color: bmTextSubColor,
                           ),
                         ),
                       ),
@@ -6932,7 +6944,7 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 6, 16, 95),
       children: [
-        Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: const Color(0xFF151922), borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFF00E5A3).withOpacity(0.4))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Row(children: [const Icon(Icons.local_fire_department_rounded, color: Colors.orangeAccent, size: 20), const SizedBox(width: 6), Text('کالری مصرفی این تمرین: ${bmGetVisibleWorkoutCalories()} کالری 🔥', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white))]),InkWell(onTap: () => bmGenerateAiWorkoutPlan(context, onDone: () => setState(() {})), borderRadius: BorderRadius.circular(8), child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5), decoration: BoxDecoration(color: const Color(0xFF00E5A3).withOpacity(0.18), borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFF00E5A3))), child: Text(bmIsGeneratingWorkout ? 'در حال محاسبه AI... ⏳' : '🤖 بروزرسانی با AI', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF00E5A3))))),]),const SizedBox(height: 8),Text(bmGetSurplusRecommendation(), style: const TextStyle(fontSize: 11.5, color: Colors.white70, height: 1.45)),])), Row(
+        Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: bmCardColor, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFF00E5A3).withOpacity(0.4))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Row(children: [const Icon(Icons.local_fire_department_rounded, color: Colors.orangeAccent, size: 20), const SizedBox(width: 6), Text('کالری مصرفی این تمرین: ${bmGetVisibleWorkoutCalories()} کالری 🔥', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: bmTextColor))]),InkWell(onTap: () => bmGenerateAiWorkoutPlan(context, onDone: () => setState(() {})), borderRadius: BorderRadius.circular(8), child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5), decoration: BoxDecoration(color: const Color(0xFF00E5A3).withOpacity(0.18), borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFF00E5A3))), child: Text(bmIsGeneratingWorkout ? 'در حال محاسبه AI... ⏳' : '🤖 بروزرسانی با AI', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF00E5A3))))),]),const SizedBox(height: 8),Text(bmGetSurplusRecommendation(), style: TextStyle(fontSize: 11.5, color: bmTextSubColor, height: 1.45)),])), Row(
           children: [
             _buildPhaseBadge(
               title: '۱. گرم کردن 🔥',
@@ -6983,23 +6995,23 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
                   ),
                   Text(
                     'حرکت ${safeIdx + 1} از ${steps.length}',
-                    style: const TextStyle(fontSize: 11.5, color: Colors.white70),
+                    style: TextStyle(fontSize: 11.5, color: bmTextSubColor),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
               Text(
                 activeStep.name,
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.w900,
                   fontSize: 17,
-                  color: Colors.white,
+                  color: bmTextColor,
                 ),
               ),
               const SizedBox(height: 5),
               Text(
                 '🎯 عضله هدف: ${activeStep.muscleGroup} • تکرار: ${activeStep.repsOrDuration}',
-                style: const TextStyle(fontSize: 12.5, color: Colors.white70),
+                style: TextStyle(fontSize: 12.5, color: bmTextSubColor),
               ),
               const SizedBox(height: 12),
               Row(
@@ -7016,14 +7028,14 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
                             ? BMColors.neonGreen.withOpacity(0.25)
                             : isCurrent
                             ? phaseColor.withOpacity(0.28)
-                            : Colors.white10,
+                            : bmBorderColor,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                           color: done
                               ? BMColors.neonGreen
                               : isCurrent
                               ? phaseColor
-                              : Colors.white12,
+                              : bmBorderColor,
                         ),
                       ),
                       alignment: Alignment.center,
@@ -7036,7 +7048,7 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
                               ? BMColors.neonGreen
                               : isCurrent
                               ? Colors.white
-                              : Colors.white54,
+                              : bmTextMutedColor,
                         ),
                       ),
                     ),
@@ -7064,9 +7076,9 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
                     const SizedBox(height: 4),
                     Text(
                       '💡 نکته مربی: ${activeStep.coachNote}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11.8,
-                        color: Colors.white70,
+                        color: bmTextSubColor,
                         height: 1.5,
                       ),
                     ),
@@ -7098,7 +7110,7 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF090D16),
+                    color: bmBgColor,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: _restElapsedSeconds < 20
@@ -7112,10 +7124,10 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
                     children: [
                       Text(
                         '⏱️ زمان استراحت: $_restElapsedSeconds ثانیه (هدف: ${activeStep.targetRestSeconds} ثانیه)',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.w900,
                           fontSize: 14,
-                          color: Colors.white,
+                          color: bmTextColor,
                         ),
                       ),
                       const SizedBox(height: 10),
@@ -7177,9 +7189,9 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         decoration: BoxDecoration(
-          color: active ? color.withOpacity(0.22) : Colors.white10,
+          color: active ? color.withOpacity(0.22) : bmBorderColor,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: active ? color : Colors.white12),
+          border: Border.all(color: active ? color : bmBorderColor),
         ),
         alignment: Alignment.center,
         child: Text(
@@ -7188,7 +7200,7 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
           style: TextStyle(
             fontWeight: FontWeight.w900,
             fontSize: 11,
-            color: active ? color : Colors.white60,
+            color: active ? color : bmTextSubColor,
           ),
         ),
       ),
@@ -7382,18 +7394,15 @@ class _BodyAndAiCoachTabState extends State<BodyAndAiCoachTab> {
                         ),
                         decoration: BoxDecoration(
                           color: msg.isUser
-                              ? (c.isDarkMode
-                                    ? BMColors.neonCyan.withOpacity(0.18)
+                              ? (c.(bmIsDarkTheme = isDarkMode) ? BMColors.neonCyan.withOpacity(0.18)
                                     : const Color(0xFFCCFBF1))
-                              : (c.isDarkMode
-                                    ? const Color(0xFF0E1525)
+                              : (c.(bmIsDarkTheme = isDarkMode) ? const Color(0xFF0E1525)
                                     : const Color(0xFFF1F5F9)),
                           borderRadius: BorderRadius.circular(15),
                           border: Border.all(
                             color: msg.isUser
                                 ? BMColors.neonCyan.withOpacity(0.6)
-                                : (c.isDarkMode
-                                      ? Colors.white12
+                                : (c.(bmIsDarkTheme = isDarkMode) ? bmBorderColor
                                       : const Color(0xFFCBD5E1)),
                           ),
                         ),
@@ -7402,8 +7411,7 @@ class _BodyAndAiCoachTabState extends State<BodyAndAiCoachTab> {
                           style: TextStyle(
                             fontSize: 13,
                             height: 1.55,
-                            color: c.isDarkMode
-                                ? Colors.white
+                            color: c.(bmIsDarkTheme = isDarkMode) ? Colors.white
                                 : const Color(0xFF0F172A),
                           ),
                         ),
@@ -7697,9 +7705,9 @@ class _ProfileAndBillingTabState extends State<ProfileAndBillingTab> {
                     : c.profile.hasActiveSubscription
                     ? '✅ اشتراک شما فعاله (${c.profile.subscriptionDaysRemaining} روز باقی‌مانده). تمدید اشتراک در روزهای ۲۸ تا ۳۱ باز می‌شه و روزهای باقی‌مانده روی ماه جدیدت اضافه می‌شه!'
                     : 'با فعال‌سازی اشتراک ۱ ماهه، قفل تمام بخش‌های هوش مصنوعی (برنامه غذایی ۷ روزه متنوع، کالری‌شمار تصویری و مربی هوشمند) باز می‌شه! 🔥',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12.5,
-                  color: Colors.white70,
+                  color: bmTextSubColor,
                   height: 1.55,
                 ),
               ),
@@ -7769,10 +7777,10 @@ class _ProfileAndBillingTabState extends State<ProfileAndBillingTab> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: c.profile.canPurchaseOrRenewSubscription
                           ? BMColors.whaleGold
-                          : Colors.white24,
+                          : bmBorderColor,
                       foregroundColor: c.profile.canPurchaseOrRenewSubscription
                           ? Colors.black
-                          : Colors.white70,
+                          : bmTextSubColor,
                       padding: const EdgeInsets.symmetric(vertical: 13),
                     ),
                     onPressed: () =>
@@ -7857,10 +7865,10 @@ class _ProfileAndBillingTabState extends State<ProfileAndBillingTab> {
                         children: [
                           Text(
                             tier['label'].toString(),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.w900,
                               fontSize: 13.5,
-                              color: Colors.white,
+                              color: bmTextColor,
                             ),
                           ),
                           Text(
@@ -7947,8 +7955,8 @@ class _ProfileAndBillingTabState extends State<ProfileAndBillingTab> {
                 Container(
                   padding: const EdgeInsets.all(13),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF3B2F0B), Color(0xFF1E293B)],
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF3B2F0B), bmSurfaceColor],
                     ),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: BMColors.whaleGold),
@@ -7971,9 +7979,9 @@ class _ProfileAndBillingTabState extends State<ProfileAndBillingTab> {
                             ),
                             Text(
                               '${c.adminTierVipWhalesCount} نفر ثبت‌شده در کلودفلر KV',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.white,
+                                color: bmTextColor,
                               ),
                             ),
                           ],
@@ -8043,12 +8051,12 @@ class _ProfileAndBillingTabState extends State<ProfileAndBillingTab> {
                   ],
                 ),
                 const Divider(height: 22),
-                const Text(
+                Text(
                   '🎁 ساخت کد تخفیف جدید برای انتشار در @bodymod_channel:',
                   style: TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 12.8,
-                    color: Colors.white,
+                    color: bmTextColor,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -8120,7 +8128,7 @@ class _ProfileAndBillingTabState extends State<ProfileAndBillingTab> {
         children: [
           Text(
             label,
-            style: const TextStyle(fontSize: 11, color: Colors.white70),
+            style: TextStyle(fontSize: 11, color: bmTextSubColor),
           ),
           const SizedBox(height: 4),
           Text(
