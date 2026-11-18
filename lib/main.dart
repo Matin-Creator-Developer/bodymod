@@ -342,11 +342,15 @@ Color get bmOnAccentColor => bmIsDarkTheme ? const Color(0xFF000000) : const Col
 Color get bmYellowBoxColor => const Color(0xFFFBBF24);
 Color get bmOnYellowBoxColor => const Color(0xFF0F172A);
 // --- [END THEME ENGINE] ---
-// --- [BODYMOD LIVE 1000-USER BETA COUNTDOWN & REFERRAL ENGINE] ---
+// --- [BODYMOD LIVE 1000-USER BETA, REFERRAL, 1-DAY WELCOME VIP & FORCE UPDATE ENGINE] ---
+const int bmCurrentAppVersion = 1;
 int bmBetaCap = 1000;
 int bmBetaSold = 1;
 int bmBetaRemaining = 999;
 bool bmBetaIsFull = false;
+bool bmForceUpdateRequired = false;
+String bmForceUpdateTitle = 'آپدیت حیاتی بادی‌مود منتشر شد! 🚀🔥';
+String bmForceUpdateMsg = 'رفیق این نسخه از برنامه قدیمی شده! برای ادامه استفاده از مربی هوشمند، همین الان نسخه جدید رو از کافه‌بازار یا مایکت دریافت کن! 💪✨';
 String bmUserPhoneGlobal = '';
 int bmRefInvitedCount = 0;
 int bmRefBonusDays = 0;
@@ -360,10 +364,37 @@ bool bmRefSubmitting = false;
 String bmGetMyReferralCode() {
   final digits = bmUserPhoneGlobal.replaceAll(RegExp(r'\D'), '');
   if (digits.length >= 6) return 'BM-' + digits.substring(digits.length - 6);
+  final clean = bmUserPhoneGlobal.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').toUpperCase();
+  if (clean.length >= 6) return 'BM-' + clean.substring(clean.length - 6);
   return 'BM-VIP100';
 }
 
-Future<void> bmSyncBetaCountdown({VoidCallback? onUpdated}) async {
+void bmShowForceUpdateModalIfNeeded(BuildContext context) {
+  if (!bmForceUpdateRequired || !context.mounted) return;
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (ctx) => PopScope(
+      canPop: false,
+      child: AlertDialog(
+        backgroundColor: bmCardColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: const BorderSide(color: Color(0xFFFBBF24), width: 2)),
+        title: Text(bmForceUpdateTitle, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: bmTextColor)),
+        content: Text(bmForceUpdateMsg, style: TextStyle(fontSize: 13.5, color: bmTextSubColor, height: 1.5)),
+        actions: [
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E5A3), foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+            onPressed: () {},
+            icon: const Icon(Icons.system_update_rounded, color: Colors.black),
+            label: const Text('دریافت نسخه جدید از مارکت 🚀', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+Future<void> bmSyncBetaCountdown({BuildContext? context, VoidCallback? onUpdated}) async {
   try {
     final prefs = await SharedPreferences.getInstance();
     bmBetaSold = prefs.getInt('bm_beta_sold_v1') ?? bmBetaSold;
@@ -372,12 +403,15 @@ Future<void> bmSyncBetaCountdown({VoidCallback? onUpdated}) async {
     if (bmAppliedRefCode.isNotEmpty) { bmDiscountPercent = 30; bmFinalSubPrice = 132300; }
     for (final k in prefs.getKeys()) {
       final v = prefs.get(k);
-      if (v is String && RegExp(r'^(?:98|09|\+98)\d{8,10}$').hasMatch(v.trim())) {
-        bmUserPhoneGlobal = v.trim();
-        break;
+      if (v is String) {
+        final vt = v.trim();
+        if (RegExp(r'^(?:98|09|\+98)\d{8,10}$').hasMatch(vt) || (vt.contains('@') && vt.contains('.'))) {
+          bmUserPhoneGlobal = vt;
+          break;
+        }
       }
     }
-    final uri = Uri.parse('https://bodymod-core.matin-mohammadi.workers.dev/api/beta-status?phone=' + Uri.encodeComponent(bmUserPhoneGlobal));
+    final uri = Uri.parse('https://bodymod-core.matin-mohammadi.workers.dev/api/beta-status?phone=' + Uri.encodeComponent(bmUserPhoneGlobal) + '&version=' + bmCurrentAppVersion.toString());
     final res = await http.get(uri).timeout(const Duration(seconds: 10));
     if (res.statusCode == 200) {
       final d = jsonDecode(res.body);
@@ -389,6 +423,9 @@ Future<void> bmSyncBetaCountdown({VoidCallback? onUpdated}) async {
         bmRefInvitedCount = int.tryParse((d['invitedCount'] ?? 0).toString()) ?? 0;
         bmRefBonusDays = int.tryParse((d['bonusDaysEarned'] ?? 0).toString()) ?? 0;
         bmRefActiveDaysLeft = int.tryParse((d['activeBonusDaysLeft'] ?? 0).toString()) ?? 0;
+        bmForceUpdateRequired = d['forceUpdate'] == true;
+        if (d['forceUpdateTitle'] != null) bmForceUpdateTitle = d['forceUpdateTitle'].toString();
+        if (d['forceUpdateMessage'] != null) bmForceUpdateMsg = d['forceUpdateMessage'].toString();
         final srvRef = (d['appliedReferralCode'] ?? '').toString().trim();
         if (srvRef.isNotEmpty) {
           bmAppliedRefCode = srvRef;
@@ -397,6 +434,12 @@ Future<void> bmSyncBetaCountdown({VoidCallback? onUpdated}) async {
           await prefs.setString('bm_applied_ref_code', srvRef);
         }
         await prefs.setInt('bm_beta_sold_v1', bmBetaSold);
+        if (d['welcomeGrantedNow'] == true && context != null && context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('🎁 ایول! به خاطر ثبت‌نامت در بادی‌مود، ۱ روز اشتراک VIP رایگان برات فعال شد تا همه امکانات رو تست کنی! 🔥💪'), backgroundColor: Color(0xFF00C896), duration: Duration(seconds: 5)));
+        }
+        if (bmForceUpdateRequired && context != null && context.mounted) {
+          bmShowForceUpdateModalIfNeeded(context);
+        }
         if (onUpdated != null) onUpdated();
       }
     }
@@ -412,7 +455,7 @@ Future<void> bmSubmitFriendReferralCode(BuildContext context, VoidCallback onRef
   bmRefSubmitting = true;
   onRefresh();
   try {
-    await bmSyncBetaCountdown();
+    await bmSyncBetaCountdown(context: context);
     final res = await http.post(
       Uri.parse('https://bodymod-core.matin-mohammadi.workers.dev/api/referral'),
       headers: {'Content-Type': 'application/json'},
@@ -445,139 +488,140 @@ Future<void> bmSubmitFriendReferralCode(BuildContext context, VoidCallback onRef
 Widget bmBuildBetaCountdownBanner(VoidCallback onRefresh) {
   final double ratio = (bmBetaRemaining / bmBetaCap).clamp(0.0, 1.0);
   final myCode = bmGetMyReferralCode();
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      Container(
-        margin: const EdgeInsets.only(top: 10, bottom: 10),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: bmYellowBoxColor,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.black26, width: 1.2),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    bmBetaIsFull ? '⛔ ظرفیت ۱۰۰۰ نفری فاز بتا تکمیل شد!' : '⏳ ظرفیت باقی‌مانده فاز بتا: $bmBetaRemaining از $bmBetaCap نفر 🔥',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: bmOnYellowBoxColor),
-                  ),
-                ),
-                InkWell(
-                  onTap: () => bmSyncBetaCountdown(onUpdated: onRefresh),
-                  child: Icon(Icons.sync_rounded, size: 18, color: bmOnYellowBoxColor),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: LinearProgressIndicator(
-                value: ratio,
-                minHeight: 7,
-                backgroundColor: Colors.black26,
-                valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF0F172A)),
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              bmDiscountPercent == 30
-                  ? '🎉 ۳۰٪ تخفیف دعوت دوست برات فعاله! مبلغ اشتراک تو: ۱۳۲,۳۰۰ تومان (به جای ۱۸۹,۰۰۰ تومان)'
-                  : 'توی فاز بتا فقط به ۱۰۰۰ نفر اشتراک فروخته میشه! شمارشگر زنده به سرور کلودفلر وصله ⚡',
-              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: bmOnYellowBoxColor),
-            ),
-          ],
-        ),
-      ),
-      Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: bmSurfaceColor,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFF00E5A3).withOpacity(0.55)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.card_giftcard_rounded, color: Color(0xFF00E5A3), size: 20),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    'دعوت از رفیق: ۳۰٪ تخفیف برای دوستت + ۳ روز اشتراک رایگان برای تو! 🎁🤝',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5, color: bmTextColor),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'کد دعوت اختصاصی خودت رو بفرست برای رفیقت؛ وقتی با کد تو ثبت‌نام کنه ۳۰٪ تخفیف اشتراک فاز بتا می‌گیره (۱۳۲,۳۰۰ تومان) و به محض اینکه اشتراک رو بخره، ۳ روز اشتراک کامل رایگان به اکانت تو اضافه میشه! 🔥',
-              style: TextStyle(fontSize: 11, color: bmTextSubColor, height: 1.45),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: BoxDecoration(color: bmCardColor, borderRadius: BorderRadius.circular(10), border: Border.all(color: bmBorderColor)),
-              child: Row(
+  return Builder(
+    builder: (ctx) => Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          margin: const EdgeInsets.only(top: 10, bottom: 10),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: bmYellowBoxColor,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.black26, width: 1.2),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('کد دعوت تو: $myCode', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: bmTextColor)),
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E5A3), foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), minimumSize: Size.zero, tapTargetSize: MaterialTapTargetSize.shrinkWrap, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
-                    onPressed: () {
-                      final inviteMsg = 'رفیق بیا توی برنامه بادی‌مود (مربی هوشمند بدنسازی و تغذیه)! 💪🔥 موقع خرید اشتراک فاز بتا کد دعوت من ($myCode) رو بزن تا ۳۰٪ تخفیف بگیری (۱۳۲,۳۰۰ تومن به جای ۱۸۹,۰۰۰ تومن) و ۳ روز هم به من اشتراک رایگان هدیه بده! 🚀\nhttps://matin-mohammadi.ir/?ref=$myCode';
-                      Clipboard.setData(ClipboardData(text: inviteMsg));
-                    },
-                    icon: const Icon(Icons.copy_rounded, size: 15, color: Colors.black),
-                    label: const Text('کپی لینک و کد دعوت', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black)),
+                  Expanded(
+                    child: Text(
+                      bmBetaIsFull ? '⛔ ظرفیت ۱۰۰۰ نفری فاز بتا تکمیل شد!' : '⏳ ظرفیت باقی‌مانده فاز بتا: $bmBetaRemaining از $bmBetaCap نفر 🔥',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: bmOnYellowBoxColor),
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () => bmSyncBetaCountdown(context: ctx, onUpdated: onRefresh),
+                    child: Icon(Icons.sync_rounded, size: 18, color: bmOnYellowBoxColor),
                   ),
                 ],
               ),
-            ),
-            if (bmRefInvitedCount > 0 || bmRefBonusDays > 0) ...[
               const SizedBox(height: 6),
-              Text('🏆 دوستان خریدکرده با کد تو: $bmRefInvitedCount نفر | هدیه تو: $bmRefBonusDays روز اشتراک رایگان (فعال: $bmRefActiveDaysLeft روز)', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF00E5A3))),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: LinearProgressIndicator(
+                  value: ratio,
+                  minHeight: 7,
+                  backgroundColor: Colors.black26,
+                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF0F172A)),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                bmDiscountPercent == 30
+                    ? '🎉 ۳۰٪ تخفیف دعوت دوست برات فعاله! مبلغ اشتراک تو: ۱۳۲,۳۰۰ تومان (به جای ۱۸۹,۰۰۰ تومان)'
+                    : '🎁 ۱ روز اشتراک رایگان برای هر ثبت‌نام جدید! (ظرفیت فاز بتا: ۱۰۰۰ نفر ⚡)',
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: bmOnYellowBoxColor),
+              ),
             ],
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: bmRefInputCtrl,
-                    style: TextStyle(fontSize: 12.5, color: bmTextColor),
-                    decoration: InputDecoration(
-                      hintText: bmAppliedRefCode.isNotEmpty ? 'کد فعال: $bmAppliedRefCode (۳۰٪ تخفیف)' : 'کد دعوت رفیقت رو داری؟ (مثلاً BM-586834)',
-                      hintStyle: TextStyle(fontSize: 11, color: bmTextMutedColor),
-                      isDense: true,
-                      filled: true,
-                      fillColor: bmCardColor,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: bmBorderColor)),
+          ),
+        ),
+        Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: bmSurfaceColor,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFF00E5A3).withOpacity(0.55)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.card_giftcard_rounded, color: Color(0xFF00E5A3), size: 20),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'دعوت از رفیق: ۳۰٪ تخفیف برای دوستت + ۳ روز اشتراک رایگان برای تو! 🎁🤝',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5, color: bmTextColor),
                     ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'کد دعوت اختصاصی خودت رو بفرست برای رفیقت؛ وقتی با کد تو ثبت‌نام کنه ۳۰٪ تخفیف اشتراک فاز بتا می‌گیره (۱۳۲,۳۰۰ تومان) و به محض خرید اشتراک، ۳ روز اشتراک کامل رایگان به اکانت تو اضافه میشه! 🔥',
+                style: TextStyle(fontSize: 11, color: bmTextSubColor, height: 1.45),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(color: bmCardColor, borderRadius: BorderRadius.circular(10), border: Border.all(color: bmBorderColor)),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('کد دعوت تو: $myCode', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: bmTextColor)),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E5A3), foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), minimumSize: Size.zero, tapTargetSize: MaterialTapTargetSize.shrinkWrap, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                      onPressed: () {
+                        final inviteMsg = 'رفیق بیا توی برنامه بادی‌مود (مربی هوشمند بدنسازی و تغذیه)! 💪🔥 به محض ورود ۱ روز اشتراک رایگان می‌گیری و موقع خرید اشتراک فاز بتا هم کد دعوت من ($myCode) رو بزن تا ۳۰٪ تخفیف بگیری (۱۳۲,۳۰۰ تومن به جای ۱۸۹,۰۰۰ تومن)! 🚀\nhttps://matin-mohammadi.ir/?ref=$myCode';
+                        Clipboard.setData(ClipboardData(text: inviteMsg));
+                        ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('✅ متن و لینک دعوت اختصاصیت کپی شد! بفرست برای رفیقت 🤝🔥'), backgroundColor: Color(0xFF00C896)));
+                      },
+                      icon: const Icon(Icons.copy_rounded, size: 15, color: Colors.black),
+                      label: const Text('کپی لینک و کد دعوت', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black)),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                 Builder(
-                  builder: (btnCtx) => ElevatedButton(
+              ),
+              if (bmRefBonusDays > 0) ...[
+                const SizedBox(height: 6),
+                Text('🏆 دوستان خریدکرده: $bmRefInvitedCount نفر | مجموع اشتراک رایگان هدیه تو: $bmRefBonusDays روز (فعال باقی‌مانده: $bmRefActiveDaysLeft روز) ✨', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF00E5A3))),
+              ],
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: bmRefInputCtrl,
+                      style: TextStyle(fontSize: 12.5, color: bmTextColor),
+                      decoration: InputDecoration(
+                        hintText: bmAppliedRefCode.isNotEmpty ? 'کد فعال: $bmAppliedRefCode (۳۰٪ تخفیف)' : 'کد دعوت رفیقت رو داری؟ (مثلاً BM-586834)',
+                        hintStyle: TextStyle(fontSize: 11, color: bmTextMutedColor),
+                        isDense: true,
+                        filled: true,
+                        fillColor: bmCardColor,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: bmBorderColor)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
                     style: ElevatedButton.styleFrom(backgroundColor: bmYellowBoxColor, foregroundColor: bmOnYellowBoxColor, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-                    onPressed: bmRefSubmitting ? null : () => bmSubmitFriendReferralCode(btnCtx, onRefresh),
+                    onPressed: bmRefSubmitting ? null : () => bmSubmitFriendReferralCode(ctx, onRefresh),
                     child: Text(bmRefSubmitting ? '...' : 'دریافت ۳۰٪ تخفیف', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: bmOnYellowBoxColor)),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
-      ),
-    ],
+      ],
+    ),
   );
 }
 // --- [END BETA COUNTDOWN ENGINE] ---
@@ -763,10 +807,10 @@ class AppConfig {
 // ============================================================================
 
 class BMColors {
-  Color get bgDark => bmBgColor;
-  Color get surfaceDark => bmCardColor;
-  Color get cardDark => bmSurfaceColor;
-  Color get cardBorderDark => bmSurfaceColor;
+  static Color get bgDark => bmBgColor;
+  static Color get surfaceDark => bmCardColor;
+  static Color get cardDark => bmSurfaceColor;
+  static Color get cardBorderDark => bmSurfaceColor;
 
   static const Color neonCyan = Color(0xFF00F5D4);
   static const Color neonGreen = Color(0xFF10B981);
@@ -790,7 +834,7 @@ class BMTheme {
       brightness: Brightness.dark,
       scaffoldBackgroundColor: BMColors.bgDark,
       primaryColor: BMColors.neonCyan,
-      colorScheme: const ColorScheme.dark(
+      colorScheme: ColorScheme.dark(
         primary: BMColors.neonCyan,
         secondary: BMColors.neonGreen,
         surface: BMColors.surfaceDark,
@@ -818,11 +862,11 @@ class BMTheme {
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: BMColors.cardBorderDark),
+          borderSide: BorderSide(color: BMColors.cardBorderDark),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: BMColors.cardBorderDark),
+          borderSide: BorderSide(color: BMColors.cardBorderDark),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
@@ -1118,7 +1162,7 @@ class UserProfileModel {
   String workoutPlace; // 'home_dumbbell', 'gym', 'bodyweight'
   String budgetTier; // 'base', 'mid', 'flagship', 'vip'
   String supplementPreference; // 'commercial', 'homemade'
-  String preferredModel; // 'gemini-3.1-flash-lite' | 'gemini-3.5-flash-lite'
+  String preferredModel; // 'gemini-3.1-flash-lite' | 'gemini-3.1-flash-lite'
   String aiCoachMemory;
   bool isLoggedIn;
   bool isProfileCompleted;
@@ -3801,7 +3845,7 @@ class BodyModController extends ChangeNotifier {
               (lite['remaining'] as num?)?.toInt() ?? remainingLiteChatQuota;
           maxLiteChatQuota = (lite['max'] as num?)?.toInt() ?? maxLiteChatQuota;
         }
-        final flash = chatDaily['gemini-3.5-flash-lite'];
+        final flash = chatDaily['gemini-3.1-flash-lite'];
         if (flash is Map<String, dynamic>) {
           remainingFlashChatQuota =
               (flash['remaining'] as num?)?.toInt() ?? remainingFlashChatQuota;
@@ -5379,7 +5423,7 @@ class BodyModApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           theme: BMTheme.light(),
           darkTheme: BMTheme.dark(),
-          themeMode: controller.(bmIsDarkTheme = isDarkMode) ? ThemeMode.dark : ThemeMode.light,
+          themeMode: (bmIsDarkTheme = controller.isDarkMode) ? ThemeMode.dark : ThemeMode.light,
           builder: (context, child) {
             return Directionality(
               textDirection: TextDirection.rtl,
@@ -5561,7 +5605,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
         decoration: BoxDecoration(
           border: Border(
             top: BorderSide(
-              color: c.(bmIsDarkTheme = isDarkMode) ? BMColors.cardBorderDark
+              color: (bmIsDarkTheme = c.isDarkMode) ? BMColors.cardBorderDark
                   : BMColors.cardBorderLight,
             ),
           ),
@@ -5569,7 +5613,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
         child: NavigationBar(
           selectedIndex: _currentTab,
           onDestinationSelected: _jumpToTab,
-          backgroundColor: c.(bmIsDarkTheme = isDarkMode) ? BMColors.surfaceDark
+          backgroundColor: (bmIsDarkTheme = c.isDarkMode) ? BMColors.surfaceDark
               : BMColors.surfaceLight,
           indicatorColor: BMColors.neonCyan.withOpacity(0.2),
           destinations: const [
@@ -5622,7 +5666,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
 
   Widget _buildAppDrawer(BuildContext context, BodyModController c) {
     return Drawer(
-      backgroundColor: c.(bmIsDarkTheme = isDarkMode) ? BMColors.surfaceDark : Colors.white,
+      backgroundColor: (bmIsDarkTheme = c.isDarkMode) ? BMColors.surfaceDark : Colors.white,
       child: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -7551,7 +7595,7 @@ class _BodyAndAiCoachTabState extends State<BodyAndAiCoachTab> {
           onNavigateTab: widget.onNavigateTab,
         ),
 
-        // انتخاب مدل هوش مصنوعی (3.1 Flash Lite یا 3.5 Flash Lite)
+        // انتخاب مدل هوش مصنوعی (3.1 Flash Lite یا 3.1 Flash Lite)
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
@@ -7593,20 +7637,20 @@ class _BodyAndAiCoachTabState extends State<BodyAndAiCoachTab> {
                     },
                   ),
                   ChoiceChip(
-                    selected: c.profile.preferredModel == 'gemini-3.5-flash-lite',
+                    selected: c.profile.preferredModel == 'gemini-3.1-flash-lite',
                     selectedColor: BMColors.purpleAccent,
                     label: Text(
-                      '3.5 Flash Lite 🧠 (${c.remainingFlashChatQuota}/${c.maxFlashChatQuota})',
+                      '3.1 Flash Lite 🧠 (${c.remainingFlashChatQuota}/${c.maxFlashChatQuota})',
                       style: TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w800,
-                        color: c.profile.preferredModel == 'gemini-3.5-flash-lite'
+                        color: c.profile.preferredModel == 'gemini-3.1-flash-lite'
                             ? Colors.white
                             : null,
                       ),
                     ),
                     onSelected: (_) {
-                      c.profile.preferredModel = 'gemini-3.5-flash-lite';
+                      c.profile.preferredModel = 'gemini-3.1-flash-lite';
                       c.saveAllToDisk();
                       c.notifyListeners();
                     },
@@ -7633,15 +7677,15 @@ class _BodyAndAiCoachTabState extends State<BodyAndAiCoachTab> {
                         ),
                         decoration: BoxDecoration(
                           color: msg.isUser
-                              ? (c.(bmIsDarkTheme = isDarkMode) ? BMColors.neonCyan.withOpacity(0.18)
+                              ? ((bmIsDarkTheme = c.isDarkMode) ? BMColors.neonCyan.withOpacity(0.18)
                                     : const Color(0xFFCCFBF1))
-                              : (c.(bmIsDarkTheme = isDarkMode) ? bmCardColor
+                              : ((bmIsDarkTheme = c.isDarkMode) ? bmCardColor
                                     : const Color(0xFFF1F5F9)),
                           borderRadius: BorderRadius.circular(15),
                           border: Border.all(
                             color: msg.isUser
                                 ? BMColors.neonCyan.withOpacity(0.6)
-                                : (c.(bmIsDarkTheme = isDarkMode) ? bmBorderColor
+                                : ((bmIsDarkTheme = c.isDarkMode) ? bmBorderColor
                                       : const Color(0xFFCBD5E1)),
                           ),
                         ),
@@ -7650,7 +7694,7 @@ class _BodyAndAiCoachTabState extends State<BodyAndAiCoachTab> {
                           style: TextStyle(
                             fontSize: 13,
                             height: 1.55,
-                            color: c.(bmIsDarkTheme = isDarkMode) ? Colors.white
+                            color: (bmIsDarkTheme = c.isDarkMode) ? Colors.white
                                 : bmCardColor,
                           ),
                         ),
