@@ -286,7 +286,7 @@ Future<bool> bmGenerateAiWorkoutPlan(BuildContext context, {VoidCallback? onDone
     final res = await http.post(
       Uri.parse('https://bodymod-core.matin-mohammadi.workers.dev/api/chat'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'message': prompt, 'prompt': prompt, 'model': 'gemini-3.5-flash-lite'}),
+      body: jsonEncode({'message': prompt, 'prompt': prompt, 'model': 'gemini-3.1-flash-lite'}),
     ).timeout(const Duration(seconds: 25));
     String rawReply = res.body;
     try {
@@ -342,8 +342,247 @@ Color get bmOnAccentColor => bmIsDarkTheme ? const Color(0xFF000000) : const Col
 Color get bmYellowBoxColor => const Color(0xFFFBBF24);
 Color get bmOnYellowBoxColor => const Color(0xFF0F172A);
 // --- [END THEME ENGINE] ---
+// --- [BODYMOD LIVE 1000-USER BETA COUNTDOWN & REFERRAL ENGINE] ---
+int bmBetaCap = 1000;
+int bmBetaSold = 1;
+int bmBetaRemaining = 999;
+bool bmBetaIsFull = false;
+String bmUserPhoneGlobal = '';
+int bmRefInvitedCount = 0;
+int bmRefBonusDays = 0;
+int bmRefActiveDaysLeft = 0;
+String bmAppliedRefCode = '';
+int bmDiscountPercent = 0;
+int bmFinalSubPrice = 189000;
+final TextEditingController bmRefInputCtrl = TextEditingController();
+bool bmRefSubmitting = false;
+
+String bmGetMyReferralCode() {
+  final digits = bmUserPhoneGlobal.replaceAll(RegExp(r'\D'), '');
+  if (digits.length >= 6) return 'BM-' + digits.substring(digits.length - 6);
+  return 'BM-VIP100';
+}
+
+Future<void> bmSyncBetaCountdown({VoidCallback? onUpdated}) async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    bmBetaSold = prefs.getInt('bm_beta_sold_v1') ?? bmBetaSold;
+    bmBetaRemaining = (bmBetaCap - bmBetaSold).clamp(0, bmBetaCap);
+    bmAppliedRefCode = prefs.getString('bm_applied_ref_code') ?? bmAppliedRefCode;
+    if (bmAppliedRefCode.isNotEmpty) { bmDiscountPercent = 30; bmFinalSubPrice = 132300; }
+    for (final k in prefs.getKeys()) {
+      final v = prefs.get(k);
+      if (v is String && RegExp(r'^(?:98|09|\+98)\d{8,10}$').hasMatch(v.trim())) {
+        bmUserPhoneGlobal = v.trim();
+        break;
+      }
+    }
+    final uri = Uri.parse('https://bodymod-core.matin-mohammadi.workers.dev/api/beta-status?phone=' + Uri.encodeComponent(bmUserPhoneGlobal));
+    final res = await http.get(uri).timeout(const Duration(seconds: 10));
+    if (res.statusCode == 200) {
+      final d = jsonDecode(res.body);
+      if (d is Map) {
+        bmBetaCap = int.tryParse((d['betaCap'] ?? 1000).toString()) ?? 1000;
+        bmBetaSold = int.tryParse((d['betaSold'] ?? 1).toString()) ?? 1;
+        bmBetaRemaining = int.tryParse((d['betaRemaining'] ?? (bmBetaCap - bmBetaSold)).toString()) ?? (bmBetaCap - bmBetaSold);
+        bmBetaIsFull = bmBetaRemaining <= 0;
+        bmRefInvitedCount = int.tryParse((d['invitedCount'] ?? 0).toString()) ?? 0;
+        bmRefBonusDays = int.tryParse((d['bonusDaysEarned'] ?? 0).toString()) ?? 0;
+        bmRefActiveDaysLeft = int.tryParse((d['activeBonusDaysLeft'] ?? 0).toString()) ?? 0;
+        final srvRef = (d['appliedReferralCode'] ?? '').toString().trim();
+        if (srvRef.isNotEmpty) {
+          bmAppliedRefCode = srvRef;
+          bmDiscountPercent = 30;
+          bmFinalSubPrice = 132300;
+          await prefs.setString('bm_applied_ref_code', srvRef);
+        }
+        await prefs.setInt('bm_beta_sold_v1', bmBetaSold);
+        if (onUpdated != null) onUpdated();
+      }
+    }
+  } catch (_) {}
+}
+
+Future<void> bmSubmitFriendReferralCode(BuildContext context, VoidCallback onRefresh) async {
+  final rawCode = bmRefInputCtrl.text.trim();
+  if (rawCode.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('رفیق اول کد معرف دوستت رو وارد کن! ✍️')));
+    return;
+  }
+  bmRefSubmitting = true;
+  onRefresh();
+  try {
+    await bmSyncBetaCountdown();
+    final res = await http.post(
+      Uri.parse('https://bodymod-core.matin-mohammadi.workers.dev/api/referral'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'action': 'apply_referral', 'phone': bmUserPhoneGlobal, 'referralCode': rawCode}),
+    ).timeout(const Duration(seconds: 12));
+    final d = jsonDecode(res.body);
+    if (res.statusCode == 200 && d['ok'] == true) {
+      final prefs = await SharedPreferences.getInstance();
+      bmAppliedRefCode = (d['appliedReferralCode'] ?? rawCode).toString();
+      bmDiscountPercent = 30;
+      bmFinalSubPrice = 132300;
+      await prefs.setString('bm_applied_ref_code', bmAppliedRefCode);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text((d['message'] ?? 'تبریک! ۳۰٪ تخفیف فاز بتا برات فعال شد! 🎉').toString()), backgroundColor: const Color(0xFF00C896)));
+      }
+    } else {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text((d['error'] ?? 'کد معرف نامعتبره رفیق!').toString()), backgroundColor: Colors.redAccent));
+      }
+    }
+  } catch (_) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('خطا در ارتباط با سرور کلودفلر! اینترنتت رو چک کن رفیق.'), backgroundColor: Colors.redAccent));
+    }
+  }
+  bmRefSubmitting = false;
+  onRefresh();
+}
+
+Widget bmBuildBetaCountdownBanner(VoidCallback onRefresh) {
+  final double ratio = (bmBetaRemaining / bmBetaCap).clamp(0.0, 1.0);
+  final myCode = bmGetMyReferralCode();
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Container(
+        margin: const EdgeInsets.only(top: 10, bottom: 10),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: bmYellowBoxColor,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.black26, width: 1.2),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    bmBetaIsFull ? '⛔ ظرفیت ۱۰۰۰ نفری فاز بتا تکمیل شد!' : '⏳ ظرفیت باقی‌مانده فاز بتا: $bmBetaRemaining از $bmBetaCap نفر 🔥',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: bmOnYellowBoxColor),
+                  ),
+                ),
+                InkWell(
+                  onTap: () => bmSyncBetaCountdown(onUpdated: onRefresh),
+                  child: Icon(Icons.sync_rounded, size: 18, color: bmOnYellowBoxColor),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: ratio,
+                minHeight: 7,
+                backgroundColor: Colors.black26,
+                valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF0F172A)),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              bmDiscountPercent == 30
+                  ? '🎉 ۳۰٪ تخفیف دعوت دوست برات فعاله! مبلغ اشتراک تو: ۱۳۲,۳۰۰ تومان (به جای ۱۸۹,۰۰۰ تومان)'
+                  : 'توی فاز بتا فقط به ۱۰۰۰ نفر اشتراک فروخته میشه! شمارشگر زنده به سرور کلودفلر وصله ⚡',
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: bmOnYellowBoxColor),
+            ),
+          ],
+        ),
+      ),
+      Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: bmSurfaceColor,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFF00E5A3).withOpacity(0.55)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.card_giftcard_rounded, color: Color(0xFF00E5A3), size: 20),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'دعوت از رفیق: ۳۰٪ تخفیف برای دوستت + ۳ روز اشتراک رایگان برای تو! 🎁🤝',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5, color: bmTextColor),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'کد دعوت اختصاصی خودت رو بفرست برای رفیقت؛ وقتی با کد تو ثبت‌نام کنه ۳۰٪ تخفیف اشتراک فاز بتا می‌گیره (۱۳۲,۳۰۰ تومان) و به محض اینکه اشتراک رو بخره، ۳ روز اشتراک کامل رایگان به اکانت تو اضافه میشه! 🔥',
+              style: TextStyle(fontSize: 11, color: bmTextSubColor, height: 1.45),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(color: bmCardColor, borderRadius: BorderRadius.circular(10), border: Border.all(color: bmBorderColor)),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('کد دعوت تو: $myCode', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: bmTextColor)),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E5A3), foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), minimumSize: Size.zero, tapTargetSize: MaterialTapTargetSize.shrinkWrap, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                    onPressed: () {
+                      final inviteMsg = 'رفیق بیا توی برنامه بادی‌مود (مربی هوشمند بدنسازی و تغذیه)! 💪🔥 موقع خرید اشتراک فاز بتا کد دعوت من ($myCode) رو بزن تا ۳۰٪ تخفیف بگیری (۱۳۲,۳۰۰ تومن به جای ۱۸۹,۰۰۰ تومن) و ۳ روز هم به من اشتراک رایگان هدیه بده! 🚀\nhttps://matin-mohammadi.ir/?ref=$myCode';
+                      Clipboard.setData(ClipboardData(text: inviteMsg));
+                    },
+                    icon: const Icon(Icons.copy_rounded, size: 15, color: Colors.black),
+                    label: const Text('کپی لینک و کد دعوت', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black)),
+                  ),
+                ],
+              ),
+            ),
+            if (bmRefInvitedCount > 0 || bmRefBonusDays > 0) ...[
+              const SizedBox(height: 6),
+              Text('🏆 دوستان خریدکرده با کد تو: $bmRefInvitedCount نفر | هدیه تو: $bmRefBonusDays روز اشتراک رایگان (فعال: $bmRefActiveDaysLeft روز)', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF00E5A3))),
+            ],
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: bmRefInputCtrl,
+                    style: TextStyle(fontSize: 12.5, color: bmTextColor),
+                    decoration: InputDecoration(
+                      hintText: bmAppliedRefCode.isNotEmpty ? 'کد فعال: $bmAppliedRefCode (۳۰٪ تخفیف)' : 'کد دعوت رفیقت رو داری؟ (مثلاً BM-586834)',
+                      hintStyle: TextStyle(fontSize: 11, color: bmTextMutedColor),
+                      isDense: true,
+                      filled: true,
+                      fillColor: bmCardColor,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: bmBorderColor)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                 Builder(
+                  builder: (btnCtx) => ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: bmYellowBoxColor, foregroundColor: bmOnYellowBoxColor, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                    onPressed: bmRefSubmitting ? null : () => bmSubmitFriendReferralCode(btnCtx, onRefresh),
+                    child: Text(bmRefSubmitting ? '...' : 'دریافت ۳۰٪ تخفیف', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: bmOnYellowBoxColor)),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ],
+  );
+}
+// --- [END BETA COUNTDOWN ENGINE] ---
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); bmLoadSavedAiWorkouts();
+  WidgetsFlutterBinding.ensureInitialized(); bmSyncBetaCountdown(); bmLoadSavedAiWorkouts();
 
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -525,9 +764,9 @@ class AppConfig {
 
 class BMColors {
   Color get bgDark => bmBgColor;
-  static const Color surfaceDark = Color(0xFF121826);
-  static const Color cardDark = Color(0xFF1A2235);
-  static const Color cardBorderDark = Color(0xFF28344E);
+  Color get surfaceDark => bmCardColor;
+  Color get cardDark => bmSurfaceColor;
+  Color get cardBorderDark => bmSurfaceColor;
 
   static const Color neonCyan = Color(0xFF00F5D4);
   static const Color neonGreen = Color(0xFF10B981);
@@ -571,7 +810,7 @@ class BMTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: const Color(0xFF0E1422),
+        fillColor: bmCardColor,
         hintStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 14,
@@ -607,15 +846,15 @@ class BMTheme {
       ),
       cardColor: BMColors.cardLight,
       dividerColor: BMColors.cardBorderLight,
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: BMColors.surfaceLight,
         elevation: 0,
         centerTitle: false,
-        iconTheme: IconThemeData(color: Color(0xFF0F172A)),
+        iconTheme: IconThemeData(color: bmCardColor),
         titleTextStyle: TextStyle(
           fontSize: 17.5,
           fontWeight: FontWeight.w900,
-          color: Color(0xFF0F172A),
+          color: bmCardColor,
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -762,8 +1001,8 @@ class BodyModTopChannelBanner extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF0F2942), Color(0xFF1E1B4B)],
+            gradient: LinearGradient(
+              colors: [bmSurfaceColor, bmSurfaceColor],
               begin: Alignment.centerRight,
               end: Alignment.centerLeft,
             ),
@@ -879,7 +1118,7 @@ class UserProfileModel {
   String workoutPlace; // 'home_dumbbell', 'gym', 'bodyweight'
   String budgetTier; // 'base', 'mid', 'flagship', 'vip'
   String supplementPreference; // 'commercial', 'homemade'
-  String preferredModel; // 'gemini-3.5-flash-lite' | 'gemini-3.8-flash'
+  String preferredModel; // 'gemini-3.1-flash-lite' | 'gemini-3.5-flash-lite'
   String aiCoachMemory;
   bool isLoggedIn;
   bool isProfileCompleted;
@@ -909,7 +1148,7 @@ class UserProfileModel {
     this.workoutPlace = 'home_dumbbell',
     this.budgetTier = AppConfig.budgetBase,
     this.supplementPreference = 'commercial',
-    this.preferredModel = 'gemini-3.5-flash-lite',
+    this.preferredModel = 'gemini-3.1-flash-lite',
     this.aiCoachMemory = '',
     this.isLoggedIn = false,
     this.isProfileCompleted = false,
@@ -1062,7 +1301,7 @@ class UserProfileModel {
               .toString(),
       supplementPreference: (json['supplementPreference'] ?? 'commercial')
           .toString(),
-      preferredModel: (json['preferredModel'] ?? 'gemini-3.5-flash-lite')
+      preferredModel: (json['preferredModel'] ?? 'gemini-3.1-flash-lite')
           .toString(),
       aiCoachMemory: (json['aiCoachMemory'] ?? '').toString(),
       isLoggedIn: json['isLoggedIn'] == true,
@@ -3241,7 +3480,7 @@ class BodyModController extends ChangeNotifier {
     final result = await bmShowResponsiveSheet<Map<String, dynamic>>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF121A2D),
+      backgroundColor: bmCardColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
       ),
@@ -3556,13 +3795,13 @@ class BodyModController extends ChangeNotifier {
     if (quotasRaw is Map<String, dynamic>) {
       final chatDaily = quotasRaw['chat_daily'];
       if (chatDaily is Map<String, dynamic>) {
-        final lite = chatDaily['gemini-3.5-flash-lite'];
+        final lite = chatDaily['gemini-3.1-flash-lite'];
         if (lite is Map<String, dynamic>) {
           remainingLiteChatQuota =
               (lite['remaining'] as num?)?.toInt() ?? remainingLiteChatQuota;
           maxLiteChatQuota = (lite['max'] as num?)?.toInt() ?? maxLiteChatQuota;
         }
-        final flash = chatDaily['gemini-3.8-flash'];
+        final flash = chatDaily['gemini-3.5-flash-lite'];
         if (flash is Map<String, dynamic>) {
           remainingFlashChatQuota =
               (flash['remaining'] as num?)?.toInt() ?? remainingFlashChatQuota;
@@ -5392,7 +5631,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFF0F172A), bmSurfaceColor],
+                  colors: [bmCardColor, bmSurfaceColor],
                 ),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: BMColors.neonCyan.withOpacity(0.45)),
@@ -5605,7 +5844,7 @@ class SmartAiLockBanner extends StatelessWidget {
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [accent.withOpacity(0.18), const Color(0xFF131C31)],
+          colors: [accent.withOpacity(0.18), bmCardColor],
         ),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: accent.withOpacity(0.65), width: 1.4),
@@ -5992,7 +6231,7 @@ class _HomeDashboardTabState extends State<HomeDashboardTab> {
                   ? [const Color(0xFF431407), bmSurfaceColor]
                   : c.currentStreakState == StreakVisualState.blueFrozen
                   ? [const Color(0xFF0C4A6E), bmSurfaceColor]
-                  : [const Color(0xFF1F2937), const Color(0xFF111827)],
+                  : [bmSurfaceColor, bmCardColor],
             ),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
@@ -6567,8 +6806,8 @@ class WeeklyMealPlanTab extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF0F292E), Color(0xFF151E32)],
+            gradient: LinearGradient(
+              colors: [bmSurfaceColor, bmCardColor],
             ),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: BMColors.neonCyan.withOpacity(0.45)),
@@ -6944,7 +7183,7 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 6, 16, 95),
       children: [
-        Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: bmCardColor, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFF00E5A3).withOpacity(0.4))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Row(children: [const Icon(Icons.local_fire_department_rounded, color: Colors.orangeAccent, size: 20), const SizedBox(width: 6), Text('کالری مصرفی این تمرین: ${bmGetVisibleWorkoutCalories()} کالری 🔥', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: bmTextColor))]),InkWell(onTap: () => bmGenerateAiWorkoutPlan(context, onDone: () => setState(() {})), borderRadius: BorderRadius.circular(8), child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5), decoration: BoxDecoration(color: const Color(0xFF00E5A3).withOpacity(0.18), borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFF00E5A3))), child: Text(bmIsGeneratingWorkout ? 'در حال محاسبه AI... ⏳' : '🤖 بروزرسانی با AI', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF00E5A3))))),]),const SizedBox(height: 8),Text(bmGetSurplusRecommendation(), style: TextStyle(fontSize: 11.5, color: bmTextSubColor, height: 1.45)),])), Row(
+        Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: bmCardColor, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFF00E5A3).withOpacity(0.4))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Row(children: [const Icon(Icons.local_fire_department_rounded, color: Colors.orangeAccent, size: 20), const SizedBox(width: 6), Text('کالری مصرفی این تمرین: ${bmGetVisibleWorkoutCalories()} کالری 🔥', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: bmTextColor))]),InkWell(onTap: () => bmGenerateAiWorkoutPlan(context, onDone: () => setState(() {})), borderRadius: BorderRadius.circular(8), child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5), decoration: BoxDecoration(color: const Color(0xFF00E5A3), borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFF00E5A3))), child: Text(bmIsGeneratingWorkout ? 'در حال محاسبه AI... ⏳' : '🤖 بروزرسانی با AI', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black)))),]),const SizedBox(height: 8),Text(bmGetSurplusRecommendation(), style: TextStyle(fontSize: 11.5, color: bmTextSubColor, height: 1.45)),])), Row(
           children: [
             _buildPhaseBadge(
               title: '۱. گرم کردن 🔥',
@@ -6970,7 +7209,7 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [phaseColor.withOpacity(0.18), const Color(0xFF111827)],
+              colors: [phaseColor.withOpacity(0.18), bmCardColor],
               begin: Alignment.topRight,
               end: Alignment.bottomLeft,
             ),
@@ -7312,7 +7551,7 @@ class _BodyAndAiCoachTabState extends State<BodyAndAiCoachTab> {
           onNavigateTab: widget.onNavigateTab,
         ),
 
-        // انتخاب مدل هوش مصنوعی (3.5 Flash Lite یا 3.8 Flash)
+        // انتخاب مدل هوش مصنوعی (3.1 Flash Lite یا 3.5 Flash Lite)
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
@@ -7334,40 +7573,40 @@ class _BodyAndAiCoachTabState extends State<BodyAndAiCoachTab> {
                 children: [
                   ChoiceChip(
                     selected:
-                        c.profile.preferredModel == 'gemini-3.5-flash-lite',
+                        c.profile.preferredModel == 'gemini-3.1-flash-lite',
                     selectedColor: BMColors.neonCyan,
                     label: Text(
-                      '3.5 Flash Lite ⚡ (${c.remainingLiteChatQuota}/${c.maxLiteChatQuota})',
+                      '3.1 Flash Lite ⚡ (${c.remainingLiteChatQuota}/${c.maxLiteChatQuota})',
                       style: TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w800,
                         color:
-                            c.profile.preferredModel == 'gemini-3.5-flash-lite'
+                            c.profile.preferredModel == 'gemini-3.1-flash-lite'
                             ? Colors.black
                             : null,
                       ),
                     ),
                     onSelected: (_) {
-                      c.profile.preferredModel = 'gemini-3.5-flash-lite';
+                      c.profile.preferredModel = 'gemini-3.1-flash-lite';
                       c.saveAllToDisk();
                       c.notifyListeners();
                     },
                   ),
                   ChoiceChip(
-                    selected: c.profile.preferredModel == 'gemini-3.8-flash',
+                    selected: c.profile.preferredModel == 'gemini-3.5-flash-lite',
                     selectedColor: BMColors.purpleAccent,
                     label: Text(
-                      '3.8 Flash 🧠 (${c.remainingFlashChatQuota}/${c.maxFlashChatQuota})',
+                      '3.5 Flash Lite 🧠 (${c.remainingFlashChatQuota}/${c.maxFlashChatQuota})',
                       style: TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w800,
-                        color: c.profile.preferredModel == 'gemini-3.8-flash'
+                        color: c.profile.preferredModel == 'gemini-3.5-flash-lite'
                             ? Colors.white
                             : null,
                       ),
                     ),
                     onSelected: (_) {
-                      c.profile.preferredModel = 'gemini-3.8-flash';
+                      c.profile.preferredModel = 'gemini-3.5-flash-lite';
                       c.saveAllToDisk();
                       c.notifyListeners();
                     },
@@ -7396,7 +7635,7 @@ class _BodyAndAiCoachTabState extends State<BodyAndAiCoachTab> {
                           color: msg.isUser
                               ? (c.(bmIsDarkTheme = isDarkMode) ? BMColors.neonCyan.withOpacity(0.18)
                                     : const Color(0xFFCCFBF1))
-                              : (c.(bmIsDarkTheme = isDarkMode) ? const Color(0xFF0E1525)
+                              : (c.(bmIsDarkTheme = isDarkMode) ? bmCardColor
                                     : const Color(0xFFF1F5F9)),
                           borderRadius: BorderRadius.circular(15),
                           border: Border.all(
@@ -7412,7 +7651,7 @@ class _BodyAndAiCoachTabState extends State<BodyAndAiCoachTab> {
                             fontSize: 13,
                             height: 1.55,
                             color: c.(bmIsDarkTheme = isDarkMode) ? Colors.white
-                                : const Color(0xFF0F172A),
+                                : bmCardColor,
                           ),
                         ),
                       ),
@@ -7681,8 +7920,8 @@ class _ProfileAndBillingTabState extends State<ProfileAndBillingTab> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF1E1B4B), Color(0xFF0F172A)],
+            gradient: LinearGradient(
+              colors: [bmSurfaceColor, bmCardColor],
             ),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: BMColors.whaleGold.withOpacity(0.65)),
@@ -7916,7 +8155,7 @@ class _ProfileAndBillingTabState extends State<ProfileAndBillingTab> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFF0D1322),
+              color: bmCardColor,
               borderRadius: BorderRadius.circular(22),
               border: Border.all(color: BMColors.whaleGold, width: 1.8),
             ),
