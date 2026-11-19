@@ -1067,6 +1067,7 @@ class BodyModTopChannelBanner extends StatelessWidget {
             ),
           ],
         ),
+      ),
     );
   }
 
@@ -3659,7 +3660,6 @@ class BodyModController extends ChangeNotifier {
             ),
           ],
         ),
-      ),
     );
 
     if (confirmed == true && emailCtrl.text.trim().contains('@')) {
