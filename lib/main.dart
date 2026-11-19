@@ -1188,6 +1188,7 @@ class UserProfileModel {
   String phone;
   String displayName;
   String photoUrl;
+  String birthDate;
   int age;
   String gender; // 'male' | 'female'
   double heightCm;
@@ -1203,6 +1204,8 @@ class UserProfileModel {
   bool isLoggedIn;
   bool isProfileCompleted;
   bool hasActiveSubscription;
+  bool isFreeTrial;
+  bool freeTrialClaimed;
   String subscriptionTier;
   int subscriptionDaysRemaining;
   int subscriptionExpiresAt;
@@ -1218,6 +1221,7 @@ class UserProfileModel {
     this.phone = '',
     this.displayName = '',
     this.photoUrl = '',
+    this.birthDate = '',
     this.age = 21,
     this.gender = 'male',
     this.heightCm = 175,
@@ -1233,6 +1237,8 @@ class UserProfileModel {
     this.isLoggedIn = false,
     this.isProfileCompleted = false,
     this.hasActiveSubscription = false,
+    this.isFreeTrial = false,
+    this.freeTrialClaimed = false,
     this.subscriptionTier = 'بدون اشتراک',
     this.subscriptionDaysRemaining = 0,
     this.subscriptionExpiresAt = 0,
@@ -1326,6 +1332,7 @@ class UserProfileModel {
     'displayName': displayName,
     'name': displayName,
     'photoUrl': photoUrl,
+    'birthDate': birthDate,
     'age': age,
     'gender': gender,
     'heightCm': heightCm,
@@ -1344,6 +1351,8 @@ class UserProfileModel {
     'isLoggedIn': isLoggedIn,
     'isProfileCompleted': isProfileCompleted,
     'hasActiveSubscription': hasActiveSubscription,
+    'isFreeTrial': isFreeTrial,
+    'freeTrialClaimed': freeTrialClaimed,
     'subscriptionTier': subscriptionTier,
     'subscriptionDaysRemaining': subscriptionDaysRemaining,
     'subscriptionExpiresAt': subscriptionExpiresAt,
@@ -1362,6 +1371,7 @@ class UserProfileModel {
       phone: (json['phone'] ?? '').toString(),
       displayName: (json['displayName'] ?? json['name'] ?? '').toString(),
       photoUrl: (json['photoUrl'] ?? json['picture'] ?? '').toString(),
+      birthDate: (json['birthDate'] ?? '').toString(),
       age: (json['age'] as num?)?.toInt() ?? 21,
       gender: (json['gender'] ?? 'male').toString(),
       heightCm:
@@ -1387,6 +1397,8 @@ class UserProfileModel {
       isLoggedIn: json['isLoggedIn'] == true,
       isProfileCompleted: json['isProfileCompleted'] == true,
       hasActiveSubscription: json['hasActiveSubscription'] == true,
+      isFreeTrial: json['isFreeTrial'] == true,
+      freeTrialClaimed: json['freeTrialClaimed'] == true,
       subscriptionTier: (json['subscriptionTier'] ?? 'بدون اشتراک').toString(),
       subscriptionDaysRemaining:
           (json['subscriptionDaysRemaining'] as num?)?.toInt() ?? 0,
@@ -2924,6 +2936,7 @@ class BodyModController extends ChangeNotifier {
 
   bool isDarkMode = true;
   bool isLoadingAi = false;
+  String deviceId = '';
   bool hasRequestedNotificationPerm = false;
 
   UserProfileModel profile = UserProfileModel();
@@ -3004,12 +3017,32 @@ class BodyModController extends ChangeNotifier {
     AppConfig.useBodyCoinSystem =
         prefs.getBool('bm_use_bodycoin_system') ?? false;
 
+    deviceId = prefs.getString('bm_device_id_v1') ?? '';
+    if (deviceId.isEmpty) {
+      final rnd = math.Random();
+      deviceId = 'dev_${DateTime.now().millisecondsSinceEpoch}_${rnd.nextInt(999999)}';
+      prefs.setString('bm_device_id_v1', deviceId);
+    }
+
     final rawProfile = prefs.getString('bm_user_profile_v82');
     if (rawProfile != null && rawProfile.isNotEmpty) {
       try {
         profile = UserProfileModel.fromJson(
           jsonDecode(rawProfile) as Map<String, dynamic>,
         );
+        if (profile.birthDate.isNotEmpty) {
+          _bmSavedBirthStr = profile.birthDate;
+        }
+        if (!profile.isAdmin && profile.hasActiveSubscription && profile.subscriptionExpiresAt > 0) {
+          final remMs = profile.subscriptionExpiresAt - DateTime.now().millisecondsSinceEpoch;
+          if (remMs <= 0) {
+            profile.hasActiveSubscription = false;
+            profile.isFreeTrial = false;
+            profile.subscriptionDaysRemaining = 0;
+          } else {
+            profile.subscriptionDaysRemaining = (remMs / 86400000).ceil();
+          }
+        }
       } catch (_) {}
     }
 
@@ -3237,6 +3270,9 @@ class BodyModController extends ChangeNotifier {
     }
     if (profile.userKey.isNotEmpty) {
       headers['X-User-ID'] = profile.userKey;
+    }
+    if (deviceId.isNotEmpty) {
+      headers['X-Device-ID'] = deviceId;
     }
     return headers;
   }
@@ -3793,12 +3829,41 @@ class BodyModController extends ChangeNotifier {
 
   void _applyServerAuthData(Map<String, dynamic> data) {
     final token = (data['token'] ?? profile.sessionToken).toString();
-    final serverProfile = data['profile'] as Map<String, dynamic>? ?? {};
+    final serverProfile = Map<String, dynamic>.from(
+      data['profile'] as Map<String, dynamic>? ?? {},
+    );
     final userObj = data['user'] as Map<String, dynamic>? ?? {};
 
+    // اگر کاربر همین الان روی گوشی فرمش رو کامل کرده ولی سرور هنوز پروفایل پیش‌فرض/خالی برگردوند، اطلاعات لوکال رو خراب نکن!
+    final bool localDone = profile.isProfileCompleted;
+    final bool serverDone = serverProfile['isProfileCompleted'] == true;
+    final Map<String, dynamic> merged = (localDone && !serverDone)
+        ? {
+            ...serverProfile,
+            ...profile.toJson(),
+            'isAdmin': serverProfile['isAdmin'] == true || profile.isAdmin,
+            'hasActiveSubscription':
+                serverProfile['hasActiveSubscription'] == true || profile.hasActiveSubscription,
+            'subscriptionDaysRemaining': math.max(
+              (serverProfile['subscriptionDaysRemaining'] as num?)?.toInt() ?? 0,
+              profile.subscriptionDaysRemaining,
+            ),
+            'subscriptionExpiresAt': math.max(
+              (serverProfile['subscriptionExpiresAt'] as num?)?.toInt() ?? 0,
+              profile.subscriptionExpiresAt,
+            ),
+            'isFreeTrial':
+                serverProfile['isFreeTrial'] == true || profile.isFreeTrial,
+            'freeTrialClaimed':
+                serverProfile['freeTrialClaimed'] == true || profile.freeTrialClaimed,
+          }
+        : {
+            ...profile.toJson(),
+            ...serverProfile,
+          };
+
     profile = UserProfileModel.fromJson({
-      ...profile.toJson(),
-      ...serverProfile,
+      ...merged,
       'sessionToken': token,
       'email': serverProfile['email'] ?? userObj['email'] ?? profile.email,
       'phone': serverProfile['phone'] ?? userObj['phone'] ?? profile.phone,
@@ -3807,8 +3872,12 @@ class BodyModController extends ChangeNotifier {
           userObj['email'] ??
           userObj['phone'] ??
           profile.userKey,
+      'birthDate': (merged['birthDate'] ?? profile.birthDate).toString(),
       'isLoggedIn': true,
     });
+    if (profile.birthDate.isNotEmpty) {
+      _bmSavedBirthStr = profile.birthDate;
+    }
 
     if (serverProfile['waterGoalGlasses'] != null) {
       targetWaterGlasses =
@@ -3873,10 +3942,11 @@ class BodyModController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ذخیره فرم پرونده بدنی + حافظه هوش مصنوعی در کلودفلر (باز کردن قفل مرحله ۲)
+  // ذخیره فرم پرونده بدنی + حافظه هوش مصنوعی در کلودفلر + فعال‌سازی ۳ روز اشتراک رایگان
   Future<bool> saveAndSyncBodyProfileForm(
     BuildContext context, {
     required String displayName,
+    required String birthDate,
     required int age,
     required String gender,
     required double heightCm,
@@ -3889,21 +3959,37 @@ class BodyModController extends ChangeNotifier {
     required String supplementPreference,
     required String aiCoachMemory,
   }) async {
+    final bool noWorkout = goal == 'gain_bulk' || workoutDaysPerWeek == 'none';
     profile.displayName = displayName.trim().isEmpty
         ? 'رفیق ورزشکار'
         : displayName.trim();
+    if (birthDate.trim().isNotEmpty) {
+      profile.birthDate = birthDate.trim();
+      _bmSavedBirthStr = profile.birthDate;
+    }
     profile.age = age;
     profile.gender = gender;
     profile.heightCm = heightCm;
     profile.weightKg = weightKg;
     profile.targetWeightKg = targetWeightKg;
     profile.goal = goal;
-    profile.workoutDaysPerWeek = workoutDaysPerWeek;
-    profile.workoutPlace = workoutPlace;
+    profile.workoutDaysPerWeek = goal == 'gain_bulk' ? 'none' : workoutDaysPerWeek;
+    profile.workoutPlace = noWorkout ? 'none' : workoutPlace;
     profile.budgetTier = budgetTier;
     profile.supplementPreference = supplementPreference;
     profile.aiCoachMemory = aiCoachMemory.trim();
     profile.isProfileCompleted = true;
+
+    // اعطای ۳ روز اشتراک رایگان برای اولین تکمیل فرم (در صورتی که قبلاً نگرفته باشد)
+    if (!profile.isAdmin && !profile.hasActiveSubscription && !profile.freeTrialClaimed) {
+      profile.freeTrialClaimed = true;
+      profile.isFreeTrial = true;
+      profile.hasActiveSubscription = true;
+      profile.subscriptionTier = 'اشتراک رایگان ۳ روزه هدیه ثبت‌نام 🎁';
+      profile.subscriptionDaysRemaining = 3;
+      profile.subscriptionExpiresAt =
+          DateTime.now().millisecondsSinceEpoch + (3 * 86400 * 1000);
+    }
 
     _ensureWorkoutStepsReady();
     await saveAllToDisk();
@@ -3916,7 +4002,10 @@ class BodyModController extends ChangeNotifier {
             .post(
               uri,
               headers: _authHeaders,
-              body: jsonEncode(profile.toJson()),
+              body: jsonEncode({
+                ...profile.toJson(),
+                'deviceId': deviceId,
+              }),
             )
             .timeout(const Duration(seconds: 10));
         if (res.statusCode == 200) {
@@ -4207,6 +4296,7 @@ class BodyModController extends ChangeNotifier {
               'foodQuery': foodDescription,
               'imageBase64': base64Image,
               'model': profile.preferredModel,
+              'profile': profile.toJson(),
             }),
           )
           .timeout(const Duration(seconds: 15));
@@ -4282,6 +4372,7 @@ class BodyModController extends ChangeNotifier {
             body: jsonEncode({
               'mode': 'weekly_plan',
               'model': profile.preferredModel,
+              'profile': profile.toJson(),
               'prompt':
                   'بر اساس پرونده بدنی من (هدف: ${AppConfig.goalLabel(profile.goal)}، بودجه: ${AppConfig.budgetLabel(profile.budgetTier)}، تمرین: ${AppConfig.workoutDaysLabel(profile.workoutDaysPerWeek)}، حافظه مربی: ${profile.aiCoachMemory}) یک برنامه غذایی ۷ روزه کاملاً متنوع برای شنبه تا جمعه بچین که هیچ دو روزی غذای تکراری نداشته باشن.',
             }),
@@ -4577,6 +4668,7 @@ class BodyModController extends ChangeNotifier {
             body: jsonEncode({
               'prompt': clean,
               'model': profile.preferredModel,
+              'profile': profile.toJson(),
             }),
           )
           .timeout(const Duration(seconds: 16));
@@ -5088,7 +5180,7 @@ class _EditableBodyProfileFormWidgetState
     super.initState();
     final p = widget.controller.profile;
     _nameCtrl = TextEditingController(text: ((p.displayName).toString().trim() == 'رفیق ورزشکار' || (p.displayName).toString().trim() == 'ورزشکار') ? '' : (p.displayName).toString());
-    _ageCtrl = TextEditingController(text: '');
+    _ageCtrl = TextEditingController(text: p.birthDate.isNotEmpty ? p.birthDate : _bmSavedBirthStr);
     _heightCtrl = TextEditingController(text: p.heightCm.toString());
     _weightCtrl = TextEditingController(text: p.weightKg.toString());
     _targetWeightCtrl = TextEditingController(
@@ -5104,7 +5196,12 @@ class _EditableBodyProfileFormWidgetState
         AppConfig.workoutDaysOptions.containsKey(p.workoutDaysPerWeek)
         ? p.workoutDaysPerWeek
         : 'd3';
-    _selectedWorkoutPlace = p.workoutPlace; bmGlobalEquipment = _selectedWorkoutPlace.toString(); bmAiCustomWorkouts.clear(); bmWorkoutBurnKcal = 0; bmAiSurplusSnack = '';
+    const validPlaces = ['home_dumbbell', 'gym', 'bodyweight'];
+    _selectedWorkoutPlace = validPlaces.contains(p.workoutPlace) ? p.workoutPlace : 'bodyweight';
+    if (_selectedGoal == 'gain_bulk') {
+      _selectedWorkoutDays = 'none';
+    }
+    bmGlobalEquipment = _selectedWorkoutPlace.toString(); bmAiCustomWorkouts.clear(); bmWorkoutBurnKcal = 0; bmAiSurplusSnack = '';
     _selectedBudgetTier = AppConfig.budgetTierOptions.containsKey(p.budgetTier)
         ? p.budgetTier
         : AppConfig.budgetBase;
@@ -5211,63 +5308,87 @@ class _EditableBodyProfileFormWidgetState
                 ),
               )
               .toList(),
-          onChanged: (v) =>
-              setState(() => _selectedGoal = v ?? 'gain_muscle'),
+          onChanged: (v) => setState(() {
+            _selectedGoal = v ?? 'gain_muscle';
+            if (_selectedGoal == 'gain_bulk') {
+              _selectedWorkoutDays = 'none';
+            }
+          }),
         ),
         const SizedBox(height: 14),
 
-        // سوال تعداد روزهای تمرین در هفته با توضیح دقیق
-        Text(
-          '🏋️‍♂️ چند روز در هفته تمرین میکنی؟ مناسب عضله سازی (هرچه بیشتر تمرین کنی، سریعتر به هدفت میرسی)',
-          style: TextStyle(
-            fontSize: 12.5,
-            fontWeight: FontWeight.w800,
-            color: BMColors.neonCyan,
-            height: 1.45,
-          ),
-        ),
-        const SizedBox(height: 6),
-        DropdownButtonFormField<String>(
-          value: _selectedWorkoutDays,
-          isExpanded: true,
-          decoration: const InputDecoration(
-            labelText: 'تعداد روزهای تمرین در هفته',
-          ),
-          items: AppConfig.workoutDaysOptions.entries
-              .map(
-                (e) => DropdownMenuItem<String>(
-                  value: e.key,
-                  child: Text(e.value, overflow: TextOverflow.ellipsis),
+        // سوال تعداد روزهای تمرین در هفته (در هدف افزایش وزن عمومی غیرفعال و خاکستری می‌شود)
+        Opacity(
+          opacity: _selectedGoal == 'gain_bulk' ? 0.42 : 1.0,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _selectedGoal == 'gain_bulk'
+                    ? '🏋️‍♂️ برای افزایش وزن عمومی نیازی به تمرین نیست (غیرفعال شد) 🍽️'
+                    : '🏋️‍♂️ چند روز در هفته تمرین میکنی؟ مناسب عضله سازی (هرچه بیشتر تمرین کنی، سریعتر به هدفت میرسی)',
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w800,
+                  color: _selectedGoal == 'gain_bulk' ? bmTextMutedColor : BMColors.neonCyan,
+                  height: 1.45,
                 ),
-              )
-              .toList(),
-          onChanged: (v) =>
-              setState(() => _selectedWorkoutDays = v ?? 'd3'),
+              ),
+              const SizedBox(height: 6),
+              DropdownButtonFormField<String>(
+                value: _selectedGoal == 'gain_bulk' ? 'none' : _selectedWorkoutDays,
+                isExpanded: true,
+                decoration: InputDecoration(
+                  labelText: 'تعداد روزهای تمرین در هفته',
+                  enabled: _selectedGoal != 'gain_bulk',
+                ),
+                items: AppConfig.workoutDaysOptions.entries
+                    .map(
+                      (e) => DropdownMenuItem<String>(
+                        value: e.key,
+                        child: Text(e.value, overflow: TextOverflow.ellipsis),
+                      ),
+                    )
+                    .toList(),
+                onChanged: _selectedGoal == 'gain_bulk'
+                    ? null
+                    : (v) => setState(() => _selectedWorkoutDays = v ?? 'd3'),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 12),
 
-        DropdownButtonFormField<String>(
-          value: _selectedWorkoutPlace,
-          isExpanded: true,
-          decoration: const InputDecoration(
-            labelText: 'محل تمرین و تجهیزات 🏟️',
+        // محل تمرین و تجهیزات (اگر کاربر تمرین نداشته باشد غیرفعال و خاکستری می‌شود)
+        Opacity(
+          opacity: (_selectedGoal == 'gain_bulk' || _selectedWorkoutDays == 'none') ? 0.42 : 1.0,
+          child: DropdownButtonFormField<String>(
+            value: _selectedWorkoutPlace,
+            isExpanded: true,
+            decoration: InputDecoration(
+              labelText: (_selectedGoal == 'gain_bulk' || _selectedWorkoutDays == 'none')
+                  ? 'محل تمرین و تجهیزات (نیازی به تمرین نیست) 🏟️'
+                  : 'محل تمرین و تجهیزات 🏟️',
+              enabled: !(_selectedGoal == 'gain_bulk' || _selectedWorkoutDays == 'none'),
+            ),
+            items: const [
+              DropdownMenuItem(
+                value: 'home_dumbbell',
+                child: Text('تمرین در خانه با دمبل 🏠💪'),
+              ),
+              DropdownMenuItem(
+                value: 'gym',
+                child: Text('باشگاه بدنسازی کامل 🏟️'),
+              ),
+              DropdownMenuItem(
+                value: 'bodyweight',
+                child: Text('در خانه بدون تجهیزات (وزن بدن) 🤸‍♂️'),
+              ),
+            ],
+            onChanged: (_selectedGoal == 'gain_bulk' || _selectedWorkoutDays == 'none')
+                ? null
+                : (v) => setState(() => _selectedWorkoutPlace = v ?? 'home_dumbbell'),
           ),
-          items: const [
-            DropdownMenuItem(
-              value: 'home_dumbbell',
-              child: Text('تمرین در خانه با دمبل 🏠💪'),
-            ),
-            DropdownMenuItem(
-              value: 'gym',
-              child: Text('باشگاه بدنسازی کامل 🏟️'),
-            ),
-            DropdownMenuItem(
-              value: 'bodyweight',
-              child: Text('در خانه بدون تجهیزات (وزن بدن) 🤸‍♂️'),
-            ),
-          ],
-          onChanged: (v) =>
-              setState(() => _selectedWorkoutPlace = v ?? 'home_dumbbell'),
         ),
         const SizedBox(height: 12),
 
@@ -5346,17 +5467,19 @@ class _EditableBodyProfileFormWidgetState
               ),
             ),
             onPressed: () async {
+              final bool noWorkoutSelected = _selectedGoal == 'gain_bulk' || _selectedWorkoutDays == 'none';
               await c.saveAndSyncBodyProfileForm(
                 context,
                 displayName: _nameCtrl.text,
+                birthDate: _ageCtrl.text.trim(),
                 age: (bmCalculateAgeFromBirthDate(_ageCtrl.text) ?? int.tryParse(_ageCtrl.text)) ?? 21,
                 gender: _selectedGender,
                 heightCm: double.tryParse(_heightCtrl.text) ?? 175,
                 weightKg: double.tryParse(_weightCtrl.text) ?? 70,
                 targetWeightKg: double.tryParse(_targetWeightCtrl.text) ?? 75,
                 goal: _selectedGoal,
-                workoutDaysPerWeek: _selectedWorkoutDays,
-                workoutPlace: _selectedWorkoutPlace,
+                workoutDaysPerWeek: _selectedGoal == 'gain_bulk' ? 'none' : _selectedWorkoutDays,
+                workoutPlace: noWorkoutSelected ? 'none' : _selectedWorkoutPlace,
                 budgetTier: _selectedBudgetTier,
                 supplementPreference: _selectedSupplementMode,
                 aiCoachMemory: _memoryCtrl.text,
@@ -5835,7 +5958,70 @@ class SmartAiLockBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) { 
     final stage = controller.aiLockStage;
-    if (stage == 0) return const SizedBox.shrink();
+    if (stage == 0) {
+      if (controller.profile.isFreeTrial &&
+          controller.profile.hasActiveSubscription &&
+          !controller.profile.isAdmin) {
+        final daysLeft = controller.profile.subscriptionDaysRemaining;
+        return Container(
+          margin: const EdgeInsets.only(bottom: 14),
+          padding: const EdgeInsets.all(15),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [BMColors.neonGreen.withOpacity(0.2), bmCardColor],
+            ),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: BMColors.neonGreen, width: 1.5),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Text('🎉🎁 ', style: TextStyle(fontSize: 20)),
+                  Expanded(
+                    child: Text(
+                      'دمت گرم رفیق، ثبت‌نامت با موفقیت انجام شد 👏',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 14.5,
+                        color: BMColors.neonGreen,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 7),
+              Text(
+                '۳ روز اشتراک رایگان بهت تعلق گرفت 😍 (باقی‌مانده: $daysLeft روز)
+میتونی از همه امکانات هوش مصنوعی هم استفاده کنی، ولی بعد از تموم شدن باید اشتراک بخری 😂',
+                style: TextStyle(fontSize: 12.8, height: 1.55, color: bmTextColor),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: BMColors.neonGreen,
+                    side: BorderSide(color: BMColors.neonGreen),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () => onNavigateTab(4),
+                  icon: const Icon(Icons.workspace_premium_rounded, size: 18),
+                  label: const Text(
+                    'مشاهده وضعیت اشتراک 💎',
+                    style: TextStyle(fontWeight: FontWeight.w900),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+      return const SizedBox.shrink();
+    }
 
     String title = '';
     String subtitle = '';
