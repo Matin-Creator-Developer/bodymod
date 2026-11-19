@@ -78,6 +78,12 @@ jobs:
           GROOVY_EOF
           fi
 
+      - name: Inject Android 13+ POST_NOTIFICATIONS Permission
+        run: |
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          if [ -f "$MANIFEST" ] && ! grep -q "POST_NOTIFICATIONS" "$MANIFEST"; then
+            sed -i 's/<application/<uses-permission android:name="android.permission.POST_NOTIFICATIONS"\/>\n    <application/' "$MANIFEST"
+          fi
       - name: Build Myket Release APK (32/64-bit)
         run: |
           flutter pub get

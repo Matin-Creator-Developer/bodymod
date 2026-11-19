@@ -130,7 +130,7 @@ class _BmBirthDateThreeBoxesState extends State<BmBirthDateThreeBoxes> {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: isM ? 12 : 14, vertical: 9),
                 decoration: BoxDecoration(color: sel ? const Color(0xFF00E5A3) : bmSurfaceColor, borderRadius: BorderRadius.circular(10), border: Border.all(color: sel ? const Color(0xFF00E5A3) : bmBorderColor)),
-                child: Text(lbl, style: TextStyle(color: sel ? Colors.black : Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                child: Text(lbl, style: TextStyle(color: sel ? Colors.black : bmTextColor, fontWeight: FontWeight.bold, fontSize: 13)),
               ),
             );
           }).toList()),
@@ -146,7 +146,7 @@ class _BmBirthDateThreeBoxesState extends State<BmBirthDateThreeBoxes> {
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         Text(lbl, style: TextStyle(fontSize: 10, color: bmTextMutedColor)),
         const SizedBox(height: 2),
-        Text(ok ? val : 'انتخاب', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: ok ? Colors.white : bmTextMutedColor)),
+        Text(ok ? val : 'انتخاب', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: ok ? bmTextColor : bmTextMutedColor)),
       ]),
     )));
   }
@@ -285,7 +285,7 @@ Future<bool> bmGenerateAiWorkoutPlan(BuildContext context, {VoidCallback? onDone
         + 'فقط و فقط یک آبجکت JSON خالص با این ۳ کلید برگردان: '
         + '{"workout_calories": ' + estWorkoutKcal.toString() + ', "surplus_snack": "پیشنهاد دقیق خوراکی و میان‌وعده پرکالری (بیشتر از کالری سوخته شده) برای ایجاد کالری مازاد و تعادل با تمرین و فعالیت روزانه", "exercises": [۷ آبجکت حرکت ورزشی به ترتیب گرم کردن، ست اصلی، سرد کردن با کلیدهای title و muscle و breath و tip]}';
     final res = await http.post(
-      Uri.parse('https://bodymod-core.matin-mohammadi.workers.dev/api/chat'),
+      Uri.parse('https://server.matin-mohammadi.ir/api/chat'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'message': prompt, 'prompt': prompt, 'model': 'gemini-3.1-flash-lite'}),
     ).timeout(const Duration(seconds: 25));
@@ -412,7 +412,7 @@ Future<void> bmSyncBetaCountdown({BuildContext? context, VoidCallback? onUpdated
         }
       }
     }
-    final uri = Uri.parse('https://bodymod-core.matin-mohammadi.workers.dev/api/beta-status?phone=' + Uri.encodeComponent(bmUserPhoneGlobal) + '&version=' + bmCurrentAppVersion.toString());
+    final uri = Uri.parse('https://server.matin-mohammadi.ir/api/beta-status?phone=' + Uri.encodeComponent(bmUserPhoneGlobal) + '&version=' + bmCurrentAppVersion.toString());
     final res = await http.get(uri).timeout(const Duration(seconds: 10));
     if (res.statusCode == 200) {
       final d = jsonDecode(res.body);
@@ -458,7 +458,7 @@ Future<void> bmSubmitFriendReferralCode(BuildContext context, VoidCallback onRef
   try {
     await bmSyncBetaCountdown(context: context);
     final res = await http.post(
-      Uri.parse('https://bodymod-core.matin-mohammadi.workers.dev/api/referral'),
+      Uri.parse('https://server.matin-mohammadi.ir/api/referral'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'action': 'apply_referral', 'phone': bmUserPhoneGlobal, 'referralCode': rawCode}),
     ).timeout(const Duration(seconds: 12));
@@ -846,22 +846,22 @@ class AppConfig {
 class BMColors {
   static Color get bgDark => bmBgColor;
   static Color get surfaceDark => bmCardColor;
-  static Color get cardDark => bmSurfaceColor;
-  static Color get cardBorderDark => bmSurfaceColor;
+  static Color get cardDark => bmCardColor;
+  static Color get cardBorderDark => bmBorderColor;
 
-  static const Color neonCyan = Color(0xFF00F5D4);
-  static const Color neonGreen = Color(0xFF10B981);
-  static const Color electricBlue = Color(0xFF3B82F6);
-  static const Color flameOrange = Color(0xFFFF6B35);
-  static const Color dangerRed = Color(0xFFEF4444);
-  static const Color warningAmber = Color(0xFFF59E0B);
-  static const Color whaleGold = Color(0xFFFFD700);
-  static const Color purpleAccent = Color(0xFF8B5CF6);
+  static Color get neonCyan => bmIsDarkTheme ? const Color(0xFF00F5D4) : const Color(0xFF0D9488);
+  static Color get neonGreen => bmIsDarkTheme ? const Color(0xFF10B981) : const Color(0xFF059669);
+  static const Color electricBlue = Color(0xFF2563EB);
+  static const Color flameOrange = Color(0xFFEA580C);
+  static const Color dangerRed = Color(0xFFDC2626);
+  static Color get warningAmber => bmIsDarkTheme ? const Color(0xFFF59E0B) : const Color(0xFFD97706);
+  static Color get whaleGold => bmIsDarkTheme ? const Color(0xFFFFD700) : const Color(0xFFB45309);
+  static const Color purpleAccent = Color(0xFF7C3AED);
 
-  static const Color bgLight = Color(0xFFF3F6FB);
+  static const Color bgLight = Color(0xFFF1F5F9);
   static const Color surfaceLight = Color(0xFFFFFFFF);
   static const Color cardLight = Color(0xFFFFFFFF);
-  static const Color cardBorderLight = Color(0xFFE2E8F0);
+  static const Color cardBorderLight = Color(0xFFCBD5E1);
 }
 
 class BMTheme {
@@ -869,45 +869,45 @@ class BMTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      scaffoldBackgroundColor: BMColors.bgDark,
-      primaryColor: BMColors.neonCyan,
-      colorScheme: ColorScheme.dark(
-        primary: BMColors.neonCyan,
-        secondary: BMColors.neonGreen,
-        surface: BMColors.surfaceDark,
-        error: BMColors.dangerRed,
+      scaffoldBackgroundColor: const Color(0xFF0B0F17),
+      primaryColor: const Color(0xFF00F5D4),
+      colorScheme: const ColorScheme.dark(
+        primary: Color(0xFF00F5D4),
+        secondary: Color(0xFF10B981),
+        surface: Color(0xFF151B26),
+        onSurface: Color(0xFFFFFFFF),
+        error: Color(0xFFEF4444),
       ),
-      cardColor: BMColors.cardDark,
-      dividerColor: BMColors.cardBorderDark,
-      appBarTheme: AppBarTheme(
-        backgroundColor: BMColors.bgDark,
+      cardColor: const Color(0xFF151B26),
+      dividerColor: const Color(0xFF334155),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xFF0B0F17),
         elevation: 0,
         centerTitle: false,
+        iconTheme: IconThemeData(color: Colors.white),
         titleTextStyle: TextStyle(
           fontSize: 17.5,
           fontWeight: FontWeight.w900,
-          color: bmTextColor,
+          color: Colors.white,
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: bmCardColor,
-        hintStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 13,
-        ),
+        fillColor: const Color(0xFF151B26),
+        labelStyle: const TextStyle(color: Color(0xFFE2E8F0)),
+        hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: BMColors.cardBorderDark),
+          borderSide: const BorderSide(color: Color(0xFF334155)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: BMColors.cardBorderDark),
+          borderSide: const BorderSide(color: Color(0xFF334155)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: BMColors.neonCyan, width: 1.8),
+          borderSide: const BorderSide(color: Color(0xFF00F5D4), width: 1.8),
         ),
       ),
     );
@@ -917,42 +917,41 @@ class BMTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      scaffoldBackgroundColor: BMColors.bgLight,
+      scaffoldBackgroundColor: const Color(0xFFF1F5F9),
       primaryColor: const Color(0xFF0D9488),
-      colorScheme: ColorScheme.light(
+      colorScheme: const ColorScheme.light(
         primary: Color(0xFF0D9488),
         secondary: Color(0xFF059669),
-        surface: BMColors.surfaceLight,
-        error: BMColors.dangerRed,
+        surface: Color(0xFFFFFFFF),
+        onSurface: Color(0xFF0F172A),
+        error: Color(0xFFDC2626),
       ),
-      cardColor: BMColors.cardLight,
-      dividerColor: BMColors.cardBorderLight,
-      appBarTheme: AppBarTheme(
-        backgroundColor: BMColors.surfaceLight,
+      cardColor: const Color(0xFFFFFFFF),
+      dividerColor: const Color(0xFFCBD5E1),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xFFFFFFFF),
         elevation: 0,
         centerTitle: false,
-        iconTheme: IconThemeData(color: bmCardColor),
+        iconTheme: IconThemeData(color: Color(0xFF0F172A)),
         titleTextStyle: TextStyle(
           fontSize: 17.5,
           fontWeight: FontWeight.w900,
-          color: bmCardColor,
+          color: Color(0xFF0F172A),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: const Color(0xFFF8FAFC),
+        labelStyle: const TextStyle(color: Color(0xFF334155)),
         hintStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 13,
-        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: BMColors.cardBorderLight),
+          borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: BMColors.cardBorderLight),
+          borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
@@ -1068,12 +1067,11 @@ class BodyModTopChannelBanner extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 
   @override
-  Widget build(BuildContext context) { bmIsDarkTheme = Theme.of(context).brightness == Brightness.dark;
+  Widget build(BuildContext context) { 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 6),
       child: InkWell(
@@ -1130,7 +1128,7 @@ class BodyModTopChannelBanner extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.black38,
+                            color: bmIsDarkTheme ? Colors.black38 : Colors.black12,
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(color: bmBorderColor),
                           ),
@@ -2192,7 +2190,7 @@ class ComprehensiveFoodBankCatalog {
       },
     ),
     FoodBankUnitItem(
-      id: 'nt_almond_pistachio',
+      id: 'nt_almond',
       category: 'آجیل و خشکبار 🥜',
       title: 'بادام درختی (خام یا بوداده)',
       baseUnitName: 'عدد (۱ دانه)',
@@ -2201,187 +2199,127 @@ class ComprehensiveFoodBankCatalog {
       carbsPerUnit: 0.3,
       fatPerUnit: 0.6,
       emoji: '🌰',
-      alternateUnitsMultiplier: {
-        'عدد (۱ دانه)': 1.0,
-        'قاشق غذاخوری (۱۰ عدد)': 10.0,
-        'مشت (۲۰ عدد)': 20.0,
-      },
+      alternateUnitsMultiplier: {'عدد (۱ دانه)': 1.0, 'قاشق غذاخوری (۱۰ عدد)': 10.0, 'مشت (۲۰ عدد)': 20.0},
     ),
-      FoodBankUnitItem(
-      id: 'nt_almond_pistachio',
+    FoodBankUnitItem(
+      id: 'nt_peanut',
       category: 'آجیل و خشکبار 🥜',
       title: 'بادام زمینی (خام یا بوداده)',
       baseUnitName: 'عدد (۱ دانه)',
-      caloriesPerUnit: 7,
+      caloriesPerUnit: 6,
       proteinPerUnit: 0.3,
-      carbsPerUnit: 0.3,
-      fatPerUnit: 0.6,
+      carbsPerUnit: 0.2,
+      fatPerUnit: 0.5,
       emoji: '🥜',
-      alternateUnitsMultiplier: {
-        'عدد (۱ دانه)': 1.0,
-        'قاشق غذاخوری (۱۰ عدد)': 10.0,
-        'مشت (۲۰ عدد)': 20.0,
-      },
+      alternateUnitsMultiplier: {'عدد (۱ دانه)': 1.0, 'قاشق غذاخوری (۱۰ عدد)': 10.0, 'مشت (۲۰ عدد)': 20.0},
     ),
-      FoodBankUnitItem(
-      id: 'nt_almond_pistachio',
+    FoodBankUnitItem(
+      id: 'nt_pistachio',
       category: 'آجیل و خشکبار 🥜',
       title: 'پسته (خام یا شور)',
       baseUnitName: 'عدد (۱ دانه)',
-      caloriesPerUnit: 7,
-      proteinPerUnit: 0.3,
-      carbsPerUnit: 0.3,
-      fatPerUnit: 0.6,
+      caloriesPerUnit: 4,
+      proteinPerUnit: 0.2,
+      carbsPerUnit: 0.2,
+      fatPerUnit: 0.3,
       emoji: '🌰',
-      alternateUnitsMultiplier: {
-        'عدد (۱ دانه)': 1.0,
-        'قاشق غذاخوری (۱۰ عدد)': 10.0,
-        'مشت (۲۰ عدد)': 20.0,
-      },
+      alternateUnitsMultiplier: {'عدد (۱ دانه)': 1.0, 'مشت کوچک (۱۵ عدد)': 15.0, 'مشت بزرگ (۳۰ عدد)': 30.0},
     ),
-      FoodBankUnitItem(
-      id: 'nt_almond_pistachio',
+    FoodBankUnitItem(
+      id: 'nt_hazelnut',
       category: 'آجیل و خشکبار 🥜',
       title: 'فندق (خام یا بوداده)',
       baseUnitName: 'عدد (۱ دانه)',
-      caloriesPerUnit: 7,
-      proteinPerUnit: 0.3,
-      carbsPerUnit: 0.3,
-      fatPerUnit: 0.6,
+      caloriesPerUnit: 9,
+      proteinPerUnit: 0.2,
+      carbsPerUnit: 0.2,
+      fatPerUnit: 0.8,
       emoji: '🌰',
-      alternateUnitsMultiplier: {
-        'عدد (۱ دانه)': 1.0,
-        'قاشق غذاخوری (۱۰ عدد)': 10.0,
-        'مشت (۲۰ عدد)': 20.0,
-      },
+      alternateUnitsMultiplier: {'عدد (۱ دانه)': 1.0, 'مشت کوچک (۱۰ عدد)': 10.0, 'مشت بزرگ (۲۰ عدد)': 20.0},
     ),
-      FoodBankUnitItem(
-      id: 'nt_almond_pistachio',
+    FoodBankUnitItem(
+      id: 'nt_cashew',
       category: 'آجیل و خشکبار 🥜',
       title: 'بادام هندی (کاجو)',
       baseUnitName: 'عدد (۱ دانه)',
-      caloriesPerUnit: 7,
+      caloriesPerUnit: 9,
       proteinPerUnit: 0.3,
-      carbsPerUnit: 0.3,
-      fatPerUnit: 0.6,
+      carbsPerUnit: 0.5,
+      fatPerUnit: 0.7,
       emoji: '🥜',
-      alternateUnitsMultiplier: {
-        'عدد (۱ دانه)': 1.0,
-        'قاشق غذاخوری (۱۰ عدد)': 10.0,
-        'مشت (۲۰ عدد)': 20.0,
-      },
+      alternateUnitsMultiplier: {'عدد (۱ دانه)': 1.0, 'مشت کوچک (۱۰ عدد)': 10.0, 'مشت بزرگ (۲۰ عدد)': 20.0},
     ),
-      FoodBankUnitItem(
-      id: 'nt_almond_pistachio',
-      category: 'آجیل و خشکبار 🥜',
-      title: 'تخمه آفتابگردان یا کدو',
-      baseUnitName: 'عدد (۱ دانه)',
-      caloriesPerUnit: 7,
-      proteinPerUnit: 0.3,
-      carbsPerUnit: 0.3,
-      fatPerUnit: 0.6,
-      emoji: '🌻',
-      alternateUnitsMultiplier: {
-        'عدد (۱ دانه)': 1.0,
-        'قاشق غذاخوری (۱۰ عدد)': 10.0,
-        'مشت (۲۰ عدد)': 20.0,
-      },
-    ),
-      FoodBankUnitItem(
-      id: 'nt_almond_pistachio',
+    FoodBankUnitItem(
+      id: 'nt_mixed_nuts',
       category: 'آجیل و خشکبار 🥜',
       title: 'آجیل چهارمغز مخلوط',
-      baseUnitName: 'عدد (۱ دانه)',
-      caloriesPerUnit: 7,
-      proteinPerUnit: 0.3,
-      carbsPerUnit: 0.3,
-      fatPerUnit: 0.6,
+      baseUnitName: 'قاشق غذاخوری',
+      caloriesPerUnit: 65,
+      proteinPerUnit: 2.0,
+      carbsPerUnit: 2.2,
+      fatPerUnit: 5.5,
       emoji: '🥣',
-      alternateUnitsMultiplier: {
-        'عدد (۱ دانه)': 1.0,
-        'قاشق غذاخوری (۱۰ عدد)': 10.0,
-        'مشت (۲۰ عدد)': 20.0,
-      },
+      alternateUnitsMultiplier: {'قاشق غذاخوری': 1.0, 'مشت (۳ قاشق)': 3.0, 'پیاله (۵ قاشق)': 5.0},
     ),
-      FoodBankUnitItem(
-      id: 'nt_almond_pistachio',
+    FoodBankUnitItem(
+      id: 'sn_sponge_cake',
       category: 'تنقلات و دسر 🍫',
       title: 'کیک خانگی یا اسفنجی ساده',
-      baseUnitName: 'عدد (۱ دانه)',
-      caloriesPerUnit: 7,
-      proteinPerUnit: 0.3,
-      carbsPerUnit: 0.3,
-      fatPerUnit: 0.6,
+      baseUnitName: 'برش متوسط (۵۰ گرم)',
+      caloriesPerUnit: 165,
+      proteinPerUnit: 3.0,
+      carbsPerUnit: 24.0,
+      fatPerUnit: 6.5,
       emoji: '🍰',
-      alternateUnitsMultiplier: {
-        'عدد (۱ دانه)': 1.0,
-        'قاشق غذاخوری (۱۰ عدد)': 10.0,
-        'مشت (۲۰ عدد)': 20.0,
-      },
+      alternateUnitsMultiplier: {'نصف برش': 0.5, 'برش متوسط (۵۰ گرم)': 1.0, 'برش بزرگ (۱۰۰ گرم)': 2.0},
     ),
-      FoodBankUnitItem(
-      id: 'nt_almond_pistachio',
+    FoodBankUnitItem(
+      id: 'sn_choco_cake',
       category: 'تنقلات و دسر 🍫',
       title: 'کیک شکلاتی یا خامه‌ای',
-      baseUnitName: 'عدد (۱ دانه)',
-      caloriesPerUnit: 7,
-      proteinPerUnit: 0.3,
-      carbsPerUnit: 0.3,
-      fatPerUnit: 0.6,
+      baseUnitName: 'برش متوسط (۷۰ گرم)',
+      caloriesPerUnit: 260,
+      proteinPerUnit: 3.5,
+      carbsPerUnit: 34.0,
+      fatPerUnit: 12.5,
       emoji: '🎂',
-      alternateUnitsMultiplier: {
-        'عدد (۱ دانه)': 1.0,
-        'قاشق غذاخوری (۱۰ عدد)': 10.0,
-        'مشت (۲۰ عدد)': 20.0,
-      },
+      alternateUnitsMultiplier: {'نصف برش': 0.5, 'برش متوسط (۷۰ گرم)': 1.0, 'برش بزرگ': 1.5},
     ),
-      FoodBankUnitItem(
-      id: 'nt_almond_pistachio',
+    FoodBankUnitItem(
+      id: 'sn_dry_pastry',
       category: 'تنقلات و دسر 🍫',
       title: 'شیرینی خشک یا دانمارکی',
-      baseUnitName: 'عدد (۱ دانه)',
-      caloriesPerUnit: 7,
-      proteinPerUnit: 0.3,
-      carbsPerUnit: 0.3,
-      fatPerUnit: 0.6,
+      baseUnitName: 'عدد متوسط',
+      caloriesPerUnit: 145,
+      proteinPerUnit: 2.2,
+      carbsPerUnit: 19.0,
+      fatPerUnit: 6.8,
       emoji: '🥐',
-      alternateUnitsMultiplier: {
-        'عدد (۱ دانه)': 1.0,
-        'قاشق غذاخوری (۱۰ عدد)': 10.0,
-        'مشت (۲۰ عدد)': 20.0,
-      },
+      alternateUnitsMultiplier: {'نصف عدد': 0.5, 'عدد متوسط': 1.0, '۲ عدد': 2.0},
     ),
-      FoodBankUnitItem(
-      id: 'nt_almond_pistachio',
+    FoodBankUnitItem(
+      id: 'sn_cream_pastry',
       category: 'تنقلات و دسر 🍫',
-      title: 'شیرینی تر خامه‌ای',
-      baseUnitName: 'عدد (۱ دانه)',
-      caloriesPerUnit: 7,
-      proteinPerUnit: 0.3,
-      carbsPerUnit: 0.3,
-      fatPerUnit: 0.6,
+      title: 'شیرینی تر خامه‌ای (رولت / ناپلئونی)',
+      baseUnitName: 'عدد متوسط',
+      caloriesPerUnit: 240,
+      proteinPerUnit: 3.0,
+      carbsPerUnit: 27.0,
+      fatPerUnit: 13.5,
       emoji: '🧁',
-      alternateUnitsMultiplier: {
-        'عدد (۱ دانه)': 1.0,
-        'قاشق غذاخوری (۱۰ عدد)': 10.0,
-        'مشت (۲۰ عدد)': 20.0,
-      },
+      alternateUnitsMultiplier: {'نصف عدد': 0.5, 'عدد متوسط': 1.0, '۲ عدد': 2.0},
     ),
-      FoodBankUnitItem(
-      id: 'nt_almond_pistachio',
+    FoodBankUnitItem(
+      id: 'sn_koloocheh',
       category: 'تنقلات و دسر 🍫',
       title: 'کلوچه یا کاپ‌کیک',
       baseUnitName: 'عدد (۱ دانه)',
-      caloriesPerUnit: 7,
-      proteinPerUnit: 0.3,
-      carbsPerUnit: 0.3,
-      fatPerUnit: 0.6,
+      caloriesPerUnit: 210,
+      proteinPerUnit: 3.2,
+      carbsPerUnit: 32.0,
+      fatPerUnit: 7.5,
       emoji: '🍪',
-      alternateUnitsMultiplier: {
-        'عدد (۱ دانه)': 1.0,
-        'قاشق غذاخوری (۱۰ عدد)': 10.0,
-        'مشت (۲۰ عدد)': 20.0,
-      },
+      alternateUnitsMultiplier: {'نصف عدد': 0.5, 'عدد (۱ دانه)': 1.0},
     ),
     FoodBankUnitItem(
       id: 'nt_raisins',
@@ -2884,7 +2822,7 @@ class _EarthBurnOfflineDialogState extends State<EarthBurnOfflineDialog>
   }
 
   @override
-  Widget build(BuildContext context) { bmIsDarkTheme = Theme.of(context).brightness == Brightness.dark;
+  Widget build(BuildContext context) { 
     return Dialog(
       backgroundColor: Colors.black,
       surfaceTintColor: Colors.black,
@@ -3340,6 +3278,15 @@ class BodyModController extends ChangeNotifier {
 
   void toggleThemeMode() {
     isDarkMode = !isDarkMode;
+    bmIsDarkTheme = isDarkMode;
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: isDarkMode ? Brightness.light : Brightness.dark,
+        systemNavigationBarColor: bmBgColor,
+        systemNavigationBarIconBrightness: isDarkMode ? Brightness.light : Brightness.dark,
+      ),
+    );
     saveAllToDisk();
     notifyListeners();
   }
@@ -3565,7 +3512,7 @@ class BodyModController extends ChangeNotifier {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
       ),
-      builder: (ctx) => Theme(data: BMTheme.dark(), child: TwoStepAuthBottomSheet(controller: this)),
+      builder: (ctx) => TwoStepAuthBottomSheet(controller: this),
     );
 
     if (result != null && result['loggedIn'] == true && context.mounted) {
@@ -3591,7 +3538,7 @@ class BodyModController extends ChangeNotifier {
     await showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => Theme(data: BMTheme.dark(), child: RegistrationProfileFormDialog(controller: this)),
+      builder: (ctx) => RegistrationProfileFormDialog(controller: this),
     );
   }
 
@@ -3658,9 +3605,7 @@ class BodyModController extends ChangeNotifier {
     final nameCtrl = TextEditingController();
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => Theme(
-        data: BMTheme.dark(),
-        child: AlertDialog(
+      builder: (ctx) => AlertDialog(
           backgroundColor: BMColors.cardDark,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
@@ -4793,7 +4738,7 @@ class _TwoStepAuthBottomSheetState extends State<TwoStepAuthBottomSheet> {
   }
 
   @override
-  Widget build(BuildContext context) { bmIsDarkTheme = Theme.of(context).brightness == Brightness.dark;
+  Widget build(BuildContext context) { 
     final c = widget.controller;
     return Padding(
       padding: EdgeInsets.only(
@@ -5045,7 +4990,7 @@ class RegistrationProfileFormDialog extends StatelessWidget {
   const RegistrationProfileFormDialog({super.key, required this.controller});
 
   @override
-  Widget build(BuildContext context) { bmIsDarkTheme = Theme.of(context).brightness == Brightness.dark;
+  Widget build(BuildContext context) { 
     return Dialog(
       backgroundColor: BMColors.surfaceDark,
       insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
@@ -5178,7 +5123,7 @@ class _EditableBodyProfileFormWidgetState
   }
 
   @override
-  Widget build(BuildContext context) { bmIsDarkTheme = Theme.of(context).brightness == Brightness.dark;
+  Widget build(BuildContext context) { 
     final c = widget.controller;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -5451,16 +5396,17 @@ class BodyModApp extends StatelessWidget {
   const BodyModApp({super.key, required this.controller});
 
   @override
-  Widget build(BuildContext context) { bmIsDarkTheme = Theme.of(context).brightness == Brightness.dark;
+  Widget build(BuildContext context) { 
     return AnimatedBuilder(
       animation: controller,
       builder: (context, _) {
+        bmIsDarkTheme = controller.isDarkMode;
         return MaterialApp(
           title: AppConfig.appName,
           debugShowCheckedModeBanner: false,
           theme: BMTheme.light(),
           darkTheme: BMTheme.dark(),
-          themeMode: (bmIsDarkTheme = controller.isDarkMode) ? ThemeMode.dark : ThemeMode.light,
+          themeMode: controller.isDarkMode ? ThemeMode.dark : ThemeMode.light,
           builder: (context, child) {
             return Directionality(
               textDirection: TextDirection.rtl,
@@ -5501,7 +5447,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
   }
 
   @override
-  Widget build(BuildContext context) { bmIsDarkTheme = Theme.of(context).brightness == Brightness.dark;
+  Widget build(BuildContext context) { 
     final c = widget.controller;
     final pages = [
       HomeDashboardTab(controller: c, onNavigateTab: _jumpToTab),
@@ -5887,7 +5833,7 @@ class SmartAiLockBanner extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) { bmIsDarkTheme = Theme.of(context).brightness == Brightness.dark;
+  Widget build(BuildContext context) { 
     final stage = controller.aiLockStage;
     if (stage == 0) return const SizedBox.shrink();
 
@@ -6155,7 +6101,7 @@ class _HomeDashboardTabState extends State<HomeDashboardTab> {
                         style: TextStyle(
                           fontWeight: FontWeight.w800,
                           fontSize: 12,
-                          color: selected ? Colors.black : Colors.white,
+                          color: selected ? Colors.black : bmTextColor,
                         ),
                       ),
                       onSelected: (_) =>
@@ -6187,7 +6133,7 @@ class _HomeDashboardTabState extends State<HomeDashboardTab> {
                         style: TextStyle(
                           fontWeight: FontWeight.w900,
                           fontSize: 12,
-                          color: selected ? Colors.black : Colors.white,
+                          color: selected ? Colors.black : bmTextColor,
                         ),
                       ),
                       onSelected: (_) => setSheetState(() => chosenQty = q),
@@ -6278,7 +6224,7 @@ class _HomeDashboardTabState extends State<HomeDashboardTab> {
   }
 
   @override
-  Widget build(BuildContext context) { bmIsDarkTheme = Theme.of(context).brightness == Brightness.dark;
+  Widget build(BuildContext context) { 
     final c = widget.controller;
     final macros = c.profile.recommendedMacros;
     final targetCal = macros['calories'] ?? 2200;
@@ -6309,9 +6255,9 @@ class _HomeDashboardTabState extends State<HomeDashboardTab> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: c.currentStreakState == StreakVisualState.redFire
-                  ? [const Color(0xFF431407), bmSurfaceColor]
+                  ? (bmIsDarkTheme ? [const Color(0xFF431407), bmSurfaceColor] : [const Color(0xFFFFEDD5), bmCardColor])
                   : c.currentStreakState == StreakVisualState.blueFrozen
-                  ? [const Color(0xFF0C4A6E), bmSurfaceColor]
+                  ? (bmIsDarkTheme ? [const Color(0xFF0C4A6E), bmSurfaceColor] : [const Color(0xFFE0F2FE), bmCardColor])
                   : [bmSurfaceColor, bmCardColor],
             ),
             borderRadius: BorderRadius.circular(20),
@@ -6706,7 +6652,7 @@ class _HomeDashboardTabState extends State<HomeDashboardTab> {
                     vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.03),
+                    color: bmIsDarkTheme ? Colors.white.withOpacity(0.03) : const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(color: bmBorderColor),
                   ),
@@ -6871,7 +6817,7 @@ class WeeklyMealPlanTab extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) { bmIsDarkTheme = Theme.of(context).brightness == Brightness.dark;
+  Widget build(BuildContext context) { 
     final c = controller;
     final currentDayName = BodyModController.weekDays[c.selectedDayIndex];
     final daySlots = c.weeklyMealPlan[currentDayName] ?? [];
@@ -7246,7 +7192,7 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
   }
 
   @override
-  Widget build(BuildContext context) { bmIsDarkTheme = Theme.of(context).brightness == Brightness.dark;
+  Widget build(BuildContext context) { 
     final c = widget.controller;
     final steps = c.workoutSteps;
     if (steps.isEmpty) return const SizedBox.shrink();
@@ -7321,7 +7267,7 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
               ),
               const SizedBox(height: 8),
               Text(
-                activeStep.name,
+                bmExStr(safeIdx, 'title', activeStep.name),
                 style: TextStyle(
                   fontWeight: FontWeight.w900,
                   fontSize: 17,
@@ -7330,7 +7276,7 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
               ),
               const SizedBox(height: 5),
               Text(
-                '🎯 عضله هدف: ${activeStep.muscleGroup} • تکرار: ${activeStep.repsOrDuration}',
+                '🎯 عضله هدف: ${bmExStr(safeIdx, 'muscle', activeStep.muscleGroup)} • تکرار: ${activeStep.repsOrDuration}',
                 style: TextStyle(fontSize: 12.5, color: bmTextSubColor),
               ),
               const SizedBox(height: 12),
@@ -7367,7 +7313,7 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
                           color: done
                               ? BMColors.neonGreen
                               : isCurrent
-                              ? Colors.white
+                              ? bmTextColor
                               : bmTextMutedColor,
                         ),
                       ),
@@ -7379,14 +7325,14 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.35),
+                  color: bmIsDarkTheme ? Colors.black.withOpacity(0.35) : const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '🫁 ریتم تنفس: ${activeStep.breathingGuide}',
+                      '🫁 ریتم تنفس: ${bmExStr(safeIdx, 'breath', activeStep.breathingGuide)}',
                       style: TextStyle(
                         fontWeight: FontWeight.w800,
                         fontSize: 12,
@@ -7395,7 +7341,7 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '💡 نکته مربی: ${activeStep.coachNote}',
+                      '💡 نکته مربی: ${bmExStr(safeIdx, 'tip', activeStep.coachNote)}',
                       style: TextStyle(
                         fontSize: 11.8,
                         color: bmTextSubColor,
@@ -7419,7 +7365,7 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFFFFB4AB),
+                      color: bmIsDarkTheme ? const Color(0xFFFFB4AB) : const Color(0xFFB91C1C),
                       height: 1.45,
                     ),
                   ),
@@ -7622,7 +7568,7 @@ class _BodyAndAiCoachTabState extends State<BodyAndAiCoachTab> {
   }
 
   @override
-  Widget build(BuildContext context) { bmIsDarkTheme = Theme.of(context).brightness == Brightness.dark;
+  Widget build(BuildContext context) { 
     final c = widget.controller;
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 6, 16, 95),
@@ -7693,8 +7639,7 @@ class _BodyAndAiCoachTabState extends State<BodyAndAiCoachTab> {
                           style: TextStyle(
                             fontSize: 13,
                             height: 1.55,
-                            color: (bmIsDarkTheme = c.isDarkMode) ? Colors.white
-                                : bmCardColor,
+                            color: bmTextColor,
                           ),
                         ),
                       ),
@@ -7872,7 +7817,7 @@ class _ProfileAndBillingTabState extends State<ProfileAndBillingTab> {
   }
 
   @override
-  Widget build(BuildContext context) { bmIsDarkTheme = Theme.of(context).brightness == Brightness.dark;
+  Widget build(BuildContext context) { 
     final c = widget.controller;
 
     return ListView(
@@ -8238,7 +8183,7 @@ class _ProfileAndBillingTabState extends State<ProfileAndBillingTab> {
                   padding: const EdgeInsets.all(13),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [Color(0xFF3B2F0B), bmSurfaceColor],
+                      colors: bmIsDarkTheme ? [const Color(0xFF3B2F0B), bmSurfaceColor] : [const Color(0xFFFEF3C7), bmCardColor],
                     ),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: BMColors.whaleGold),
