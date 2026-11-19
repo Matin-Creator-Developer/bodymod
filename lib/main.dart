@@ -7362,7 +7362,7 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
                   ),
                   child: Text(
                     _restCoachWarning!,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
                       color: bmIsDarkTheme ? const Color(0xFFFFB4AB) : const Color(0xFFB91C1C),
