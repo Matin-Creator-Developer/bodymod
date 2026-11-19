@@ -148,7 +148,7 @@ jobs:
             static const String storeFlavor = 'myket';
             static const String rsaKey = String.fromEnvironment('STORE_RSA_KEY', defaultValue: '');
 
-            static Future?> purchase({
+            static Future purchase({
               required String sku,
               String payload = '',
               bool consumeImmediately = true,

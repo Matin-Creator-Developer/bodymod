@@ -4,7 +4,7 @@ class BmStoreBilling {
   static const String storeFlavor = String.fromEnvironment('STORE_FLAVOR', defaultValue: 'market');
   static const String rsaKey = String.fromEnvironment('STORE_RSA_KEY', defaultValue: '');
 
-  static Future?> purchase({
+  static Future purchase({
     required String sku,
     String payload = '',
     bool consumeImmediately = true,

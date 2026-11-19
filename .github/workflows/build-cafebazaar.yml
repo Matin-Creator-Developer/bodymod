@@ -105,14 +105,14 @@ jobs:
             static const String storeFlavor = 'bazaar';
             static const String rsaKey = String.fromEnvironment('STORE_RSA_KEY', defaultValue: '');
 
-            static Future?> purchase({
+            static Future purchase({
               required String sku,
               String payload = '',
               bool consumeImmediately = true,
             }) async {
               if (rsaKey.trim().isEmpty) return null;
               try {
-                final completer = Completer<bool>();
+                final completer = Completer();
                 await FlutterPoolakey.connect(
                   rsaKey.trim(),
                   onSucceed: () {
@@ -127,7 +127,7 @@ jobs:
                   const Duration(seconds: 8),
                   onTimeout: () => false,
                 );
-                if (!connected) return null;
+                if (connected != true) return null;
 
                 final purchaseInfo = await FlutterPoolakey.purchase(
                   sku,
