@@ -3458,7 +3458,7 @@ class BodyModController extends ChangeNotifier {
   List customAiFoods = [];
 
   Future syncCustomAiFoodsToCloud() async {
-    if (!isLoggedIn) return;
+    if (profile.userKey.trim().isEmpty || profile.userKey == 'anonymous') return;
     try {
       await http
           .post(
@@ -3471,7 +3471,7 @@ class BodyModController extends ChangeNotifier {
   }
 
   Future fetchCustomAiFoodsFromCloud() async {
-    if (!isLoggedIn) return;
+    if (profile.userKey.trim().isEmpty || profile.userKey == 'anonymous') return;
     try {
       final res = await http
           .get(
@@ -4412,7 +4412,7 @@ class BodyModController extends ChangeNotifier {
         if (data is Map<String, dynamic>) {
           _applyQuotasFromResponse(data['quotas']);
           final calAnalysis = data['calorie_analysis'];
-          Map? parsedResult;
+          Map<String, dynamic>? parsedResult;
           if (calAnalysis is Map<String, dynamic> &&
               calAnalysis['calories'] != null) {
             parsedResult = {

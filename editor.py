@@ -1,55 +1,63 @@
 import re
 
-path = "lib/main.dart"
-with open(path, "r", encoding="utf-8") as f:
+LT = chr(60)
+GT = chr(62)
+
+# ============================================================================
+# 1. FIX lib/main.dart (isLoggedIn + parsedResult type)
+# ============================================================================
+main_path = "lib/main.dart"
+with open(main_path, "r", encoding="utf-8") as f:
     dart = f.read()
 
-# 1. فیکس تعریف لیست غذاهای سفارشی بدون جنریک
+dart = dart.replace(
+    "if (!isLoggedIn) return;",
+    "if (profile.userKey.trim().isEmpty || profile.userKey == 'anonymous') return;",
+)
+
 dart = re.sub(
-    r"List[^\n]*customAiFoods\s*=\s*\[\];",
-    "List customAiFoods = [];",
+    r"Map\?\s+parsedResult;",
+    f"Map{LT}String, dynamic{GT}? parsedResult;",
     dart,
 )
 
-# 2. فیکس توابع غذاهای سفارشی (حذف هر نوع جنریک خراب)
-dart = re.sub(
-    r"Future[^\n]*syncCustomAiFoodsToCloud\(\)\s*async\s*\{",
-    "Future syncCustomAiFoodsToCloud() async {",
-    dart,
-)
-dart = re.sub(
-    r"Future[^\n]*fetchCustomAiFoodsFromCloud\(\)\s*async\s*\{",
-    "Future fetchCustomAiFoodsFromCloud() async {",
-    dart,
-)
-dart = re.sub(
-    r"Future[^\n]*saveCustomAiFood\([^\n]*food\)\s*async\s*\{",
-    "Future saveCustomAiFood(Map food) async {",
-    dart,
-)
-dart = re.sub(
-    r"Future[^\n]*removeCustomAiFood\(String title\)\s*async\s*\{",
-    "Future removeCustomAiFood(String title) async {",
-    dart,
-)
-
-# 3. فیکس whereType و Map.from و parsedResult
-dart = re.sub(r"\.whereType[^\n]*\(\)", ".where((e) => e is Map)", dart)
-dart = re.sub(r"Map[^\n]*\.from\(e\)", "Map.from(e as Map)", dart)
-dart = re.sub(r"Map[^\n]*parsedResult;", "Map? parsedResult;", dart)
-
-with open(path, "w", encoding="utf-8") as f:
+with open(main_path, "w", encoding="utf-8") as f:
     f.write(dart)
 
-# چک کردن اینکه هیچ خط خراب‌ شده‌ای نمونده باشه
-bad_lines = []
-for idx, line in enumerate(dart.splitlines(), 1):
-    if any(tok in line for tok in ["List>", "Map>", "Future>", "whereType()"]):
-        bad_lines.append((idx, line.strip()))
+print("✅ [lib/main.dart] ارور isLoggedIn و parsedResult کامل فیکس شد!")
 
-if bad_lines:
-    print("⚠️ این خط‌ها هنوز مشکوکن:")
-    for ln, txt in bad_lines:
-        print(f"  خط {ln}: {txt}")
+# ============================================================================
+# 2. FIX build-cafebazaar.yml (Replace deprecated jcenter() in flutter_poolakey)
+# ============================================================================
+bazaar_yml = ".github/workflows/build-cafebazaar.yml"
+with open(bazaar_yml, "r", encoding="utf-8") as f:
+    b_code = f.read()
+
+target = 'pg = re.sub(r"compileSdkVersion\\\\s+\\\\d+", "compileSdkVersion 34", pg)'
+replacement = (
+    'pg = re.sub(r"jcenter\\s*\\(\\s*\\)", "mavenCentral()", pg)\n'
+    '                  pg = re.sub(r"compileSdkVersion\\\\s+\\\\d+", "compileSdkVersion 34", pg)'
+)
+
+if "jcenter" not in b_code:
+    if target in b_code:
+        b_code = b_code.replace(target, replacement, 1)
+        print("✅ [build-cafebazaar.yml] حذف jcenter() به پچ Poolakey اضافه شد!")
+    else:
+        # حالت جایگزین اگر بک‌اسلش‌ها تکی باشند
+        alt_target = 'pg = re.sub(r"compileSdkVersion\\s+\\d+", "compileSdkVersion 34", pg)'
+        if alt_target in b_code:
+            b_code = b_code.replace(
+                alt_target,
+                'pg = re.sub(r"jcenter\\s*\\(\\s*\\)", "mavenCentral()", pg)\n                  ' + alt_target,
+                1,
+            )
+            print("✅ [build-cafebazaar.yml] حذف jcenter() به پچ Poolakey اضافه شد!")
+        else:
+            print("⚠️ [build-cafebazaar.yml] خط هدف پیدا نشد — بگو چکش کنیم!")
+    with open(bazaar_yml, "w", encoding="utf-8") as f:
+        f.write(b_code)
 else:
-    print("✅ [lib/main.dart] ۱۰۰٪ تمیز و بدون هیچ خطای جنریک فیکس شد! 🚀")
+    print("ℹ️ [build-cafebazaar.yml] پچ jcenter از قبل وجود دارد.")
+
+print("🚀 همه‌چیز آماده بیلد سبزِ مایکت و کافه‌بازار!")

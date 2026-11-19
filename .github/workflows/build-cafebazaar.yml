@@ -195,6 +195,7 @@ jobs:
                       pg = f.read()
                   if "namespace" not in pg:
                       pg = pg.replace("android {", 'android {\n    namespace "ir.cafebazaar.flutter_poolakey"', 1)
+                  pg = re.sub(r"jcenter\s*\(\s*\)", "mavenCentral()", pg)
                   pg = re.sub(r"compileSdkVersion\s+\d+", "compileSdkVersion 34", pg)
                   with open(pgradle, "w", encoding="utf-8") as f:
                       f.write(pg)
