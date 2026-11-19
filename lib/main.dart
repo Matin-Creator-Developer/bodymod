@@ -20,6 +20,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
+import 'store_billing.dart';
 
 List<int> _bmG2J(int gy, int gm, int gd) {
   const m = [0,31,59,90,120,151,181,212,243,273,304,334];
@@ -385,7 +386,7 @@ void bmShowForceUpdateModalIfNeeded(BuildContext context) {
         actions: [
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E5A3), foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-            onPressed: () {},
+            onPressed: () => BmStoreBilling.openStoreUpdate(),
             icon: const Icon(Icons.system_update_rounded, color: Colors.black),
             label: const Text('دریافت نسخه جدید از مارکت 🚀', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
           ),
@@ -1320,7 +1321,7 @@ class UserProfileModel {
   // آیا کاربر مجاز به خرید یا تمدید اشتراک هست؟ (بدون اشتراک یا در روزهای ۲۸ تا ۳۱ یعنی <= ۳ روز باقی‌مانده)
   bool get canPurchaseOrRenewSubscription {
     if (isAdmin) return false;
-    if (!hasActiveSubscription) return true;
+    if (!hasActiveSubscription || isFreeTrial) return true;
     return subscriptionDaysRemaining <= 3;
   }
 
@@ -3013,7 +3014,7 @@ class BodyModController extends ChangeNotifier {
 
     isDarkMode = prefs.getBool('bm_dark_mode') ?? true;
     hasRequestedNotificationPerm =
-        prefs.getBool('bm_notif_perm_asked') ?? false;
+        prefs.getBool('bm_notif_perm_asked_v2') ?? false;
     AppConfig.useBodyCoinSystem =
         prefs.getBool('bm_use_bodycoin_system') ?? false;
 
@@ -3289,7 +3290,7 @@ class BodyModController extends ChangeNotifier {
     if (prefs == null) return;
 
     await prefs.setBool('bm_dark_mode', isDarkMode);
-    await prefs.setBool('bm_notif_perm_asked', hasRequestedNotificationPerm);
+    await prefs.setBool('bm_notif_perm_asked_v2', hasRequestedNotificationPerm);
     await prefs.setBool('bm_use_bodycoin_system', AppConfig.useBodyCoinSystem);
     await prefs.setString('bm_user_profile_v82', jsonEncode(profile.toJson()));
     await prefs.setInt('bm_streak_count_v82', streakCount);
@@ -3445,11 +3446,18 @@ class BodyModController extends ChangeNotifier {
     BuildContext context, {
     bool forceDialog = false,
   }) async {
+    try {
+      if (!forceDialog && await Permission.notification.isGranted) {
+        hasRequestedNotificationPerm = true;
+        await saveAllToDisk();
+        return;
+      }
+    } catch (_) {}
     if (hasRequestedNotificationPerm && !forceDialog) return;
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (!context.mounted) return;
     hasRequestedNotificationPerm = true;
     await saveAllToDisk();
-
-    if (!context.mounted) return;
     final shouldAsk = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -3851,14 +3859,12 @@ class BodyModController extends ChangeNotifier {
             'isAdmin': serverProfile['isAdmin'] == true || profile.isAdmin,
             'hasActiveSubscription':
                 serverProfile['hasActiveSubscription'] == true || profile.hasActiveSubscription,
-            'subscriptionDaysRemaining': math.max(
-              (serverProfile['subscriptionDaysRemaining'] as num?)?.toInt() ?? 0,
-              profile.subscriptionDaysRemaining,
-            ),
-            'subscriptionExpiresAt': math.max(
-              (serverProfile['subscriptionExpiresAt'] as num?)?.toInt() ?? 0,
-              profile.subscriptionExpiresAt,
-            ),
+            'subscriptionDaysRemaining': serverProfile['subscriptionExpiresAt'] != null
+                ? (serverProfile['subscriptionDaysRemaining'] as num?)?.toInt() ?? 0
+                : profile.subscriptionDaysRemaining,
+            'subscriptionExpiresAt': serverProfile['subscriptionExpiresAt'] != null
+                ? (serverProfile['subscriptionExpiresAt'] as num?)?.toInt() ?? 0
+                : profile.subscriptionExpiresAt,
             'isFreeTrial':
                 serverProfile['isFreeTrial'] == true || profile.isFreeTrial,
             'freeTrialClaimed':
@@ -4088,7 +4094,7 @@ class BodyModController extends ChangeNotifier {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'رفیق هنوز ${profile.subscriptionDaysRemaining} روز از اشتراکت باقی مونده! تمدید اشتراک توی روزهای ۲۸ تا ۳۱ (وقتی ۳ روز یا کمتر مونده باشه) باز میشه و روزهای باقی‌مانده هم روی ماه جدیدت جمع میشه 😍⏳',
+            'رفیق هنوز ${profile.subscriptionDaysRemaining} روز از اشتراکت باقی مونده! تمدید اشتراک فقط وقتی ۳ روز یا کمتر از اشتراکت باقی مونده باشه باز می‌شه و روزهای باقی‌مانده هم روی ۳۰ روز جدیدت جمع می‌شه 😍⏳',
           ),
         ),
       );
@@ -4103,13 +4109,12 @@ class BodyModController extends ChangeNotifier {
         : AppConfig.monthlySubscriptionSku;
 
     try {
-      // فراخوانی درگاه پرداخت درون‌برنامه‌ای کافه‌بازار / مایکت
-      final dynamic billingResult = await AppConfig.marketBillingChannel
-          .invokeMethod('purchaseSubscription', {
-            'sku': sku,
-            'priceToman': discountedSubscriptionPriceToman,
-            'userKey': profile.userKey,
-          });
+      // فراخوانی پاپ‌آپ پرداخت درون‌برنامه‌ای نیتیو کافه‌بازار / مایکت
+      final dynamic billingResult = await BmStoreBilling.purchase(
+        sku: sku,
+        payload: profile.userKey,
+        consumeImmediately: true,
+      );
 
       if (billingResult is Map &&
           billingResult['purchaseToken'] != null &&
@@ -4209,12 +4214,11 @@ class BodyModController extends ChangeNotifier {
     if (!online) return;
 
     try {
-      final dynamic billingResult = await AppConfig.marketBillingChannel
-          .invokeMethod('purchaseConsumableDonation', {
-            'sku': sku,
-            'amountToman': amountToman,
-            'consumeImmediately': true, // قابلیت خرید چندباره و نامحدود (حتی ۱۰ بار پشت سر هم!)
-          });
+      final dynamic billingResult = await BmStoreBilling.purchase(
+        sku: sku,
+        payload: profile.userKey,
+        consumeImmediately: true, // قابلیت خرید چندباره و نامحدود (حتی ۱۰ بار پشت سر هم!)
+      );
 
       if (billingResult is Map &&
           billingResult['purchaseToken'] != null &&
@@ -5400,11 +5404,21 @@ class _EditableBodyProfileFormWidgetState
         const SizedBox(height: 12),
 
         // ۴ سطح وضعیت اقتصادی و میزان درآمد ماهانه
+        Text(
+          '💰 وضعیت اقتصادی (برای اینکه مربی هوش مصنوعیت توصیه واقعی‌تری داشته باشه)',
+          style: TextStyle(
+            fontSize: 12.2,
+            fontWeight: FontWeight.w800,
+            color: BMColors.neonCyan,
+            height: 1.45,
+          ),
+        ),
+        const SizedBox(height: 6),
         DropdownButtonFormField<String>(
           value: _selectedBudgetTier,
           isExpanded: true,
           decoration: const InputDecoration(
-            labelText: 'وضعیت اقتصادی — میزان درآمد شما در ماه 💰',
+            labelText: 'میزان درآمد شما در ماه 💰',
           ),
           items: AppConfig.budgetTierOptions.entries
               .map(
@@ -6169,8 +6183,8 @@ class SmartAiLockBanner extends StatelessWidget {
           !controller.profile.isAdmin) {
         final daysLeft = controller.profile.subscriptionDaysRemaining;
         return Container(
-          margin: const EdgeInsets.only(bottom: 14),
-          padding: const EdgeInsets.all(15),
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [BMColors.neonGreen.withOpacity(0.2), bmCardColor],
@@ -7994,12 +8008,46 @@ class _BodyAndAiCoachTabState extends State<BodyAndAiCoachTab> {
               ),
               const SizedBox(height: 10),
               Container(
-                constraints: const BoxConstraints(maxHeight: 320),
+                constraints: const BoxConstraints(maxHeight: 205),
                 child: ListView.builder(
+                  reverse: true,
                   shrinkWrap: true,
-                  itemCount: c.chatMessages.length,
+                  itemCount: c.chatMessages.length + (c.isLoadingAi ? 1 : 0),
                   itemBuilder: (context, idx) {
-                    final msg = c.chatMessages[idx];
+                    if (c.isLoadingAi && idx == 0) {
+                      return Align(
+                        alignment: Alignment.centerLeft,
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 9),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: c.isDarkMode ? bmCardColor : const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(15),
+                            border: Border.all(color: BMColors.neonCyan.withOpacity(0.5)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: BMColors.neonCyan,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'مربی هوشمند در حال نوشتن... 🤖✨',
+                                style: TextStyle(fontSize: 12.5, color: bmTextSubColor),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                    final realIdx = c.isLoadingAi ? idx - 1 : idx;
+                    final msg = c.chatMessages[c.chatMessages.length - 1 - realIdx];
                     return Align(
                       alignment: msg.isUser
                           ? Alignment.centerRight
@@ -8319,8 +8367,10 @@ class _ProfileAndBillingTabState extends State<ProfileAndBillingTab> {
               Text(
                 c.profile.isAdmin
                     ? '👑 حساب مدیرعامل: اشتراک نامحدود VIP شما روی سرور کلودفلر فعاله!'
+                    : (c.profile.hasActiveSubscription && c.profile.isFreeTrial)
+                    ? '🎁 اشتراک هدیه ۳ روزه شما فعاله (${c.profile.subscriptionDaysRemaining} روز باقی‌مانده).\nاگه همین الان اشتراک ۱ ماهه بخری، این ${c.profile.subscriptionDaysRemaining} روز هم روی ماهت اضافه می‌شه! (در فاز بتا فقط اشتراک ۱ ماهه فعال است)'
                     : c.profile.hasActiveSubscription
-                    ? '✅ اشتراک شما فعاله (${c.profile.subscriptionDaysRemaining} روز باقی‌مانده). تمدید اشتراک در روزهای ۲۸ تا ۳۱ باز می‌شه و روزهای باقی‌مانده روی ماه جدیدت اضافه می‌شه!'
+                    ? '✅ اشتراک ۱ ماهه شما فعاله (${c.profile.subscriptionDaysRemaining} روز باقی‌مانده).\nتمدید اشتراک فقط در ۳ روز آخرِ اشتراکت (وقتی ۳ روز یا کمتر مونده باشه) باز می‌شه و روزهای باقی‌مانده به ۳۰ روز جدید اضافه می‌شه!'
                     : 'با فعال‌سازی اشتراک ۱ ماهه، قفل تمام بخش‌های هوش مصنوعی (برنامه غذایی ۷ روزه متنوع، کالری‌شمار تصویری و مربی هوشمند) باز می‌شه! 🔥',
                 style: TextStyle(
                   fontSize: 12.5,
@@ -8406,9 +8456,11 @@ class _ProfileAndBillingTabState extends State<ProfileAndBillingTab> {
                     label: Text(
                       !c.profile.hasActiveSubscription
                           ? 'خرید اشتراک ۱ ماهه (${c.discountedSubscriptionPriceToman} تومان) 🔥'
+                          : c.profile.isFreeTrial
+                          ? 'خرید اشتراک ۱ ماهه (+ حفظ ${c.profile.subscriptionDaysRemaining} روز هدیه) 🔥'
                           : c.profile.canPurchaseOrRenewSubscription
                           ? 'تمدید اشتراک ۱ ماهه (+ حفظ ${c.profile.subscriptionDaysRemaining} روز باقی‌مانده) 🔄'
-                          : 'اشتراک فعاله (${c.profile.subscriptionDaysRemaining} روز مانده — تمدید در روز ۲۸ تا ۳۱)',
+                          : 'اشتراک ۳۰ روزه فعاله (${c.profile.subscriptionDaysRemaining} روز مانده — تمدید در ۳ روز آخر)',
                       style: const TextStyle(
                         fontWeight: FontWeight.w900,
                         fontSize: 12.8,

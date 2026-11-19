@@ -84,13 +84,97 @@ jobs:
           if [ -f "$MANIFEST" ] && ! grep -q "POST_NOTIFICATIONS" "$MANIFEST"; then
             sed -i 's/<application/<uses-permission android:name="android.permission.POST_NOTIFICATIONS"\/>\n    <application/' "$MANIFEST"
           fi
+      - name: Inject CafeBazaar Billing Permission & Queries
+        run: |
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          if [ -f "$MANIFEST" ] && ! grep -q "PAY_THROUGH_BAZAAR" "$MANIFEST"; then
+            sed -i 's|<application|<uses-permission android:name="com.farsitel.bazaar.permission.PAY_THROUGH_BAZAAR"/>\n    <queries><package android:name="com.farsitel.bazaar"/></queries>\n    <application|' "$MANIFEST"
+          fi
+
+      - name: Configure CafeBazaar Native In-App Billing (Poolakey)
+        run: |
+          if ! grep -q "flutter_poolakey:" pubspec.yaml; then
+            sed -i '/url_launcher:/a\  flutter_poolakey: ^2.2.0+1.0.0' pubspec.yaml
+          fi
+          cat << 'BAZAAR_BILLING_EOF' > lib/store_billing.dart
+          import 'dart:async';
+          import 'package:flutter_poolakey/flutter_poolakey.dart';
+          import 'package:url_launcher/url_launcher.dart';
+
+          class BmStoreBilling {
+            static const String storeFlavor = 'bazaar';
+            static const String rsaKey = String.fromEnvironment('STORE_RSA_KEY', defaultValue: '');
+
+            static Future?> purchase({
+              required String sku,
+              String payload = '',
+              bool consumeImmediately = true,
+            }) async {
+              if (rsaKey.trim().isEmpty) return null;
+              try {
+                final completer = Completer<bool>();
+                await FlutterPoolakey.connect(
+                  rsaKey.trim(),
+                  onSucceed: () {
+                    if (!completer.isCompleted) completer.complete(true);
+                  },
+                  onFailed: () {
+                    if (!completer.isCompleted) completer.complete(false);
+                  },
+                  onDisconnected: () {},
+                );
+                final connected = await completer.future.timeout(
+                  const Duration(seconds: 8),
+                  onTimeout: () => false,
+                );
+                if (!connected) return null;
+
+                final purchaseInfo = await FlutterPoolakey.purchase(
+                  sku,
+                  payload: payload,
+                );
+                final token = purchaseInfo.purchaseToken;
+                if (token.isNotEmpty) {
+                  if (consumeImmediately) {
+                    try {
+                      await FlutterPoolakey.consume(token);
+                    } catch (_) {}
+                  }
+                  return {
+                    'purchaseToken': token,
+                    'market': 'cafebazaar',
+                    'sku': sku,
+                  };
+                }
+              } catch (_) {}
+              return null;
+            }
+
+            static Future<void> openStoreUpdate() async {
+              final uri = Uri.parse('bazaar://details?id=ir.matinmohammadi.bodymod');
+              try {
+                final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+                if (!ok) {
+                  await launchUrl(
+                    Uri.parse('https://cafebazaar.ir/app/ir.matinmohammadi.bodymod'),
+                    mode: LaunchMode.externalApplication,
+                  );
+                }
+              } catch (_) {}
+            }
+          }
+          BAZAAR_BILLING_EOF
+
       - name: Build CafeBazaar Release APK (32/64-bit)
+        env:
+          STORE_RSA_KEY: ${{ secrets.BAZAAR_RSA_KEY }}
         run: |
           flutter pub get
           BUILD_NUM=$((300 + ${{ github.run_number }} * 2))
           flutter build apk --release --no-shrink \
             --target-platform android-arm,android-arm64 \
             --dart-define=STORE_FLAVOR=bazaar \
+            --dart-define=STORE_RSA_KEY="$STORE_RSA_KEY" \
             --build-name=8.1.${{ github.run_number }} \
             --build-number=$BUILD_NUM
           cp build/app/outputs/flutter-apk/app-release.apk BodyMod-v8.1.${{ github.run_number }}-CafeBazaar.apk
