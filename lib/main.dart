@@ -3050,6 +3050,13 @@ class BodyModController extends ChangeNotifier {
     lastCompletedStreakDate = prefs.getString('bm_last_streak_date_v82') ?? '';
     todayWaterGlasses = prefs.getInt('bm_today_water_v82') ?? 0;
     targetWaterGlasses = prefs.getInt('bm_target_water_v82') ?? 8;
+    final savedRef = prefs.getString('bm_applied_ref_code') ?? '';
+    if (savedRef.isNotEmpty) {
+      bmAppliedRefCode = savedRef;
+      appliedDiscountCode = savedRef;
+      appliedDiscountPercent = 30;
+      discountedSubscriptionPriceToman = 349300;
+    }
 
     final rawFoodLogs = prefs.getString('bm_today_food_logs_v82');
     if (rawFoodLogs != null && rawFoodLogs.isNotEmpty) {
@@ -5844,16 +5851,20 @@ class _MainShellScreenState extends State<MainShellScreen> {
             ),
             ListTile(
               leading: Icon(
-                Icons.notifications_active_rounded,
+                Icons.card_giftcard_rounded,
                 color: BMColors.neonGreen,
               ),
-              title: const Text('تنظیم مجوز اعلان اندروید (Allow)'),
+              title: const Text(
+                'دعوت از دوست 🎁',
+                style: TextStyle(fontWeight: FontWeight.w800),
+              ),
+              subtitle: const Text(
+                '۳۰٪ تخفیف برای دوستت + ۳ روز اشتراک رایگان برای تو',
+                style: TextStyle(fontSize: 11.5),
+              ),
               onTap: () {
                 Navigator.pop(context);
-                c.requestAndroidNotificationPermission(
-                  context,
-                  forceDialog: true,
-                );
+                _showReferralInviteSheet(context, c);
               },
             ),
             // فقط اگر کلودفلر تایید کند که کاربر مدیرعامل است، گزینه پنل مدیرعامل نمایش داده می‌شود!
@@ -5874,6 +5885,202 @@ class _MainShellScreenState extends State<MainShellScreen> {
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  void _showReferralInviteSheet(BuildContext context, BodyModController c) {
+    if (c.profile.isLoggedIn && c.profile.userKey.isNotEmpty) {
+      bmUserPhoneGlobal = c.profile.userKey;
+    }
+    bmShowResponsiveSheet(
+      context: context,
+      backgroundColor: BMColors.cardDark,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          if (c.profile.isLoggedIn && c.profile.userKey.isNotEmpty) {
+            bmUserPhoneGlobal = c.profile.userKey;
+          }
+          final myCode = bmGetMyReferralCode();
+          return Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    const Text('🎁🤝 ', style: TextStyle(fontSize: 22)),
+                    Expanded(
+                      child: Text(
+                        'دعوت از دوست (بُرد-بُرد!) 🔥',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w900,
+                          color: bmTextColor,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      icon: Icon(Icons.close_rounded, color: bmTextSubColor),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'کد یا لینک دعوت خودت رو بفرست برای رفیقت:
+'
+                  '• دوستت با زدن کد تو ۳۰٪ تخفیف اشتراک می‌گیره (۳۴۹,۳۰۰ تومان به جای ۴۹۹,۰۰۰ تومان) 🎉
+'
+                  '• به محض اینکه دوستت اشتراک بخره، ۳ روز اشتراک رایگان به حساب تو اضافه می‌شه! 🚀💎',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: bmTextSubColor,
+                    height: 1.55,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: bmSurfaceColor,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: BMColors.neonGreen.withOpacity(0.55)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          c.profile.isLoggedIn ? 'کد دعوت تو: $myCode' : 'اول وارد حسابت شو 🔐',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 13.5,
+                            color: bmTextColor,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: BMColors.neonGreen,
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onPressed: () {
+                          if (!c.profile.isLoggedIn) {
+                            Navigator.pop(ctx);
+                            c.openTwoStepAuthModal(context, onNavigateHome: () => _jumpToTab(0));
+                            return;
+                          }
+                          final inviteMsg =
+                              'رفیق بیا توی برنامه بادی‌مود (مربی هوشمند بدنسازی و تغذیه)! 💪🔥 موقع خرید اشتراک کد دعوت من ($myCode) رو بزن تا ۳۰٪ تخفیف بگیری (۳۴۹,۳۰۰ تومن به جای ۴۹۹,۰۰۰ تومن)! 🚀\nhttps://matin-mohammadi.ir/?ref=$myCode';
+                          Clipboard.setData(ClipboardData(text: inviteMsg));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('✅ متن و لینک دعوت اختصاصیت کپی شد! بفرست برای رفیقت 🤝🔥'),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.copy_rounded, size: 15, color: Colors.black),
+                        label: const Text(
+                          'کپی لینک و کد',
+                          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w900, color: Colors.black),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (bmRefBonusDays > 0 || bmRefInvitedCount > 0) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    '🏆 دوستان خریدکرده: $bmRefInvitedCount نفر | هدیه اشتراک رایگان تو: $bmRefBonusDays روز ✨',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: BMColors.neonGreen,
+                    ),
+                  ),
+                ],
+                const Divider(height: 24),
+                Text(
+                  'کد یا لینک دعوت دوستت رو داری؟ اینجا بزن تا ۳۰٪ تخفیف اشتراک بگیری 👇',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w800,
+                    color: bmTextColor,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: bmRefInputCtrl,
+                        textDirection: TextDirection.ltr,
+                        style: TextStyle(fontSize: 12.5, color: bmTextColor),
+                        decoration: InputDecoration(
+                          hintText: bmAppliedRefCode.isNotEmpty
+                              ? 'کد فعال: $bmAppliedRefCode (۳۰٪ تخفیف)'
+                              : 'مثلاً BM-586834 یا لینک دعوت',
+                          isDense: true,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: bmYellowBoxColor,
+                        foregroundColor: bmOnYellowBoxColor,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: bmRefSubmitting
+                          ? null
+                          : () async {
+                              if (!c.profile.isLoggedIn) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('رفیق اول با گوگل یا شماره موبایل وارد حسابت شو! 🔐'),
+                                  ),
+                                );
+                                return;
+                              }
+                              bmUserPhoneGlobal = c.profile.userKey;
+                              await bmSubmitFriendReferralCode(ctx, () {
+                                if (ctx.mounted) setSheetState(() {});
+                              });
+                              if (bmAppliedRefCode.isNotEmpty) {
+                                c.appliedDiscountCode = bmAppliedRefCode;
+                                c.appliedDiscountPercent = 30;
+                                c.discountedSubscriptionPriceToman = 349300;
+                                c.notifyListeners();
+                              }
+                            },
+                      child: Text(
+                        bmRefSubmitting ? '...' : 'اعمال ۳۰٪ تخفیف',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w900,
+                          color: bmOnYellowBoxColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

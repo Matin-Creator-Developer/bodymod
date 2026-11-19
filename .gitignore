@@ -218,3 +218,11 @@ AI_HANDOVER.txt
 key_b64.txt
 *.bak
 *.v_working_bak
+
+worker.js
+cf.py
+deploy_worker.py
+all_dart.txt
+AI_HANDOVER.txt
+*.keystore
+key_b64.txt
