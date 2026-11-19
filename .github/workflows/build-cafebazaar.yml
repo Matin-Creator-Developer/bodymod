@@ -104,30 +104,46 @@ jobs:
           class BmStoreBilling {
             static const String storeFlavor = 'bazaar';
             static const String rsaKey = String.fromEnvironment('STORE_RSA_KEY', defaultValue: '');
+            static String lastError = '';
+            static bool _connected = false;
 
             static Future purchase({
               required String sku,
               String payload = '',
               bool consumeImmediately = true,
             }) async {
-              if (rsaKey.trim().isEmpty) return null;
+              lastError = '';
+              final cleanKey = rsaKey.replaceAll(RegExp(r'\s+'), '');
+              if (cleanKey.isEmpty) {
+                lastError = 'کلید RSA کافه‌بازار در بیلد خالی است (BAZAR_RSA_KEY)!';
+                return null;
+              }
               try {
-                final completer = Completer();
-                await FlutterPoolakey.connect(
-                  rsaKey.trim(),
-                  onSucceed: () {
-                    if (!completer.isCompleted) completer.complete(true);
-                  },
-                  onFailed: () {
-                    if (!completer.isCompleted) completer.complete(false);
-                  },
-                  onDisconnected: () {},
-                );
-                final connected = await completer.future.timeout(
-                  const Duration(seconds: 8),
-                  onTimeout: () => false,
-                );
-                if (connected != true) return null;
+                if (!_connected) {
+                  final completer = Completer();
+                  await FlutterPoolakey.connect(
+                    cleanKey,
+                    onSucceed: () {
+                      _connected = true;
+                      if (!completer.isCompleted) completer.complete(true);
+                    },
+                    onFailed: () {
+                      _connected = false;
+                      if (!completer.isCompleted) completer.complete(false);
+                    },
+                    onDisconnected: () {
+                      _connected = false;
+                    },
+                  );
+                  final ok = await completer.future.timeout(
+                    const Duration(seconds: 10),
+                    onTimeout: () => false,
+                  );
+                  if (ok != true) {
+                    lastError = 'اتصال به اپلیکیشن کافه‌بازار برقرار نشد! مطمئن شو کافه‌بازار روی گوشیت نصب و به‌روزه و توش وارد شدی 🟢';
+                    return null;
+                  }
+                }
 
                 final purchaseInfo = await FlutterPoolakey.purchase(
                   sku,
@@ -146,7 +162,11 @@ jobs:
                     'sku': sku,
                   };
                 }
-              } catch (_) {}
+                lastError = 'پرداخت توسط کاربر لغو شد یا توکن از بازار دریافت نشد.';
+              } catch (e) {
+                _connected = false;
+                lastError = 'خطای درگاه کافه‌بازار: $e';
+              }
               return null;
             }
 
@@ -167,7 +187,7 @@ jobs:
 
       - name: Build CafeBazaar Release APK (32/64-bit)
         env:
-          STORE_RSA_KEY: ${{ secrets.BAZAAR_RSA_KEY }}
+          STORE_RSA_KEY: ${{ secrets.BAZAR_RSA_KEY }}
         run: |
           flutter pub get
           python3 - << 'POOLAKEY_FIX_EOF'

@@ -147,16 +147,17 @@ jobs:
           class BmStoreBilling {
             static const String storeFlavor = 'myket';
             static const String rsaKey = String.fromEnvironment('STORE_RSA_KEY', defaultValue: '');
+            static String lastError = '';
 
             static Future purchase({
               required String sku,
               String payload = '',
               bool consumeImmediately = true,
             }) async {
-              if (rsaKey.trim().isEmpty) return null;
+              if (rsaKey.replaceAll(RegExp(r'\s+'), '').isEmpty) return null;
               try {
                 final IabResult? initRes = await MyketIAP.init(
-                  rsaKey: rsaKey.trim(),
+                  rsaKey: rsaKey.replaceAll(RegExp(r'\s+'), ''),
                   enableDebugLogging: false,
                 );
                 if (initRes == null || !initRes.isSuccess()) return null;

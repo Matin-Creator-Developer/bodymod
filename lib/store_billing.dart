@@ -2,6 +2,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 class BmStoreBilling {
   static const String storeFlavor = String.fromEnvironment('STORE_FLAVOR', defaultValue: 'market');
+  static String lastError = '';
   static const String rsaKey = String.fromEnvironment('STORE_RSA_KEY', defaultValue: '');
 
   static Future purchase({

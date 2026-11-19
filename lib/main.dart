@@ -396,6 +396,317 @@ void bmShowForceUpdateModalIfNeeded(BuildContext context) {
   );
 }
 
+String bmDeviceIdGlobal = '';
+bool bmStoreLockDialogShown = false;
+bool bmAccountLimitDialogShown = false;
+
+Future<String> bmGetOrCreateDeviceId() async {
+  if (bmDeviceIdGlobal.isNotEmpty) return bmDeviceIdGlobal;
+  final prefs = await SharedPreferences.getInstance();
+  var id = prefs.getString('bm_device_id_v1') ?? '';
+  if (id.isEmpty) {
+    final now = DateTime.now().microsecondsSinceEpoch.toRadixString(36);
+    final rnd = (now.hashCode ^ 0x5A7C9E).abs().toRadixString(36);
+    id = 'BMDEV-$now-$rnd';
+    await prefs.setString('bm_device_id_v1', id);
+  }
+  bmDeviceIdGlobal = id;
+  return id;
+}
+
+Future<void> bmVerifyStoreIntegrity(BuildContext context) async {
+  if (bmStoreLockDialogShown) return;
+  try {
+    final devId = await bmGetOrCreateDeviceId();
+    final res = await http.post(
+      Uri.parse('https://server.matin-mohammadi.ir/api/security/verify-store'),
+      headers: {'Content-Type': 'application/json', 'X-Device-ID': devId},
+      body: jsonEncode({
+        'storeFlavor': BmStoreBilling.storeFlavor,
+        'rsaKey': BmStoreBilling.rsaKey,
+      }),
+    ).timeout(const Duration(seconds: 10));
+    if (res.statusCode == 200) {
+      final d = jsonDecode(utf8.decode(res.bodyBytes));
+      if (d is Map && d['valid'] == false && context.mounted && !bmStoreLockDialogShown) {
+        bmStoreLockDialogShown = true;
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => PopScope(
+            canPop: false,
+            child: AlertDialog(
+              backgroundColor: const Color(0xFF0E141B),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: const BorderSide(color: Colors.redAccent, width: 2),
+              ),
+              title: const Text(
+                '🚨 نسخه غیررسمی شناسایی شد!',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontWeight: FontWeight.w900, color: Colors.redAccent),
+              ),
+              content: const Text(
+                'فکر کردی میتونی سر من کلاه بزاری؟ 🤣\nمن از تو هم زرنگترم 😂\nزود تند سریع برنامه رو پاک کن و از این لینک ها وارد فروشگاه های رسمی بازار یا مایکت شو و برنامه رسمی رو نصب کن 😉',
+                textAlign: TextAlign.center,
+                style: TextStyle(height: 1.7, fontSize: 14, color: Colors.white),
+              ),
+              actionsAlignment: MainAxisAlignment.center,
+              actions: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF10B981),
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      onPressed: () => launchUrl(
+                        Uri.parse('https://cafebazaar.ir/app/ir.matinmohammadi.bodymod'),
+                        mode: LaunchMode.externalApplication,
+                      ),
+                      icon: const Icon(Icons.store_rounded),
+                      label: const Text('🟢 دانلود رسمی از کافه‌بازار', style: TextStyle(fontWeight: FontWeight.w900)),
+                    ),
+                    const SizedBox(height: 8),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF38BDF8),
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      onPressed: () => launchUrl(
+                        Uri.parse('https://myket.ir/app/ir.matinmohammadi.bodymod'),
+                        mode: LaunchMode.externalApplication,
+                      ),
+                      icon: const Icon(Icons.shop_rounded),
+                      label: const Text('🔵 دانلود رسمی از مایکت', style: TextStyle(fontWeight: FontWeight.w900)),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    }
+  } catch (_) {}
+}
+
+Future<void> bmCheckDeviceAccountLimit(BuildContext context, String identifier) async {
+  final cleanId = identifier.trim();
+  if (cleanId.isEmpty || cleanId == 'anonymous' || bmAccountLimitDialogShown) return;
+  try {
+    final devId = await bmGetOrCreateDeviceId();
+    final authType = cleanId.contains('@') ? 'google' : 'phone';
+    final res = await http.post(
+      Uri.parse('https://server.matin-mohammadi.ir/api/security/check-device-account'),
+      headers: {'Content-Type': 'application/json', 'X-Device-ID': devId},
+      body: jsonEncode({
+        'deviceId': devId,
+        'authType': authType,
+        'identifier': cleanId,
+      }),
+    ).timeout(const Duration(seconds: 10));
+    if (res.statusCode == 403 && context.mounted && !bmAccountLimitDialogShown) {
+      final d = jsonDecode(utf8.decode(res.bodyBytes));
+      if (d is Map && d['deviceAccountLimit'] == true) {
+        bmAccountLimitDialogShown = true;
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => PopScope(
+            canPop: false,
+            child: AlertDialog(
+              backgroundColor: const Color(0xFF0E141B),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: const BorderSide(color: Colors.amber, width: 1.8),
+              ),
+              title: const Text(
+                '🕵️‍♂️ محدودیت ساخت اکانت!',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontWeight: FontWeight.w900, color: Colors.amber),
+              ),
+              content: const Text(
+                'نمیتونی سر من کلاه بزاری 😂\nفقط دوتا اکانت میتونی بسازی، یکی با شماره موبایل، یکی با اکانت گوگلت\nدکمه برگشت رو بزن و برگرد',
+                textAlign: TextAlign.center,
+                style: TextStyle(height: 1.7, fontSize: 14, color: Colors.white),
+              ),
+              actionsAlignment: MainAxisAlignment.center,
+              actions: [
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () {
+                      bmAccountLimitDialogShown = false;
+                      Navigator.pop(ctx);
+                    },
+                    icon: const Icon(Icons.arrow_back_rounded),
+                    label: const Text('برگشت', style: TextStyle(fontWeight: FontWeight.w900)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    }
+  } catch (_) {}
+}
+
+Future<void> bmShowChangeContactDialog(BuildContext context) async {
+  String selectedType = 'phone';
+  final inputCtrl = TextEditingController();
+  bool submitting = false;
+  String? statusError;
+
+  await showDialog(
+    context: context,
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setDlgState) => AlertDialog(
+        backgroundColor: const Color(0xFF0E141B),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: Color(0xFF10B981), width: 1.5),
+        ),
+        title: const Text(
+          '✏️ تغییر شماره موبایل یا جیمیل',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF10B981), fontSize: 16),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'بعد از تکمیل فرم مشخصات، می‌تونی شماره موبایل یا جیمیل اکانتت رو اینجا تغییر بدی و روی کلودفلر آپدیت کنی:',
+              style: TextStyle(fontSize: 12.5, color: Colors.white70, height: 1.5),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: ChoiceChip(
+                    label: const Text('📱 شماره موبایل'),
+                    selected: selectedType == 'phone',
+                    onSelected: (_) => setDlgState(() {
+                      selectedType = 'phone';
+                      statusError = null;
+                    }),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ChoiceChip(
+                    label: const Text('📧 جیمیل'),
+                    selected: selectedType == 'email',
+                    onSelected: (_) => setDlgState(() {
+                      selectedType = 'email';
+                      statusError = null;
+                    }),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: inputCtrl,
+              keyboardType: selectedType == 'phone' ? TextInputType.phone : TextInputType.emailAddress,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: selectedType == 'phone' ? 'مثلاً: 09141234567' : 'مثلاً: name@gmail.com',
+                hintStyle: const TextStyle(color: Colors.white38),
+                filled: true,
+                fillColor: const Color(0xFF16202A),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+            if (statusError != null) ...[
+              const SizedBox(height: 8),
+              Text(statusError!, style: const TextStyle(color: Colors.redAccent, fontSize: 12)),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: submitting ? null : () => Navigator.pop(ctx),
+            child: const Text('انصراف', style: TextStyle(color: Colors.white70)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF10B981),
+              foregroundColor: Colors.black,
+            ),
+            onPressed: submitting
+                ? null
+                : () async {
+                    final val = inputCtrl.text.trim();
+                    if (selectedType == 'phone' && val.length < 10) {
+                      setDlgState(() => statusError = 'شماره موبایل معتبر نیست!');
+                      return;
+                    }
+                    if (selectedType == 'email' && !val.contains('@')) {
+                      setDlgState(() => statusError = 'آدرس جیمیل معتبر نیست!');
+                      return;
+                    }
+                    setDlgState(() {
+                      submitting = true;
+                      statusError = null;
+                    });
+                    try {
+                      final devId = await bmGetOrCreateDeviceId();
+                      final prefs = await SharedPreferences.getInstance();
+                      final token = prefs.getString('bm_auth_token') ?? prefs.getString('auth_token') ?? '';
+                      final res = await http.post(
+                        Uri.parse('https://server.matin-mohammadi.ir/api/account/update-contact'),
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'X-Device-ID': devId,
+                          if (token.isNotEmpty) 'Authorization': 'Bearer $token',
+                        },
+                        body: jsonEncode({
+                          'deviceId': devId,
+                          'currentIdentifier': bmUserPhoneGlobal,
+                          'contactType': selectedType,
+                          'newValue': val,
+                        }),
+                      ).timeout(const Duration(seconds: 12));
+                      final d = jsonDecode(utf8.decode(res.bodyBytes));
+                      if (res.statusCode == 200 && d is Map && d['ok'] == true) {
+                        if (ctx.mounted) Navigator.pop(ctx);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text((d['message'] ?? 'با موفقیت ذخیره شد ✅').toString())),
+                          );
+                        }
+                      } else {
+                        setDlgState(() {
+                          submitting = false;
+                          statusError = (d is Map ? (d['error'] ?? 'خطا در ثبت تغییرات') : 'خطا در ثبت تغییرات').toString();
+                        });
+                      }
+                    } catch (_) {
+                      setDlgState(() {
+                        submitting = false;
+                        statusError = 'خطا در اتصال به سرور کلودفلر! اینترنتت رو چک کن 🌐';
+                      });
+                    }
+                  },
+            child: Text(submitting ? 'در حال ثبت...' : 'ذخیره تغییرات ✅', style: const TextStyle(fontWeight: FontWeight.w900)),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 Future<void> bmSyncBetaCountdown({BuildContext? context, VoidCallback? onUpdated}) async {
   try {
     final prefs = await SharedPreferences.getInstance();
@@ -458,12 +769,51 @@ Future<void> bmSubmitFriendReferralCode(BuildContext context, VoidCallback onRef
   onRefresh();
   try {
     await bmSyncBetaCountdown(context: context);
+    final devId = await bmGetOrCreateDeviceId();
     final res = await http.post(
       Uri.parse('https://server.matin-mohammadi.ir/api/referral'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'action': 'apply_referral', 'phone': bmUserPhoneGlobal, 'referralCode': rawCode}),
+      headers: {'Content-Type': 'application/json', 'X-Device-ID': devId},
+      body: jsonEncode({'action': 'apply_referral', 'phone': bmUserPhoneGlobal, 'referralCode': rawCode, 'deviceId': devId}),
     ).timeout(const Duration(seconds: 12));
-    final d = jsonDecode(res.body);
+    final d = jsonDecode(utf8.decode(res.bodyBytes));
+    if ((d is Map && d['selfReferralCheat'] == true) || res.statusCode == 403) {
+      if (context.mounted) {
+        await showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: const Color(0xFF0E141B),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: const BorderSide(color: Colors.amber, width: 1.5),
+            ),
+            title: const Text(
+              '🕵️‍♂️ مچت رو گرفتم!',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontWeight: FontWeight.w900, color: Colors.amber),
+            ),
+            content: const Text(
+              'نمیتونی سر من کلاه بزاری 😂\nبه اکانت خودت نمیتونی دعوت بدی، نمیتونی تقلب کنی 😉\nکد رو به دوست واقعیت بفرست یا کنسل کن',
+              textAlign: TextAlign.center,
+              style: TextStyle(height: 1.7, fontSize: 14, color: Colors.white),
+            ),
+            actionsAlignment: MainAxisAlignment.center,
+            actions: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.amber,
+                  foregroundColor: Colors.black,
+                ),
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('باشه، کنسل کن 😅', style: TextStyle(fontWeight: FontWeight.w900)),
+              ),
+            ],
+          ),
+        );
+      }
+      bmRefSubmitting = false;
+      onRefresh();
+      return;
+    }
     if (res.statusCode == 200 && d['ok'] == true) {
       final prefs = await SharedPreferences.getInstance();
       bmAppliedRefCode = (d['appliedReferralCode'] ?? rawCode).toString();
@@ -4275,7 +4625,7 @@ class BodyModController extends ChangeNotifier {
             ],
           ),
           content: Text(
-            'شتاب‌دهنده پرداخت برای شناسه محصول «$sku» (مبلغ: $discountedSubscriptionPriceToman تومان) فراخوانی شد.\n\n'
+            '${BmStoreBilling.lastError.isNotEmpty ? '${BmStoreBilling.lastError}\n\n' : ''}شتاب‌دهنده پرداخت برای شناسه محصول «$sku» (مبلغ: $discountedSubscriptionPriceToman تومان) فراخوانی شد.\n\n'
             'چون برنامه در حالت نسخه نهاییِ انتشار (Production) قرار دارد، اشتراک بدون دریافت توکن تایید پرداخت از کافه‌بازار یا مایکت فعال نمی‌شود تا کاملاً امن و آماده لانچ در مارکت باشد! 🚀✅',
             style: const TextStyle(fontSize: 13, height: 1.6),
           ),
@@ -8579,6 +8929,24 @@ class _ProfileAndBillingTabState extends State<ProfileAndBillingTab> {
                         ),
                       ),
               ),
+        const SizedBox(height: 10),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFF10B981),
+              side: const BorderSide(color: Color(0xFF10B981)),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            ),
+            onPressed: () => bmShowChangeContactDialog(context),
+            icon: const Icon(Icons.edit_rounded, size: 18),
+            label: const Text(
+              '✏️ تغییر شماره موبایل یا جیمیل',
+              style: TextStyle(fontWeight: FontWeight.w800),
+            ),
+          ),
+        ),
             ],
           ),
         ),
