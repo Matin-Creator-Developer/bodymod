@@ -170,6 +170,45 @@ jobs:
           STORE_RSA_KEY: ${{ secrets.BAZAAR_RSA_KEY }}
         run: |
           flutter pub get
+          python3 - << 'POOLAKEY_FIX_EOF'
+          import glob, os, re
+
+          # 1. Add jitpack.io to android/build.gradle(.kts)
+          for gfile in ["android/build.gradle.kts", "android/build.gradle"]:
+              if os.path.exists(gfile):
+                  with open(gfile, "r", encoding="utf-8") as f:
+                      g = f.read()
+                  if "jitpack.io" not in g:
+                      if gfile.endswith(".kts"):
+                          g = g.replace("mavenCentral()", 'mavenCentral()\n        maven { url = uri("https://jitpack.io") }')
+                      else:
+                          g = g.replace("mavenCentral()", 'mavenCentral()\n        maven { url "https://jitpack.io" }')
+                      with open(gfile, "w", encoding="utf-8") as f:
+                          f.write(g)
+
+          # 2. Patch flutter_poolakey plugin build.gradle (add namespace & compileSdk) and AndroidManifest.xml
+          pub_cache = os.environ.get("PUB_CACHE", os.path.expanduser("~/.pub-cache"))
+          for pdir in glob.glob(os.path.join(pub_cache, "hosted", "*", "flutter_poolakey-*")):
+              pgradle = os.path.join(pdir, "android", "build.gradle")
+              if os.path.exists(pgradle):
+                  with open(pgradle, "r", encoding="utf-8") as f:
+                      pg = f.read()
+                  if "namespace" not in pg:
+                      pg = pg.replace("android {", 'android {\n    namespace "ir.cafebazaar.flutter_poolakey"', 1)
+                  pg = re.sub(r"compileSdkVersion\s+\d+", "compileSdkVersion 34", pg)
+                  with open(pgradle, "w", encoding="utf-8") as f:
+                      f.write(pg)
+                  print("Patched Poolakey Gradle:", pgradle)
+              pmanifest = os.path.join(pdir, "android", "src", "main", "AndroidManifest.xml")
+              if os.path.exists(pmanifest):
+                  with open(pmanifest, "r", encoding="utf-8") as f:
+                      pm = f.read()
+                  pm_new = re.sub(r'\s+package="[^"]+"', "", pm)
+                  if pm_new != pm:
+                      with open(pmanifest, "w", encoding="utf-8") as f:
+                          f.write(pm_new)
+                      print("Patched Poolakey Manifest:", pmanifest)
+          POOLAKEY_FIX_EOF
           BUILD_NUM=$((300 + ${{ github.run_number }} * 2))
           flutter build apk --release --no-shrink \
             --target-platform android-arm,android-arm64 \

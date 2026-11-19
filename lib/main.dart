@@ -3015,6 +3015,18 @@ class BodyModController extends ChangeNotifier {
     isDarkMode = prefs.getBool('bm_dark_mode') ?? true;
     hasRequestedNotificationPerm =
         prefs.getBool('bm_notif_perm_asked_v2') ?? false;
+      final savedCustomFoods = prefs.getString('bm_custom_ai_foods');
+      if (savedCustomFoods != null && savedCustomFoods.isNotEmpty) {
+        try {
+          final decoded = jsonDecode(savedCustomFoods);
+          if (decoded is List) {
+            customAiFoods = decoded
+                .whereType()
+                .map((e) => Map<String, dynamic>.from(e))
+                .toList();
+          }
+        } catch (_) {}
+      }
     AppConfig.useBodyCoinSystem =
         prefs.getBool('bm_use_bodycoin_system') ?? false;
 
@@ -3291,6 +3303,7 @@ class BodyModController extends ChangeNotifier {
 
     await prefs.setBool('bm_dark_mode', isDarkMode);
     await prefs.setBool('bm_notif_perm_asked_v2', hasRequestedNotificationPerm);
+      await prefs.setString('bm_custom_ai_foods', jsonEncode(customAiFoods));
     await prefs.setBool('bm_use_bodycoin_system', AppConfig.useBodyCoinSystem);
     await prefs.setString('bm_user_profile_v82', jsonEncode(profile.toJson()));
     await prefs.setInt('bm_streak_count_v82', streakCount);
@@ -3442,6 +3455,87 @@ class BodyModController extends ChangeNotifier {
   }
 
   // درخواست مجوز نوتیفیکیشن اندروید ۱۳+ در بدو ورود
+  List> customAiFoods = [];
+
+  Future<void> syncCustomAiFoodsToCloud() async {
+    if (!isLoggedIn) return;
+    try {
+      await http
+          .post(
+            Uri.parse('${AppConfig.serverBaseUrl}/api/custom-foods'),
+            headers: _authHeaders,
+            body: jsonEncode({'foods': customAiFoods}),
+          )
+          .timeout(const Duration(seconds: 12));
+    } catch (_) {}
+  }
+
+  Future<void> fetchCustomAiFoodsFromCloud() async {
+    if (!isLoggedIn) return;
+    try {
+      final res = await http
+          .get(
+            Uri.parse('${AppConfig.serverBaseUrl}/api/custom-foods'),
+            headers: _authHeaders,
+          )
+          .timeout(const Duration(seconds: 12));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(res.bodyBytes));
+        if (data is Map && data['foods'] is List) {
+          final cloudList = (data['foods'] as List)
+              .whereType()
+              .map((e) => Map<String, dynamic>.from(e))
+              .toList();
+          if (cloudList.isNotEmpty) {
+            final existingTitles = customAiFoods
+                .map((e) => (e['title'] ?? '').toString().trim())
+                .toSet();
+            for (final item in cloudList) {
+              final t = (item['title'] ?? '').toString().trim();
+              if (t.isNotEmpty && !existingTitles.contains(t)) {
+                customAiFoods.add(item);
+                existingTitles.add(t);
+              }
+            }
+            await saveAllToDisk();
+            notifyListeners();
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> saveCustomAiFood(Map<String, dynamic> food) async {
+    final title = (food['title'] ?? '').toString().trim();
+    if (title.isEmpty) return;
+    customAiFoods.removeWhere(
+      (e) => (e['title'] ?? '').toString().trim() == title,
+    );
+    customAiFoods.insert(0, {
+      'title': title,
+      'calories': (food['calories'] as num?)?.toInt() ?? 250,
+      'proteinG': (food['proteinG'] as num?)?.toInt() ?? 10,
+      'carbsG': (food['carbsG'] as num?)?.toInt() ?? 25,
+      'fatG': (food['fatG'] as num?)?.toInt() ?? 8,
+      'coachTip': (food['coachTip'] ?? '').toString(),
+    });
+    if (customAiFoods.length > 100) {
+      customAiFoods = customAiFoods.sublist(0, 100);
+    }
+    await saveAllToDisk();
+    notifyListeners();
+    unawaited(syncCustomAiFoodsToCloud());
+  }
+
+  Future<void> removeCustomAiFood(String title) async {
+    customAiFoods.removeWhere(
+      (e) => (e['title'] ?? '').toString().trim() == title.trim(),
+    );
+    await saveAllToDisk();
+    notifyListeners();
+    unawaited(syncCustomAiFoodsToCloud());
+  }
+
   Future<void> requestAndroidNotificationPermission(
     BuildContext context, {
     bool forceDialog = false,
@@ -4310,19 +4404,19 @@ class BodyModController extends ChangeNotifier {
               'profile': profile.toJson(),
             }),
           )
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 45));
 
+      final rawBody = utf8.decode(response.bodyBytes);
       if (response.statusCode == 200) {
-        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        final data = jsonDecode(rawBody);
         if (data is Map<String, dynamic>) {
           _applyQuotasFromResponse(data['quotas']);
           final calAnalysis = data['calorie_analysis'];
+          Map<String, dynamic>? parsedResult;
           if (calAnalysis is Map<String, dynamic> &&
               calAnalysis['calories'] != null) {
-            isLoadingAi = false;
-            notifyListeners();
-            return {
-              'title': (calAnalysis['title'] ?? foodDescription).toString(),
+            parsedResult = {
+              'title': (calAnalysis['title'] ?? (foodDescription.isEmpty ? 'وعده بررسی‌شده با تصویر 📸' : foodDescription)).toString(),
               'calories': (calAnalysis['calories'] as num?)?.toInt() ?? 280,
               'proteinG': (calAnalysis['proteinG'] as num?)?.toInt() ?? 18,
               'carbsG': (calAnalysis['carbsG'] as num?)?.toInt() ?? 30,
@@ -4330,24 +4424,48 @@ class BodyModController extends ChangeNotifier {
               'coachTip': (calAnalysis['coachTip'] ?? data['reply'] ?? '')
                   .toString(),
             };
-          }
-          if (data['reply'] != null) {
-            isLoadingAi = false;
-            notifyListeners();
-            return {
+          } else if (data['reply'] != null) {
+            final replyStr = data['reply'].toString();
+            final calMatch = RegExp(r'(\d{2,4})\s*(?:کالری|kcal|کیلوکالری)', caseSensitive: false).firstMatch(replyStr);
+            parsedResult = {
               'title': foodDescription.isEmpty
                   ? 'وعده بررسی‌شده با تصویر 📸'
                   : foodDescription,
-              'calories': 320,
-              'proteinG': 22,
-              'carbsG': 34,
-              'fatG': 11,
-              'coachTip': data['reply'].toString(),
+              'calories': int.tryParse(calMatch?.group(1) ?? '') ?? 300,
+              'proteinG': 15,
+              'carbsG': 35,
+              'fatG': 10,
+              'coachTip': replyStr,
             };
           }
+          if (parsedResult != null) {
+            await saveCustomAiFood(parsedResult);
+            isLoadingAi = false;
+            notifyListeners();
+            return parsedResult;
+          }
+        }
+      } else {
+        String errMsg = 'خطا در آنالیز غذا (کد ${response.statusCode}) — دوباره تلاش کن رفیق!';
+        try {
+          final errData = jsonDecode(rawBody);
+          if (errData is Map && (errData['message'] != null || errData['error'] != null)) {
+            errMsg = (errData['message'] ?? errData['error']).toString();
+          }
+        } catch (_) {}
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errMsg)));
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('پاسخی از هوش مصنوعی نرسید (احتمالاً اینترنت کند بود) — یه بار دیگه امتحان کن! 🌐'),
+          ),
+        );
+      }
+    }
 
     isLoadingAi = false;
     notifyListeners();
@@ -6936,9 +7054,16 @@ class _HomeDashboardTabState extends State<HomeDashboardTab> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '✅ ${_lastAiFoodResult!['title']} — ${_lastAiFoodResult!['calories']} کالری',
+                        '✅ ${_lastAiFoodResult!['title']} — ${_lastAiFoodResult!['calories']} کالری (در غذاهای سفارشی ذخیره شد 💾)',
                         style: const TextStyle(fontWeight: FontWeight.w900),
                       ),
+                      if ((_lastAiFoodResult!['coachTip'] ?? '').toString().trim().isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          _lastAiFoodResult!['coachTip'].toString(),
+                          style: TextStyle(fontSize: 12, color: bmTextSubColor, height: 1.45),
+                        ),
+                      ],
                       const SizedBox(height: 6),
                       SizedBox(
                         width: double.infinity,
@@ -6980,6 +7105,123 @@ class _HomeDashboardTabState extends State<HomeDashboardTab> {
           ),
         ),
         const SizedBox(height: 16),
+
+        if (c.customAiFoods.isNotEmpty) ...[
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: bmCardColor,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: BMColors.neonCyan.withOpacity(0.45)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text('🍽️', style: TextStyle(fontSize: 18)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'غذاهای سفارشی من (رایگان و آفلاین ⚡)',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14,
+                          color: BMColors.neonCyan,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'هر غذایی با هوش مصنوعی آنالیز کنی اینجا و روی کلودفلر ذخیره می‌شه؛ دفعات بعد رایگان و حتی بدون اینترنت ثبتش کن!',
+                  style: TextStyle(fontSize: 11.5, color: bmTextSubColor),
+                ),
+                const SizedBox(height: 10),
+                ...c.customAiFoods.map((food) {
+                  final title = (food['title'] ?? '').toString();
+                  final cal = (food['calories'] as num?)?.toInt() ?? 0;
+                  final pro = (food['proteinG'] as num?)?.toInt() ?? 0;
+                  final carb = (food['carbsG'] as num?)?.toInt() ?? 0;
+                  final fat = (food['fatG'] as num?)?.toInt() ?? 0;
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: bmSurfaceColor,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: bmBorderColor),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                title,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '$cal کالری | پ: ${pro}g • ک: ${carb}g • چ: ${fat}g',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  color: bmTextSubColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'حذف',
+                          icon: Icon(
+                            Icons.delete_outline_rounded,
+                            size: 19,
+                            color: bmTextSubColor,
+                          ),
+                          onPressed: () => c.removeCustomAiFood(title),
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: BMColors.neonGreen,
+                            foregroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            minimumSize: const Size(0, 34),
+                          ),
+                          onPressed: () {
+                            c.addFoodLog(
+                              title: title,
+                              calories: cal,
+                              proteinG: pro,
+                              carbsG: carb,
+                              fatG: fat,
+                              emoji: '🍽️',
+                            );
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('✅ «$title» ($cal کالری) به صورت رایگان ثبت شد!'),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            '➕ خوردم',
+                            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
 
         // بانک جامع تمام غذاها، خوراکی‌ها، میوه‌ها، آجیل، نوشیدنی‌ها و دسرها با کوچک‌ترین واحد ممکن!
         Container(
