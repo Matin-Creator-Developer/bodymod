@@ -1073,7 +1073,7 @@ class BodyModTopChannelBanner extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) { bmIsDarkTheme = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 6),
       child: InkWell(
@@ -1147,12 +1147,12 @@ class BodyModTopChannelBanner extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 3),
-                    const Text(
+                    Text(
                       'کدهای تخفیف فقط توی کانال منتشر میشه 🎁🔥',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFFE2E8F0),
+                        color: bmTextColor,
                       ),
                     ),
                   ],
@@ -2884,7 +2884,7 @@ class _EarthBurnOfflineDialogState extends State<EarthBurnOfflineDialog>
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) { bmIsDarkTheme = Theme.of(context).brightness == Brightness.dark;
     return Dialog(
       backgroundColor: Colors.black,
       surfaceTintColor: Colors.black,
@@ -2939,12 +2939,12 @@ class _EarthBurnOfflineDialogState extends State<EarthBurnOfflineDialog>
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
+            Text(
               'عزیز من چون دسترسی به کره زمین (اینترنت) نداری، کل کره زمین نابود شد! 😂🤦‍♂️\n\n'
               'بخش‌های آفلاین مثل ثبت کالری، لیوان آب، بانک خوراکی‌ها و پلیر باشگاه رو می‌تونی همین الان بدون نت استفاده کنی؛ ولی برای هوش مصنوعی اول نتت رو وصل کن تا زمین رو نجات بدیم! 🚀✨',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Color(0xFFE2E8F0),
+                color: bmTextColor,
                 fontSize: 14,
                 height: 1.65,
               ),
@@ -3130,7 +3130,7 @@ class BodyModController extends ChangeNotifier {
           text:
               'سلام قهرمان! 👋🔥 من مربی هوشمند اختصاصی تو توی BodyMod هستم.\n'
               'هر سوالی درباره تغذیه، جایگزینی غذاها، مکمل‌ها یا تکنیک حرکات داری بپرس!\n\n'
-              '💡 راستی: اگه دکمه ارسال (🚀) رو نگه داری (Long Press)، قبل از فرستادن بهت نشون میدم پیامت چقدر توکن و بادی‌کوین مصرف می‌کنه! 🪙😎',
+              '',
           timeLabel: 'الان',
         ),
       ];
@@ -3483,10 +3483,10 @@ class BodyModController extends ChangeNotifier {
             ),
           ],
         ),
-        content: const Text(
-          'برای اینکه یادآور ساعت وعده‌های غذایی، روزهای تمرین و هشدار یخ زدن آتیش استریکت (💙🔥) رو از دست ندی، روی دکمه زیر بزن و توی پنجره اندروید گزینه Allow رو انتخاب کن! 🚀',
+        content: Text(
+          'اینجا قرار نیست ورزش کنی\nاینجا قراره بدنتو مود (Mod/اصلاح) کنی 💪😎\nراز سلامتی بی‌نهایت دست منه ✊\n\nبرای اینکه یادآور ساعت وعده‌های غذایی، روزهای تمرین و هشدار یخ زدن آتیش استریکت (💙🔥) رو از دست ندی، روی دکمه زیر بزن و توی پنجره اندروید گزینه Allow رو انتخاب کن! 🚀',
           style: TextStyle(
-            color: Color(0xFFE2E8F0),
+            color: bmTextColor,
             fontSize: 13.8,
             height: 1.6,
           ),
@@ -4793,7 +4793,7 @@ class _TwoStepAuthBottomSheetState extends State<TwoStepAuthBottomSheet> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) { bmIsDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final c = widget.controller;
     return Padding(
       padding: EdgeInsets.only(
@@ -5045,7 +5045,7 @@ class RegistrationProfileFormDialog extends StatelessWidget {
   const RegistrationProfileFormDialog({super.key, required this.controller});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) { bmIsDarkTheme = Theme.of(context).brightness == Brightness.dark;
     return Dialog(
       backgroundColor: BMColors.surfaceDark,
       insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
@@ -5178,7 +5178,7 @@ class _EditableBodyProfileFormWidgetState
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) { bmIsDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final c = widget.controller;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -5451,7 +5451,7 @@ class BodyModApp extends StatelessWidget {
   const BodyModApp({super.key, required this.controller});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) { bmIsDarkTheme = Theme.of(context).brightness == Brightness.dark;
     return AnimatedBuilder(
       animation: controller,
       builder: (context, _) {
@@ -5501,7 +5501,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) { bmIsDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final c = widget.controller;
     final pages = [
       HomeDashboardTab(controller: c, onNavigateTab: _jumpToTab),
@@ -5887,7 +5887,7 @@ class SmartAiLockBanner extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) { bmIsDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final stage = controller.aiLockStage;
     if (stage == 0) return const SizedBox.shrink();
 
@@ -6278,7 +6278,7 @@ class _HomeDashboardTabState extends State<HomeDashboardTab> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) { bmIsDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final c = widget.controller;
     final macros = c.profile.recommendedMacros;
     final targetCal = macros['calories'] ?? 2200;
@@ -6871,7 +6871,7 @@ class WeeklyMealPlanTab extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) { bmIsDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final c = controller;
     final currentDayName = BodyModController.weekDays[c.selectedDayIndex];
     final daySlots = c.weeklyMealPlan[currentDayName] ?? [];
@@ -7246,7 +7246,7 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) { bmIsDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final c = widget.controller;
     final steps = c.workoutSteps;
     if (steps.isEmpty) return const SizedBox.shrink();
@@ -7622,7 +7622,7 @@ class _BodyAndAiCoachTabState extends State<BodyAndAiCoachTab> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) { bmIsDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final c = widget.controller;
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 6, 16, 95),
@@ -7652,46 +7652,8 @@ class _BodyAndAiCoachTabState extends State<BodyAndAiCoachTab> {
                 spacing: 8,
                 runSpacing: 6,
                 children: [
-                  ChoiceChip(
-                    selected:
-                        c.profile.preferredModel == 'gemini-3.1-flash-lite',
-                    selectedColor: BMColors.neonCyan,
-                    label: Text(
-                      '3.1 Flash Lite ⚡ (${c.remainingLiteChatQuota}/${c.maxLiteChatQuota})',
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w800,
-                        color:
-                            c.profile.preferredModel == 'gemini-3.1-flash-lite'
-                            ? Colors.black
-                            : null,
-                      ),
-                    ),
-                    onSelected: (_) {
-                      c.profile.preferredModel = 'gemini-3.1-flash-lite';
-                      c.saveAllToDisk();
-                      c.notifyListeners();
-                    },
-                  ),
-                  ChoiceChip(
-                    selected: c.profile.preferredModel == 'gemini-3.1-flash-lite',
-                    selectedColor: BMColors.purpleAccent,
-                    label: Text(
-                      '3.1 Flash Lite 🧠 (${c.remainingFlashChatQuota}/${c.maxFlashChatQuota})',
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w800,
-                        color: c.profile.preferredModel == 'gemini-3.1-flash-lite'
-                            ? Colors.white
-                            : null,
-                      ),
-                    ),
-                    onSelected: (_) {
-                      c.profile.preferredModel = 'gemini-3.1-flash-lite';
-                      c.saveAllToDisk();
-                      c.notifyListeners();
-                    },
-                  ),
+                  const SizedBox.shrink(),
+                  const SizedBox.shrink(),
                 ],
               ),
               const SizedBox(height: 10),
@@ -7910,7 +7872,7 @@ class _ProfileAndBillingTabState extends State<ProfileAndBillingTab> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) { bmIsDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final c = widget.controller;
 
     return ListView(
