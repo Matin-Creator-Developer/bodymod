@@ -3021,8 +3021,8 @@ class BodyModController extends ChangeNotifier {
           final decoded = jsonDecode(savedCustomFoods);
           if (decoded is List) {
             customAiFoods = decoded
-                .whereType()
-                .map((e) => Map<String, dynamic>.from(e))
+                .where((e) => e is Map)
+                .map((e) => Map.from(e as Map))
                 .toList();
           }
         } catch (_) {}
@@ -3455,9 +3455,9 @@ class BodyModController extends ChangeNotifier {
   }
 
   // درخواست مجوز نوتیفیکیشن اندروید ۱۳+ در بدو ورود
-  List> customAiFoods = [];
+  List customAiFoods = [];
 
-  Future<void> syncCustomAiFoodsToCloud() async {
+  Future syncCustomAiFoodsToCloud() async {
     if (!isLoggedIn) return;
     try {
       await http
@@ -3470,7 +3470,7 @@ class BodyModController extends ChangeNotifier {
     } catch (_) {}
   }
 
-  Future<void> fetchCustomAiFoodsFromCloud() async {
+  Future fetchCustomAiFoodsFromCloud() async {
     if (!isLoggedIn) return;
     try {
       final res = await http
@@ -3483,8 +3483,8 @@ class BodyModController extends ChangeNotifier {
         final data = jsonDecode(utf8.decode(res.bodyBytes));
         if (data is Map && data['foods'] is List) {
           final cloudList = (data['foods'] as List)
-              .whereType()
-              .map((e) => Map<String, dynamic>.from(e))
+              .where((e) => e is Map)
+              .map((e) => Map.from(e as Map))
               .toList();
           if (cloudList.isNotEmpty) {
             final existingTitles = customAiFoods
@@ -3505,7 +3505,7 @@ class BodyModController extends ChangeNotifier {
     } catch (_) {}
   }
 
-  Future<void> saveCustomAiFood(Map<String, dynamic> food) async {
+  Future saveCustomAiFood(Map food) async {
     final title = (food['title'] ?? '').toString().trim();
     if (title.isEmpty) return;
     customAiFoods.removeWhere(
@@ -3527,7 +3527,7 @@ class BodyModController extends ChangeNotifier {
     unawaited(syncCustomAiFoodsToCloud());
   }
 
-  Future<void> removeCustomAiFood(String title) async {
+  Future removeCustomAiFood(String title) async {
     customAiFoods.removeWhere(
       (e) => (e['title'] ?? '').toString().trim() == title.trim(),
     );
@@ -4412,7 +4412,7 @@ class BodyModController extends ChangeNotifier {
         if (data is Map<String, dynamic>) {
           _applyQuotasFromResponse(data['quotas']);
           final calAnalysis = data['calorie_analysis'];
-          Map<String, dynamic>? parsedResult;
+          Map? parsedResult;
           if (calAnalysis is Map<String, dynamic> &&
               calAnalysis['calories'] != null) {
             parsedResult = {
