@@ -676,7 +676,7 @@ Future<bool> bmGenerateAiWorkoutPlan(BuildContext context, {VoidCallback? onDone
   bmIsGeneratingWorkout = false;
   if (onDone != null) onDone();
   if (context.mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ برنامه تمرینی و تعادل کالری مازاد بر اساس فرم تو بروزرسانی شد! 💪🔥'), backgroundColor: Color(0xFF00C896)));
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('⚠️ خطا در ساخت برنامه ورزشی از هوش مصنوعی! چند ثانیه دیگه دوباره امتحان کن رفیق.'), backgroundColor: Colors.redAccent));
   }
   return false;
 }
@@ -4455,7 +4455,10 @@ class BodyModController extends ChangeNotifier {
       final response = await http
           .post(
             uri,
-            headers: {'Content-Type': 'application/json'},
+            headers: {
+              'Content-Type': 'application/json',
+              if (deviceId.isNotEmpty) 'X-Device-ID': deviceId,
+            },
             body: jsonEncode({
               'id_token': auth.idToken,
               'access_token': auth.accessToken,
@@ -4463,10 +4466,15 @@ class BodyModController extends ChangeNotifier {
               'email': account.email,
               'name': account.displayName ?? '',
               'photo_url': account.photoUrl ?? '',
+              'deviceId': deviceId,
             }),
           )
           .timeout(const Duration(seconds: 12));
 
+      if (response.statusCode == 403 && context.mounted) {
+        await bmCheckDeviceAccountLimit(context, account.email);
+        return null;
+      }
       if (response.statusCode == 200) {
         final data = jsonDecode(utf8.decode(response.bodyBytes));
         if (data is Map<String, dynamic> && data['success'] == true) {
@@ -4647,11 +4655,15 @@ class BodyModController extends ChangeNotifier {
       final res = await http
           .post(
             uri,
-            headers: {'Content-Type': 'application/json'},
+            headers: {
+              'Content-Type': 'application/json',
+              if (deviceId.isNotEmpty) 'X-Device-ID': deviceId,
+            },
             body: jsonEncode({
               'phone': cleanPhone,
               'code': cleanCode,
               'otpToken': _lastOtpStatelessToken,
+              'deviceId': deviceId,
             }),
           )
           .timeout(const Duration(seconds: 12));
@@ -4888,6 +4900,8 @@ class BodyModController extends ChangeNotifier {
     bmAiCustomWorkouts = [];
     bmAccountIdGlobal = '';
     bmIsAdminGlobal = false;
+    _ceoPanelPassword = '';
+    adminFullStats = {};
     bmWorkoutQuotaWeekUsedGlobal = '';
     bmRemainingWorkoutQuotaGlobal = 1;
     bmWorkoutBurnKcal = 0;
@@ -6755,6 +6769,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       widget.controller.requestAndroidNotificationPermission(context);
+      bmVerifyStoreIntegrity(context);
     });
   }
 
