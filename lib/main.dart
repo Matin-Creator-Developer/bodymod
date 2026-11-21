@@ -561,6 +561,7 @@ Future<void> bmLoadSavedAiWorkouts() async {
     }
     bmWorkoutBurnKcal = prefs.getInt('bm_ai_workout_burn_kcal') ?? 0;
     bmAiSurplusSnack = prefs.getString('bm_ai_surplus_snack') ?? '';
+    bmWorkoutQuotaWeekUsedGlobal = prefs.getString('bm_workout_quota_week_v1') ?? '';
     final savedJson = prefs.getString('bm_ai_custom_workouts_v1');
     if (savedJson != null && savedJson.isNotEmpty) {
       final List<dynamic> decoded = jsonDecode(savedJson);
@@ -618,7 +619,7 @@ Future<bool> bmGenerateAiWorkoutPlan(BuildContext context, {VoidCallback? onDone
     final res = await http.post(
       Uri.parse('https://server.matin-mohammadi.ir/api/chat'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'message': prompt, 'prompt': prompt, 'model': 'gemini-3.1-flash-lite'}),
+      body: jsonEncode({'message': prompt, 'prompt': prompt, 'mode': 'workout_plan', 'model': 'gemini-3.1-flash-lite'}),
     ).timeout(const Duration(seconds: 25));
     String rawReply = res.body;
     try {
@@ -642,6 +643,9 @@ Future<bool> bmGenerateAiWorkoutPlan(BuildContext context, {VoidCallback? onDone
           final List<dynamic> arr = parsed['exercises'];
           bmAiCustomWorkouts = arr.map((e) => Map<String, String>.from((e as Map).map((k, v) => MapEntry(k.toString(), v.toString())))).toList();
           await prefs.setString('bm_ai_custom_workouts_v1', jsonEncode(bmAiCustomWorkouts));
+          bmWorkoutQuotaWeekUsedGlobal = bmCurrentIranWeekKey();
+          bmRemainingWorkoutQuotaGlobal = 0;
+          await prefs.setString('bm_workout_quota_week_v1', bmWorkoutQuotaWeekUsedGlobal);
         }
         bmIsGeneratingWorkout = false;
         if (onDone != null) onDone();
@@ -693,12 +697,42 @@ int bmFinalSubPrice = 499000;
 final TextEditingController bmRefInputCtrl = TextEditingController();
 bool bmRefSubmitting = false;
 
+String bmAccountIdGlobal = '';
+bool bmIsAdminGlobal = false;
+int bmRemainingWorkoutQuotaGlobal = 1;
+String bmWorkoutQuotaWeekUsedGlobal = '';
+
+String bmCurrentIranWeekKey() {
+  final now = DateTime.now().toUtc().add(const Duration(hours: 3, minutes: 30));
+  final start = DateTime.utc(now.year, 1, 1);
+  final days = now.difference(start).inDays;
+  final week = ((days + 1) / 7).ceil();
+  return '${now.year}-W${week.toString().padLeft(2, '0')}';
+}
+
+bool bmIsWorkoutQuotaExhausted() {
+  if (bmIsAdminGlobal) return false;
+  if (bmRemainingWorkoutQuotaGlobal <= 0) return true;
+  if (bmWorkoutQuotaWeekUsedGlobal == bmCurrentIranWeekKey()) return true;
+  return false;
+}
+
 String bmGetMyReferralCode() {
-  final digits = bmUserPhoneGlobal.replaceAll(RegExp(r'\D'), '');
-  if (digits.length >= 6) return 'BM-' + digits.substring(digits.length - 6);
-  final clean = bmUserPhoneGlobal.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').toUpperCase();
-  if (clean.length >= 6) return 'BM-' + clean.substring(clean.length - 6);
-  return 'BM-VIP100';
+  if (RegExp(r'^BM-\d{11}$').hasMatch(bmAccountIdGlobal)) {
+    return bmAccountIdGlobal;
+  }
+  final seed = bmUserPhoneGlobal.trim();
+  if (seed.isEmpty) return 'BM-10000000001';
+  int h1 = 2166136261;
+  int h2 = 16777619;
+  for (int i = 0; i < seed.length; i++) {
+    h1 = ((h1 ^ seed.codeUnitAt(i)) * 16777619) & 0x7fffffff;
+    h2 = ((h2 + seed.codeUnitAt(i) * (i + 7)) * 31) & 0x7fffffff;
+  }
+  final p1 = (1 + (h1 % 9)).toString();
+  final p2 = (h1 % 100000).toString().padLeft(5, '0');
+  final p3 = (h2 % 100000).toString().padLeft(5, '0');
+  return 'BM-$p1$p2$p3';
 }
 
 void bmShowForceUpdateModalIfNeeded(BuildContext context) {
@@ -1281,7 +1315,7 @@ Widget bmBuildBetaCountdownBanner(VoidCallback onRefresh) {
                       controller: bmRefInputCtrl,
                       style: TextStyle(fontSize: 12.5, color: bmTextColor),
                       decoration: InputDecoration(
-                        hintText: bmAppliedRefCode.isNotEmpty ? 'کد فعال: $bmAppliedRefCode (۳۰٪ تخفیف)' : 'کد دعوت رفیقت رو داری؟ (مثلاً BM-586834)',
+                        hintText: bmAppliedRefCode.isNotEmpty ? 'کد فعال: $bmAppliedRefCode (۳۰٪ تخفیف)' : 'کد دعوت رفیقت رو داری؟ (مثلاً BM-12345678910)',
                         hintStyle: TextStyle(fontSize: 11, color: bmTextMutedColor),
                         isDense: true,
                         filled: true,
@@ -3653,8 +3687,18 @@ class BodyModController extends ChangeNotifier {
   List<ChatMessageModel> chatMessages = [];
 
   // کوتاهای زنده سرور کلودفلر
-  int remainingLiteChatQuota = 6;
-  int maxLiteChatQuota = 6;
+  int remainingLiteChatQuota = 3;
+  int remainingFoodTextQuota = 3;
+  int maxFoodTextQuota = 3;
+  int remainingFoodPhotoQuota = 1;
+  int maxFoodPhotoQuota = 1;
+  int remainingMealPlanQuota = 1;
+  int maxMealPlanQuota = 1;
+  int remainingWorkoutPlanQuota = 1;
+  int maxWorkoutPlanQuota = 1;
+  int remainingCoachAnalysisQuota = 1;
+  int maxCoachAnalysisQuota = 1;
+  int maxLiteChatQuota = 3;
   int remainingFlashChatQuota = 3;
   int maxFlashChatQuota = 3;
 
@@ -4671,27 +4715,119 @@ class BodyModController extends ChangeNotifier {
       targetWaterGlasses =
           (serverProfile['waterGoalGlasses'] as num).toInt().clamp(6, 25);
     }
+    final srvAccId = (serverProfile['accountId'] ?? data['accountId'] ?? '').toString().trim();
+    if (RegExp(r'^BM-\d{11}$').hasMatch(srvAccId)) {
+      bmAccountIdGlobal = srvAccId;
+    }
+    bmIsAdminGlobal = profile.isAdmin;
     _applyQuotasFromResponse(data['quotas']);
   }
 
-  void _applyQuotasFromResponse(dynamic quotasRaw) {
-    if (quotasRaw is Map<String, dynamic>) {
-      final chatDaily = quotasRaw['chat_daily'];
-      if (chatDaily is Map<String, dynamic>) {
-        final lite = chatDaily['gemini-3.1-flash-lite'];
-        if (lite is Map<String, dynamic>) {
-          remainingLiteChatQuota =
-              (lite['remaining'] as num?)?.toInt() ?? remainingLiteChatQuota;
-          maxLiteChatQuota = (lite['max'] as num?)?.toInt() ?? maxLiteChatQuota;
+  Future<String?> requestWeeklyBodyAnalysis(
+    BuildContext context, {
+    required double weightKg,
+    double? heightCm,
+    required String note,
+  }) async {
+    if (!profile.isAdmin && remainingCoachAnalysisQuota <= 0) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('سهمیه‌ت تموم شده رفیق 😉 (هفته‌ای ۱ بار)')),
+        );
+      }
+      return null;
+    }
+    if (heightCm != null && heightCm >= 100 && heightCm <= 240) {
+      profile.heightCm = heightCm;
+    }
+    addBodyMetricRecord(weightKg: weightKg, note: note);
+    if (!profile.isLoggedIn) {
+      return 'وزن و قدت ذخیره شد! برای تحلیل هوش مصنوعی اول وارد حسابت شو 🔐';
+    }
+    isLoadingAi = true;
+    notifyListeners();
+    try {
+      final prompt =
+          'ثبت تغییرات هفتگی کاربر: قد جدید ${profile.heightCm.toStringAsFixed(0)} سانتی‌متر، وزن جدید ${weightKg.toStringAsFixed(1)} کیلوگرم، BMI فعلی ${profile.bmi.toStringAsFixed(1)}. یادداشت کاربر: ${note.isEmpty ? "ندارد" : note}. لطفاً روند پیشرفت رو کوتاه، انگیزشی و علمی تحلیل کن و ۲ توصیه کاربردی برای هفته آینده بده.';
+      final res = await http
+          .post(
+            Uri.parse('${AppConfig.serverBaseUrl}/api/ai/coach-analysis'),
+            headers: _authHeaders,
+            body: jsonEncode({
+              'mode': 'coach_analysis',
+              'model': 'gemini-3.1-flash-lite',
+              'prompt': prompt,
+              'message': prompt,
+            }),
+          )
+          .timeout(const Duration(seconds: 25));
+      final data = jsonDecode(utf8.decode(res.bodyBytes));
+      if (data is Map<String, dynamic>) {
+        if (data['quotas'] != null) {
+          _applyQuotasFromResponse(data['quotas']);
+        } else if (res.statusCode == 200 && !profile.isAdmin) {
+          remainingCoachAnalysisQuota = 0;
         }
-        final flash = chatDaily['gemini-3.1-flash-lite'];
-        if (flash is Map<String, dynamic>) {
-          remainingFlashChatQuota =
-              (flash['remaining'] as num?)?.toInt() ?? remainingFlashChatQuota;
-          maxFlashChatQuota =
-              (flash['max'] as num?)?.toInt() ?? maxFlashChatQuota;
+        if (res.statusCode == 200) {
+          final reply = (data['reply'] ?? data['response'] ?? data['text'] ?? '').toString().trim();
+          isLoadingAi = false;
+          notifyListeners();
+          return reply.isNotEmpty ? reply : 'تغییراتت ثبت و بررسی شد قهرمان! 💪📈';
+        } else {
+          final err = (data['error'] ?? 'سهمیه‌ت تموم شده رفیق 😉').toString();
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
+          }
         }
       }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('خطا در ارتباط با هوش مصنوعی؛ تغییراتت ولی ذخیره شد! 📡')),
+        );
+      }
+    }
+    isLoadingAi = false;
+    notifyListeners();
+    return null;
+  }
+
+  void _applyQuotasFromResponse(dynamic quotasRaw) {
+    bmIsAdminGlobal = profile.isAdmin;
+    if (quotasRaw is Map<String, dynamic>) {
+      int readRem(String key, int fallback) {
+        final g = quotasRaw[key];
+        if (g is Map<String, dynamic>) {
+          final m = g['gemini-3.1-flash-lite'];
+          if (m is Map<String, dynamic> && m['remaining'] != null) {
+            return (m['remaining'] as num).toInt();
+          }
+        }
+        return fallback;
+      }
+      int readMax(String key, int fallback) {
+        final g = quotasRaw[key];
+        if (g is Map<String, dynamic>) {
+          final m = g['gemini-3.1-flash-lite'];
+          if (m is Map<String, dynamic> && m['max'] != null) {
+            return (m['max'] as num).toInt();
+          }
+        }
+        return fallback;
+      }
+      remainingLiteChatQuota = readRem('chat_daily', remainingLiteChatQuota);
+      maxLiteChatQuota = readMax('chat_daily', 3);
+      remainingFoodTextQuota = readRem('food_text_weekly', remainingFoodTextQuota);
+      maxFoodTextQuota = readMax('food_text_weekly', 3);
+      remainingFoodPhotoQuota = readRem('food_photo_weekly', remainingFoodPhotoQuota);
+      maxFoodPhotoQuota = readMax('food_photo_weekly', 1);
+      remainingMealPlanQuota = readRem('plan_weekly', remainingMealPlanQuota);
+      maxMealPlanQuota = readMax('plan_weekly', 1);
+      remainingWorkoutPlanQuota = readRem('workout_weekly', remainingWorkoutPlanQuota);
+      maxWorkoutPlanQuota = readMax('workout_weekly', 1);
+      remainingCoachAnalysisQuota = readRem('coach_weekly', remainingCoachAnalysisQuota);
+      maxCoachAnalysisQuota = readMax('coach_weekly', 1);
+      bmRemainingWorkoutQuotaGlobal = remainingWorkoutPlanQuota;
     }
   }
 
@@ -6627,40 +6763,34 @@ class _MainShellScreenState extends State<MainShellScreen> {
                 _jumpToTab(4);
               }
             },
-            child: Container(
-              margin: const EdgeInsets.only(left: 10, top: 8, bottom: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: BMColors.neonCyan.withOpacity(0.14),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: BMColors.neonCyan.withOpacity(0.55)),
-              ),
-              child: Row(
-                children: [
-                  Text(
-                    !c.profile.isLoggedIn
-                        ? '🔐'
-                        : c.profile.isAdmin
-                        ? '👑'
-                        : '⚡',
-                    style: const TextStyle(fontSize: 13),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    !c.profile.isLoggedIn
-                        ? 'ورود'
-                        : c.profile.isAdmin
-                        ? 'VIP'
-                        : '${c.remainingLiteChatQuota}/${c.maxLiteChatQuota}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 11.5,
-                      color: BMColors.neonCyan,
+            child: (!c.profile.isLoggedIn || c.profile.isAdmin)
+                ? Container(
+                    margin: const EdgeInsets.only(left: 10, top: 8, bottom: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: BMColors.neonCyan.withOpacity(0.14),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: BMColors.neonCyan.withOpacity(0.55)),
                     ),
-                  ),
-                ],
-              ),
-            ),
+                    child: Row(
+                      children: [
+                        Text(
+                          !c.profile.isLoggedIn ? '🔐' : '👑',
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          !c.profile.isLoggedIn ? 'ورود' : 'VIP',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 11.5,
+                            color: BMColors.neonCyan,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : const SizedBox.shrink(),
           ),
         ],
       ),
@@ -6948,7 +7078,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
                         },
                         icon: const Icon(Icons.copy_rounded, size: 15, color: Colors.black),
                         label: const Text(
-                          'کپی لینک و کد',
+                          'کپی کد دعوت 👆',
                           style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w900, color: Colors.black),
                         ),
                       ),
@@ -6986,7 +7116,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
                         decoration: InputDecoration(
                           hintText: bmAppliedRefCode.isNotEmpty
                               ? 'کد فعال: $bmAppliedRefCode (۳۰٪ تخفیف)'
-                              : 'کد دعوت (آیدی اکانت) رفیقت رو بزن (مثلاً BM-586834)',
+                              : 'کد دعوت (آیدی اکانت) رفیقت رو بزن (مثلاً BM-12345678910)',
                           isDense: true,
                         ),
                       ),
@@ -7835,7 +7965,7 @@ class _HomeDashboardTabState extends State<HomeDashboardTab> {
                         foregroundColor: Colors.black,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
-                      onPressed: c.isLoadingAi
+                      onPressed: (c.isLoadingAi || (!c.profile.isAdmin && c.remainingFoodTextQuota <= 0))
                           ? null
                           : () async {
                               final txt = _foodAiQueryCtrl.text.trim();
@@ -7849,21 +7979,31 @@ class _HomeDashboardTabState extends State<HomeDashboardTab> {
                               }
                             },
                       icon: const Icon(Icons.auto_awesome_rounded, size: 18),
-                      label: const Text(
-                        'آنالیز با هوش مصنوعی',
-                        style: TextStyle(fontWeight: FontWeight.w900),
+                      label: Text(
+                        (!c.profile.isAdmin && c.remainingFoodTextQuota <= 0)
+                            ? 'سهمیه‌ت تموم شده رفیق 😉'
+                            : 'آنالیز با هوش مصنوعی (${c.profile.isAdmin ? "∞" : "${c.remainingFoodTextQuota}/${c.maxFoodTextQuota}"})',
+                        style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12),
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   IconButton.filledTonal(
-                    onPressed: () =>
-                        _pickFoodPhotoAndAnalyze(ImageSource.camera),
+                    tooltip: (!c.profile.isAdmin && c.remainingFoodPhotoQuota <= 0)
+                        ? 'سهمیه‌ت تموم شده رفیق 😉'
+                        : 'عکس غذا (${c.profile.isAdmin ? "∞" : "${c.remainingFoodPhotoQuota}/${c.maxFoodPhotoQuota}"})',
+                    onPressed: (c.isLoadingAi || (!c.profile.isAdmin && c.remainingFoodPhotoQuota <= 0))
+                        ? null
+                        : () => _pickFoodPhotoAndAnalyze(ImageSource.camera),
                     icon: const Icon(Icons.camera_alt_rounded),
                   ),
                   IconButton.filledTonal(
-                    onPressed: () =>
-                        _pickFoodPhotoAndAnalyze(ImageSource.gallery),
+                    tooltip: (!c.profile.isAdmin && c.remainingFoodPhotoQuota <= 0)
+                        ? 'سهمیه‌ت تموم شده رفیق 😉'
+                        : 'گالری غذا (${c.profile.isAdmin ? "∞" : "${c.remainingFoodPhotoQuota}/${c.maxFoodPhotoQuota}"})',
+                    onPressed: (c.isLoadingAi || (!c.profile.isAdmin && c.remainingFoodPhotoQuota <= 0))
+                        ? null
+                        : () => _pickFoodPhotoAndAnalyze(ImageSource.gallery),
                     icon: const Icon(Icons.photo_library_rounded),
                   ),
                 ],
@@ -8361,7 +8501,7 @@ class WeeklyMealPlanTab extends StatelessWidget {
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  onPressed: c.isLoadingAi
+                  onPressed: (c.isLoadingAi || (!c.profile.isAdmin && c.remainingMealPlanQuota <= 0))
                       ? null
                       : () async {
                           final ok = await c.requestAiWeeklyMealPlan(context);
@@ -8386,9 +8526,11 @@ class WeeklyMealPlanTab extends StatelessWidget {
                         )
                       : const Icon(Icons.auto_awesome_rounded, size: 19),
                   label: Text(
-                    hasPlan
-                        ? 'درخواست چینش مجدد برنامه ۷ روزه متنوع از AI 🔄'
-                        : 'دریافت برنامه غذایی ۷ روزه متنوع از هوش مصنوعی 🚀',
+                    (!c.profile.isAdmin && c.remainingMealPlanQuota <= 0)
+                        ? 'سهمیه‌ت تموم شده رفیق 😉'
+                        : (hasPlan
+                            ? 'درخواست چینش مجدد برنامه ۷ روزه متنوع از AI 🔄'
+                            : 'دریافت برنامه غذایی ۷ روزه متنوع از هوش مصنوعی 🚀'),
                     style: const TextStyle(
                       fontWeight: FontWeight.w900,
                       fontSize: 13,
@@ -8698,7 +8840,7 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 6, 16, 95),
       children: [
-        Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: bmCardColor, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFF00E5A3).withOpacity(0.4))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Row(children: [const Icon(Icons.local_fire_department_rounded, color: Colors.orangeAccent, size: 20), const SizedBox(width: 6), Text('کالری مصرفی این تمرین: ${bmGetVisibleWorkoutCalories()} کالری 🔥', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: bmTextColor))]),InkWell(onTap: () => bmGenerateAiWorkoutPlan(context, onDone: () => setState(() {})), borderRadius: BorderRadius.circular(8), child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5), decoration: BoxDecoration(color: const Color(0xFF00E5A3), borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFF00E5A3))), child: ValueListenableBuilder<int>(valueListenable: bmAiCooldownSec, builder: (_, sec, __) => Text(bmIsGeneratingWorkout ? 'در حال محاسبه AI... ⏳' : (sec > 0 ? '⏳ صبر کن ($sec)' : '🤖 بروزرسانی با AI'), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black))))),]),const SizedBox(height: 8),Text(bmGetSurplusRecommendation(), style: TextStyle(fontSize: 11.5, color: bmTextSubColor, height: 1.45)),])), Column(
+        Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: bmCardColor, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFF00E5A3).withOpacity(0.4))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Row(children: [const Icon(Icons.local_fire_department_rounded, color: Colors.orangeAccent, size: 20), const SizedBox(width: 6), Text('کالری مصرفی این تمرین: ${bmGetVisibleWorkoutCalories()} کالری 🔥', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: bmTextColor))]),InkWell(onTap: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? null : () => bmGenerateAiWorkoutPlan(context, onDone: () => setState(() {})), borderRadius: BorderRadius.circular(8), child: Opacity(opacity: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? 0.45 : 1.0, child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5), decoration: BoxDecoration(color: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? Colors.grey : const Color(0xFF00E5A3), borderRadius: BorderRadius.circular(8), border: Border.all(color: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? Colors.grey : const Color(0xFF00E5A3))), child: ValueListenableBuilder<int>(valueListenable: bmAiCooldownSec, builder: (_, sec, __) => Text(bmGlobalDaysPerWeek <= 0 ? 'ورزش نداری رفیق 😅' : (bmIsWorkoutQuotaExhausted() ? 'سهمیه‌ت تموم شده رفیق 😉' : (bmIsGeneratingWorkout ? 'در حال محاسبه AI... ⏳' : (sec > 0 ? '⏳ صبر کن ($sec)' : '🤖 بروزرسانی با AI'))), style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.black)))))),]),const SizedBox(height: 8),Text(bmGetSurplusRecommendation(), style: TextStyle(fontSize: 11.5, color: bmTextSubColor, height: 1.45)),])), Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
@@ -9159,7 +9301,9 @@ class BodyAndAiCoachTab extends StatefulWidget {
 class _BodyAndAiCoachTabState extends State<BodyAndAiCoachTab> {
   final TextEditingController _chatInputCtrl = TextEditingController();
   final TextEditingController _weightInputCtrl = TextEditingController();
+  final TextEditingController _heightInputCtrl = TextEditingController();
   final TextEditingController _bodyNoteCtrl = TextEditingController();
+  String? _lastBodyAiAnalysis;
 
   @override
   void initState() {
@@ -9171,6 +9315,7 @@ class _BodyAndAiCoachTabState extends State<BodyAndAiCoachTab> {
   void dispose() {
     _chatInputCtrl.dispose();
     _weightInputCtrl.dispose();
+    _heightInputCtrl.dispose();
     _bodyNoteCtrl.dispose();
     super.dispose();
   }
@@ -9368,7 +9513,7 @@ class _BodyAndAiCoachTabState extends State<BodyAndAiCoachTab> {
                           vertical: 13,
                         ),
                       ),
-                      onPressed: c.isLoadingAi
+                      onPressed: (c.isLoadingAi || (!c.profile.isAdmin && c.remainingLiteChatQuota <= 0))
                           ? null
                           : () {
                               final txt = _chatInputCtrl.text.trim();
@@ -9376,9 +9521,11 @@ class _BodyAndAiCoachTabState extends State<BodyAndAiCoachTab> {
                               _chatInputCtrl.clear();
                               c.sendChatMessageToCoach(context, txt);
                             },
-                      child: const Text(
-                        '🚀 ارسال',
-                        style: TextStyle(fontWeight: FontWeight.w900),
+                      child: Text(
+                        (!c.profile.isAdmin && c.remainingLiteChatQuota <= 0)
+                            ? 'سهمیه‌ت تموم شده رفیق 😉'
+                            : '🚀 ارسال',
+                        style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12),
                       ),
                     ),
                   ),
@@ -9409,12 +9556,28 @@ class _BodyAndAiCoachTabState extends State<BodyAndAiCoachTab> {
                 ),
               ),
               const SizedBox(height: 10),
-              TextField(
-                controller: _weightInputCtrl,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'ثبت وزن جدید این هفته (کیلوگرم)',
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _weightInputCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'وزن جدید (کیلوگرم)',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: _heightInputCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'قد جدید (اختیاری: ${c.profile.heightCm.round()})',
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 8),
               TextField(
@@ -9431,28 +9594,49 @@ class _BodyAndAiCoachTabState extends State<BodyAndAiCoachTab> {
                     backgroundColor: BMColors.neonGreen,
                     foregroundColor: Colors.black,
                   ),
-                  onPressed: () {
-                    final w =
-                        double.tryParse(_weightInputCtrl.text) ??
-                        c.profile.weightKg;
-                    c.addBodyMetricRecord(
-                      weightKg: w,
-                      note: _bodyNoteCtrl.text.trim(),
-                    );
-                    _bodyNoteCtrl.clear();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('وزن جدیدت در تاریخچه ثبت شد قهرمان! 📈🔥'),
-                      ),
-                    );
-                  },
+                  onPressed: (c.isLoadingAi || (!c.profile.isAdmin && c.remainingCoachAnalysisQuota <= 0))
+                      ? null
+                      : () async {
+                          final w = double.tryParse(_weightInputCtrl.text) ?? c.profile.weightKg;
+                          final h = double.tryParse(_heightInputCtrl.text);
+                          final note = _bodyNoteCtrl.text.trim();
+                          _bodyNoteCtrl.clear();
+                          final analysis = await c.requestWeeklyBodyAnalysis(
+                            context,
+                            weightKg: w,
+                            heightCm: h,
+                            note: note,
+                          );
+                          if (analysis != null && mounted) {
+                            setState(() => _lastBodyAiAnalysis = analysis);
+                          }
+                        },
                   icon: const Icon(Icons.add_chart_rounded),
-                  label: const Text(
-                    'ثبت در تاریخچه پیشرفت بدن',
-                    style: TextStyle(fontWeight: FontWeight.w900),
+                  label: Text(
+                    (!c.profile.isAdmin && c.remainingCoachAnalysisQuota <= 0)
+                        ? 'سهمیه‌ت تموم شده رفیق 😉'
+                        : 'ثبت تغییرات قد و وزن + تحلیل AI (هفته‌ای ۱ بار) 📈',
+                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12),
                   ),
                 ),
               ),
+              if (_lastBodyAiAnalysis != null && _lastBodyAiAnalysis!.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: BMColors.neonCyan.withOpacity(0.10),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: BMColors.neonCyan.withOpacity(0.5)),
+                  ),
+                  child: Text(
+                    '🤖 تحلیل هفتگی مربی:
+$_lastBodyAiAnalysis',
+                    style: TextStyle(fontSize: 12.5, height: 1.55, color: bmTextColor),
+                  ),
+                ),
+              ],
               if (c.bodyLogsHistory.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 ...c.bodyLogsHistory.reversed.map(
