@@ -1259,12 +1259,12 @@ Widget bmBuildBetaCountdownBanner(VoidCallback onRefresh) {
                     ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00E5A3), foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), minimumSize: Size.zero, tapTargetSize: MaterialTapTargetSize.shrinkWrap, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
                       onPressed: () {
-                        final inviteMsg = 'رفیق بیا توی برنامه بادی‌مود (مربی هوشمند بدنسازی و تغذیه)! 💪🔥 به محض ورود ۱ روز اشتراک رایگان می‌گیری و موقع خرید اشتراک فاز بتا هم کد دعوت من ($myCode) رو بزن تا ۳۰٪ تخفیف بگیری (۳۴۹,۳۰۰ تومن به جای ۴۹۹,۰۰۰ تومن)! 🚀\nhttps://matin-mohammadi.ir/?ref=$myCode';
+                        final inviteMsg = 'رفیق بیا توی برنامه بادی‌مود (مربی هوشمند بدنسازی و تغذیه)! 💪🔥\nبه محض ورود ۱ روز اشتراک رایگان می‌گیری و موقع خرید اشتراک هم این کد دعوت (آیدی اکانت من) رو داخل برنامه بزن تا ۳۰٪ تخفیف بگیری (۳۴۹,۳۰۰ تومن به جای ۴۹۹,۰۰۰ تومن)! 🚀\n\nکد دعوت من (روش بزن تا کپی بشه 👇):\n`$myCode`';
                         Clipboard.setData(ClipboardData(text: inviteMsg));
-                        ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('✅ متن و لینک دعوت اختصاصیت کپی شد! بفرست برای رفیقت 🤝🔥'), backgroundColor: Color(0xFF00C896)));
+                        ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('✅ کد دعوت اختصاصیت کپی شد! بفرست برای رفیقت 🤝🔥'), backgroundColor: Color(0xFF00C896)));
                       },
                       icon: const Icon(Icons.copy_rounded, size: 15, color: Colors.black),
-                      label: const Text('کپی لینک و کد دعوت', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black)),
+                      label: const Text('کپی کد دعوت 👆', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black)),
                     ),
                   ],
                 ),
@@ -6004,7 +6004,7 @@ class _EditableBodyProfileFormWidgetState
     final p = widget.controller.profile;
     _nameCtrl = TextEditingController(text: ((p.displayName).toString().trim() == 'رفیق ورزشکار' || (p.displayName).toString().trim() == 'ورزشکار') ? '' : (p.displayName).toString());
     _ageCtrl = TextEditingController(text: p.birthDate.isNotEmpty ? p.birthDate : _bmSavedBirthStr);
-    final bool isFreshSignUp = widget.isInsidePopup || !p.isProfileCompleted;
+    final bool isFreshSignUp = !p.isProfileCompleted;
     _heightCtrl = TextEditingController(text: isFreshSignUp ? '' : p.heightCm.toString());
     _weightCtrl = TextEditingController(text: isFreshSignUp ? '' : p.weightKg.toString());
     _targetWeightCtrl = TextEditingController(
@@ -6938,11 +6938,11 @@ class _MainShellScreenState extends State<MainShellScreen> {
                             return;
                           }
                           final inviteMsg =
-                              'رفیق بیا توی برنامه بادی‌مود (مربی هوشمند بدنسازی و تغذیه)! 💪🔥 موقع خرید اشتراک کد دعوت من ($myCode) رو بزن تا ۳۰٪ تخفیف بگیری (۳۴۹,۳۰۰ تومن به جای ۴۹۹,۰۰۰ تومن)! 🚀\nhttps://matin-mohammadi.ir/?ref=$myCode';
+                              'رفیق بیا توی برنامه بادی‌مود (مربی هوشمند بدنسازی و تغذیه)! 💪🔥\nموقع خرید اشتراک این کد دعوت (آیدی اکانت من) رو داخل برنامه وارد کن تا ۳۰٪ تخفیف بگیری (۳۴۹,۳۰۰ تومن به جای ۴۹۹,۰۰۰ تومن)! 🚀\n\nکد دعوت من (روش بزن تا کپی بشه 👇):\n`$myCode`';
                           Clipboard.setData(ClipboardData(text: inviteMsg));
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('✅ متن و لینک دعوت اختصاصیت کپی شد! بفرست برای رفیقت 🤝🔥'),
+                              content: Text('✅ کد دعوت اختصاصیت کپی شد! بفرست برای رفیقت 🤝🔥'),
                             ),
                           );
                         },
@@ -6986,7 +6986,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
                         decoration: InputDecoration(
                           hintText: bmAppliedRefCode.isNotEmpty
                               ? 'کد فعال: $bmAppliedRefCode (۳۰٪ تخفیف)'
-                              : 'مثلاً BM-586834 یا لینک دعوت',
+                              : 'کد دعوت (آیدی اکانت) رفیقت رو بزن (مثلاً BM-586834)',
                           isDense: true,
                         ),
                       ),
@@ -8611,6 +8611,7 @@ class WorkoutAndLivePlayerTab extends StatefulWidget {
 class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
   int _activeStepIndex = 0;
   int _currentSet = 1;
+  String? _previewPhase;
   bool _isResting = false;
   int _restElapsedSeconds = 0;
   Timer? _restTimer;
@@ -8697,25 +8698,201 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 6, 16, 95),
       children: [
-        Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: bmCardColor, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFF00E5A3).withOpacity(0.4))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Row(children: [const Icon(Icons.local_fire_department_rounded, color: Colors.orangeAccent, size: 20), const SizedBox(width: 6), Text('کالری مصرفی این تمرین: ${bmGetVisibleWorkoutCalories()} کالری 🔥', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: bmTextColor))]),InkWell(onTap: () => bmGenerateAiWorkoutPlan(context, onDone: () => setState(() {})), borderRadius: BorderRadius.circular(8), child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5), decoration: BoxDecoration(color: const Color(0xFF00E5A3), borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFF00E5A3))), child: ValueListenableBuilder<int>(valueListenable: bmAiCooldownSec, builder: (_, sec, __) => Text(bmIsGeneratingWorkout ? 'در حال محاسبه AI... ⏳' : (sec > 0 ? '⏳ صبر کن ($sec)' : '🤖 بروزرسانی با AI'), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black))))),]),const SizedBox(height: 8),Text(bmGetSurplusRecommendation(), style: TextStyle(fontSize: 11.5, color: bmTextSubColor, height: 1.45)),])), Row(
+        Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: bmCardColor, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFF00E5A3).withOpacity(0.4))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Row(children: [const Icon(Icons.local_fire_department_rounded, color: Colors.orangeAccent, size: 20), const SizedBox(width: 6), Text('کالری مصرفی این تمرین: ${bmGetVisibleWorkoutCalories()} کالری 🔥', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: bmTextColor))]),InkWell(onTap: () => bmGenerateAiWorkoutPlan(context, onDone: () => setState(() {})), borderRadius: BorderRadius.circular(8), child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5), decoration: BoxDecoration(color: const Color(0xFF00E5A3), borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFF00E5A3))), child: ValueListenableBuilder<int>(valueListenable: bmAiCooldownSec, builder: (_, sec, __) => Text(bmIsGeneratingWorkout ? 'در حال محاسبه AI... ⏳' : (sec > 0 ? '⏳ صبر کن ($sec)' : '🤖 بروزرسانی با AI'), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black))))),]),const SizedBox(height: 8),Text(bmGetSurplusRecommendation(), style: TextStyle(fontSize: 11.5, color: bmTextSubColor, height: 1.45)),])), Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildPhaseBadge(
-              title: '۱. گرم کردن 🔥',
-              active: activeStep.phase == 'warmup',
-              color: BMColors.flameOrange,
+            Row(
+              children: [
+                Expanded(
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => setState(() => _previewPhase = (_previewPhase == 'warmup') ? null : 'warmup'),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
+                      decoration: BoxDecoration(
+                        color: (_previewPhase == 'warmup' || (_previewPhase == null && activeStep.phase == 'warmup'))
+                            ? BMColors.flameOrange.withOpacity(0.22)
+                            : bmSurfaceColor,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: (_previewPhase == 'warmup' || (_previewPhase == null && activeStep.phase == 'warmup'))
+                              ? BMColors.flameOrange
+                              : bmBorderColor,
+                          width: _previewPhase == 'warmup' ? 1.8 : 1,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        '۱. گرم کردن 🔥',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w800,
+                          color: (_previewPhase == 'warmup' || (_previewPhase == null && activeStep.phase == 'warmup'))
+                              ? BMColors.flameOrange
+                              : bmTextSubColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => setState(() => _previewPhase = (_previewPhase == 'main') ? null : 'main'),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
+                      decoration: BoxDecoration(
+                        color: (_previewPhase == 'main' || (_previewPhase == null && activeStep.phase == 'main'))
+                            ? BMColors.neonCyan.withOpacity(0.22)
+                            : bmSurfaceColor,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: (_previewPhase == 'main' || (_previewPhase == null && activeStep.phase == 'main'))
+                              ? BMColors.neonCyan
+                              : bmBorderColor,
+                          width: _previewPhase == 'main' ? 1.8 : 1,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        '۲. ست‌های اصلی 💪',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w800,
+                          color: (_previewPhase == 'main' || (_previewPhase == null && activeStep.phase == 'main'))
+                              ? BMColors.neonCyan
+                              : bmTextSubColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => setState(() => _previewPhase = (_previewPhase == 'cooldown') ? null : 'cooldown'),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
+                      decoration: BoxDecoration(
+                        color: (_previewPhase == 'cooldown' || (_previewPhase == null && activeStep.phase == 'cooldown'))
+                            ? BMColors.electricBlue.withOpacity(0.22)
+                            : bmSurfaceColor,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: (_previewPhase == 'cooldown' || (_previewPhase == null && activeStep.phase == 'cooldown'))
+                              ? BMColors.electricBlue
+                              : bmBorderColor,
+                          width: _previewPhase == 'cooldown' ? 1.8 : 1,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        '۳. سرد کردن ❄️',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w800,
+                          color: (_previewPhase == 'cooldown' || (_previewPhase == null && activeStep.phase == 'cooldown'))
+                              ? BMColors.electricBlue
+                              : bmTextSubColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 6),
-            _buildPhaseBadge(
-              title: '۲. ست‌های اصلی 💪',
-              active: activeStep.phase == 'main',
-              color: BMColors.neonCyan,
-            ),
-            const SizedBox(width: 6),
-            _buildPhaseBadge(
-              title: '۳. سرد کردن ❄️',
-              active: activeStep.phase == 'cooldown',
-              color: BMColors.electricBlue,
-            ),
+            if (_previewPhase != null) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: bmCardColor,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: BMColors.neonCyan.withOpacity(0.55)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          _previewPhase == 'warmup'
+                              ? '📋 لیست تمرین‌های گرم کردن 🔥'
+                              : (_previewPhase == 'main'
+                                  ? '📋 لیست ست‌های اصلی امروز 💪'
+                                  : '📋 لیست تمرین‌های سرد کردن ❄️'),
+                          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, color: BMColors.neonCyan),
+                        ),
+                        InkWell(
+                          borderRadius: BorderRadius.circular(10),
+                          onTap: () => setState(() => _previewPhase = null),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: BMColors.neonGreen.withOpacity(0.18),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: BMColors.neonGreen),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.refresh_rounded, size: 15, color: BMColors.neonGreen),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'تمرین فعلی',
+                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: BMColors.neonGreen),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ...List.generate(steps.length, (i) {
+                      if (steps[i].phase != _previewPhase) return const SizedBox.shrink();
+                      final isNow = i == safeIdx;
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: isNow ? BMColors.neonGreen.withOpacity(0.14) : bmSurfaceColor,
+                          borderRadius: BorderRadius.circular(11),
+                          border: Border.all(color: isNow ? BMColors.neonGreen : bmBorderColor),
+                        ),
+                        child: Row(
+                          children: [
+                            Text(
+                              isNow ? '▶️ ' : '${i + 1}. ',
+                              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12.5, color: isNow ? BMColors.neonGreen : bmTextColor),
+                            ),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    bmExStr(i, 'title', steps[i].name),
+                                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5, color: bmTextColor),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '${steps[i].sets} ست • ${steps[i].repsOrDuration} • ${bmExStr(i, 'muscle', steps[i].muscleGroup)}',
+                                    style: TextStyle(fontSize: 11, color: bmTextSubColor),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
+            ],
           ],
         )]),
         const SizedBox(height: 12),
