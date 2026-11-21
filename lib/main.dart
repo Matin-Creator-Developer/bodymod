@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 // ============================================================================
 // BodyMod AI (بادی‌مود) — v8.2 Production Market Launch Edition
 // Package: ir.matinmohammadi.bodymod
@@ -84,6 +85,299 @@ Future<T?> bmShowResponsiveSheet<T>({
 }
 String _bmSavedBirthStr = '';
 
+
+class BmExerciseOfflineManager {
+  static bool _checkedTodayCleanup = false;
+  static bool showYesterdayCleanedBanner = false;
+
+  static String _iranTodayStr() {
+    final iran = DateTime.now().toUtc().add(const Duration(hours: 3, minutes: 30));
+    final y = iran.year.toString().padLeft(4, '0');
+    final m = iran.month.toString().padLeft(2, '0');
+    final d = iran.day.toString().padLeft(2, '0');
+    return '$y-$m-$d';
+  }
+
+  static Future<void> checkAndCleanupYesterday() async {
+    if (_checkedTodayCleanup) return;
+    _checkedTodayCleanup = true;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedDate = prefs.getString('bm_offline_ex_date_v1') ?? '';
+      final today = _iranTodayStr();
+      if (savedDate.isNotEmpty && savedDate != today) {
+        await prefs.remove('bm_offline_ex_cache_v1');
+        await prefs.remove('bm_offline_ex_date_v1');
+        showYesterdayCleanedBanner = true;
+      }
+    } catch (_) {}
+  }
+
+  static Future<List<Uint8List>?> getCachedFrames(String exerciseName) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString('bm_offline_ex_cache_v1');
+      if (raw == null || raw.isEmpty) return null;
+      final Map<String, dynamic> map = jsonDecode(raw);
+      final entry = map[exerciseName];
+      if (entry is List && entry.length >= 2) {
+        return [
+          base64Decode(entry[0].toString()),
+          base64Decode(entry[1].toString()),
+        ];
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  static Future<bool> isTodayDownloaded() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return (prefs.getString('bm_offline_ex_date_v1') ?? '') == _iranTodayStr();
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<bool> downloadAllForToday(List<String> names) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final Map<String, dynamic> cache = {};
+      for (final name in names) {
+        final rUri = Uri.parse(
+          '${AppConfig.serverBaseUrl}/api/exercise-media/resolve?q=${Uri.encodeComponent(name)}',
+        );
+        final rRes = await http.get(rUri).timeout(const Duration(seconds: 10));
+        if (rRes.statusCode == 200) {
+          final data = jsonDecode(utf8.decode(rRes.bodyBytes));
+          final frames = data['frames'];
+          if (frames is List && frames.length >= 2) {
+            final f0 = await http.get(Uri.parse('${AppConfig.serverBaseUrl}${frames[0]}')).timeout(const Duration(seconds: 10));
+            final f1 = await http.get(Uri.parse('${AppConfig.serverBaseUrl}${frames[1]}')).timeout(const Duration(seconds: 10));
+            if (f0.statusCode == 200 && f1.statusCode == 200) {
+              cache[name] = [base64Encode(f0.bodyBytes), base64Encode(f1.bodyBytes)];
+            }
+          }
+        }
+      }
+      if (cache.isNotEmpty) {
+        await prefs.setString('bm_offline_ex_cache_v1', jsonEncode(cache));
+        await prefs.setString('bm_offline_ex_date_v1', _iranTodayStr());
+        return true;
+      }
+    } catch (_) {}
+    return false;
+  }
+}
+
+class BmExerciseDemoBox extends StatefulWidget {
+  final String exerciseName;
+  final String muscleGroup;
+  final List<String> allTodayNames;
+
+  const BmExerciseDemoBox({
+    super.key,
+    required this.exerciseName,
+    required this.muscleGroup,
+    required this.allTodayNames,
+  });
+
+  @override
+  State<BmExerciseDemoBox> createState() => _BmExerciseDemoBoxState();
+}
+
+class _BmExerciseDemoBoxState extends State<BmExerciseDemoBox> {
+  List<Uint8List>? _offlineBytes;
+  List<String>? _onlineUrls;
+  int _frameIdx = 0;
+  Timer? _animTimer;
+  bool _loading = true;
+  bool _downloadingAll = false;
+  bool _todaySaved = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initMedia();
+    _animTimer = Timer.periodic(const Duration(milliseconds: 900), (_) {
+      if (mounted) setState(() => _frameIdx = (_frameIdx == 0) ? 1 : 0);
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant BmExerciseDemoBox oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.exerciseName != widget.exerciseName) {
+      _initMedia();
+    }
+  }
+
+  @override
+  void dispose() {
+    _animTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _initMedia() async {
+    if (mounted) setState(() => _loading = true);
+    await BmExerciseOfflineManager.checkAndCleanupYesterday();
+    if (BmExerciseOfflineManager.showYesterdayCleanedBanner && mounted) {
+      BmExerciseOfflineManager.showYesterdayCleanedBanner = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              duration: Duration(seconds: 6),
+              content: Text(
+                'رفیق نگران نباش حافظه گوشیت به این زودی پر نمیشه 😅 دیتایی که دیروز دانلود کردی پاک شده و الان میتونی دیتای جدید دانلود کنی 😉',
+              ),
+            ),
+          );
+        }
+      });
+    }
+
+    final savedToday = await BmExerciseOfflineManager.isTodayDownloaded();
+    final cached = await BmExerciseOfflineManager.getCachedFrames(widget.exerciseName);
+    if (cached != null && cached.length >= 2) {
+      if (mounted) {
+        setState(() {
+          _offlineBytes = cached;
+          _todaySaved = savedToday;
+          _loading = false;
+        });
+      }
+      return;
+    }
+
+    try {
+      final uri = Uri.parse(
+        '${AppConfig.serverBaseUrl}/api/exercise-media/resolve?q=${Uri.encodeComponent(widget.exerciseName)}&m=${Uri.encodeComponent(widget.muscleGroup)}',
+      );
+      final res = await http.get(uri).timeout(const Duration(seconds: 8));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(res.bodyBytes));
+        final frames = data['frames'];
+        if (frames is List && frames.length >= 2 && mounted) {
+          setState(() {
+            _offlineBytes = null;
+            _onlineUrls = [
+              '${AppConfig.serverBaseUrl}${frames[0]}',
+              '${AppConfig.serverBaseUrl}${frames[1]}',
+            ];
+            _todaySaved = savedToday;
+            _loading = false;
+          });
+          return;
+        }
+      }
+    } catch (_) {}
+
+    if (mounted) {
+      setState(() {
+        _todaySaved = savedToday;
+        _loading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          height: 175,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.35),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: BMColors.neonCyan.withOpacity(0.35)),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: _loading
+              ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
+              : (_offlineBytes != null && _offlineBytes!.length >= 2)
+                  ? Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.memory(
+                          _offlineBytes![_frameIdx],
+                          fit: BoxFit.contain,
+                          gaplessPlayback: true,
+                        ),
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: Colors.black54,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'آفلاین ⚡',
+                              style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: BMColors.neonGreen),
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : (_onlineUrls != null && _onlineUrls!.length >= 2)
+                      ? Image.network(
+                          _onlineUrls![_frameIdx],
+                          fit: BoxFit.contain,
+                          gaplessPlayback: true,
+                          errorBuilder: (_, __, ___) => const Center(
+                            child: Text('🎬 پیش‌نمایش حرکت در حال بارگذاری...', style: TextStyle(fontSize: 12)),
+                          ),
+                        )
+                      : const Center(
+                          child: Text('🏋️‍♂️ راهنمای تصویری حرکت', style: TextStyle(fontSize: 12)),
+                        ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: _todaySaved ? BMColors.neonGreen : BMColors.neonCyan.withOpacity(0.5)),
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: (_downloadingAll || _todaySaved)
+                ? null
+                : () async {
+                    setState(() => _downloadingAll = true);
+                    final ok = await BmExerciseOfflineManager.downloadAllForToday(widget.allTodayNames);
+                    if (mounted) {
+                      setState(() {
+                        _downloadingAll = false;
+                        _todaySaved = ok;
+                      });
+                      if (ok) {
+                        _initMedia();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('همه‌ی حرکات امروز برای حالت آفلاین دانلود شد! ⚡📥')),
+                        );
+                      }
+                    }
+                  },
+            icon: _downloadingAll
+                ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                : Icon(_todaySaved ? Icons.offline_pin_rounded : Icons.download_for_offline_outlined, size: 18),
+            label: Text(
+              _downloadingAll
+                  ? 'در حال دانلود حرکات امروز...'
+                  : (_todaySaved ? 'حرکات امروز آفلاین ذخیره شد ✅ (فردا خودکار پاک می‌شه)' : 'دانلود حرکات امروز برای حالت آفلاین (اختیاری) ⬇️'),
+              style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class BmNativeBridge {
   static const MethodChannel _ch = MethodChannel('ir.matinmohammadi.bodymod/native');
 
@@ -98,7 +392,7 @@ class BmNativeBridge {
     } catch (_) {}
     var existing = prefs.getString('bm_device_id_v1') ?? '';
     if (existing.isEmpty) {
-      existing = 'dev_${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(999999)}';
+      existing = 'dev_${DateTime.now().millisecondsSinceEpoch}_${DateTime.now().microsecondsSinceEpoch % 999999}';
       await prefs.setString('bm_device_id_v1', existing);
     }
     return existing;
@@ -3416,7 +3710,8 @@ class BodyModController extends ChangeNotifier {
     AppConfig.useBodyCoinSystem =
         prefs.getBool('bm_use_bodycoin_system') ?? false;
 
-    deviceId = await BmNativeBridge.getHardwareDeviceId(prefs);
+    deviceId = prefs.getString('bm_device_id_v1') ?? '';
+    BmNativeBridge.getHardwareDeviceId(prefs).then((v) { if (v.isNotEmpty) deviceId = v; });
     if (deviceId.isEmpty) {
       final rnd = math.Random();
       deviceId = 'dev_${DateTime.now().millisecondsSinceEpoch}_${rnd.nextInt(999999)}';
@@ -6009,7 +6304,7 @@ class _EditableBodyProfileFormWidgetState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   '📜 قوانین خودمونی بادی‌مود (فقط ۶ تاست!)',
                   style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5, color: BMColors.neonCyan),
                 ),
@@ -6029,7 +6324,7 @@ class _EditableBodyProfileFormWidgetState
                   style: TextStyle(fontSize: 12, height: 1.65),
                 ),
                 const Divider(height: 22),
-                const Text(
+                Text(
                   '🎓 امتحانِ ریز ببینم واقعاً خوندی یا فقط رد کردی 😂:',
                   style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, color: BMColors.warningAmber),
                 ),
@@ -7600,7 +7895,7 @@ class _HomeDashboardTabState extends State<HomeDashboardTab> {
                         ),
                         child: Text(
                           '🔥 ${_lastAiFoodResult!['calories']} کالری  |  💪 پروتئین: ${_lastAiFoodResult!['proteinG']}g  |  🍞 کربوهیدرات: ${_lastAiFoodResult!['carbsG']}g  |  🥑 چربی: ${_lastAiFoodResult!['fatG']}g',
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: BMColors.neonGreen),
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: BMColors.neonGreen),
                         ),
                       ),
                       if ((_lastAiFoodResult!['coachTip'] ?? '').toString().trim().isNotEmpty) ...[
