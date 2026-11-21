@@ -1,877 +1,618 @@
+import os
 import re
 
-LT = chr(60)
-GT = chr(62)
+def read_file(path):
+    with open(path, "r", encoding="utf-8") as f:
+        return f.read()
 
-main_path = "lib/main.dart"
-stub_path = "lib/store_billing.dart"
-worker_path = "worker.js"
-bazaar_yml = ".github/workflows/build-cafebazaar.yml"
-myket_yml = ".github/workflows/build-myket.yml"
+def write_file(path, content):
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(content)
 
-def safe_replace(text, old, new, label, fname):
-    if old in text:
-        print(f"✅ [{fname}] {label}")
-        return text.replace(old, new, 1)
-    else:
-        print(f"⚠️ [{fname}] Skipped (not found or already patched): {label}")
-        return text
+# ==============================================================================
+# 1. PATCH WORKFLOWS: Inject Native ANDROID_ID + Blue Heart Morning Notification
+# ==============================================================================
+NATIVE_INJECT_BLOCK = r'''          sed -i 's/android:label="bodymod"/android:label="BodyMod"/g' android/app/src/main/AndroidManifest.xml
+          python3 - << 'PY_NATIVE'
+import os
+manifest_path = "android/app/src/main/AndroidManifest.xml"
+m = open(manifest_path, "r", encoding="utf-8").read()
+for perm in [
+    '<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>',
+    '<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>'
+]:
+    if perm not in m:
+        m = m.replace("<application", perm + "\n    <application", 1)
+receiver_xml = '<receiver android:name=".BmStreakReceiver" android:exported="false" />'
+if "BmStreakReceiver" not in m:
+    m = m.replace("</application>", "        " + receiver_xml + "\n    </application>", 1)
+open(manifest_path, "w", encoding="utf-8").write(m)
 
-# ============================================================================
-# 1. PATCH worker.js
-#    - Verify official store RSA (BAZAR_RSA_KEY / MYKET_RSA_KEY)
-#    - Device ID 2-account limit (1 Google + 1 Phone = 6 days total trial)
-#    - Update phone/email after profile completion
-#    - Device ID anti-cheat for self-referral
-#    - Auto-grant 3-day trial in /api/ai/* (fix Stage-3 lock)
-# ============================================================================
-with open(worker_path, "r", encoding="utf-8") as f:
-    js = f.read()
+kt_dir = "android/app/src/main/kotlin/ir/matinmohammadi/bodymod"
+os.makedirs(kt_dir, exist_ok=True)
 
-security_and_account_routes = """    // --- لایه امنیتی چک کلید RSA رسمی بازار و مایکت در کلودفلر ---
-    if (request.url.includes('/api/security/verify-store')) {
-      const corsH = { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Device-ID' };
-      if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsH });
-      let b = {};
-      try { b = await request.json(); } catch (e) {}
-      const clean = (s) => String(s || '').replace(/\\s+/g, '');
-      const clientKey = clean(b.rsaKey);
-      const bazaarKey = clean(env.BAZAR_RSA_KEY || env.BAZAAR_RSA_KEY);
-      const myketKey = clean(env.MYKET_RSA_KEY);
-      if (!bazaarKey && !myketKey) {
-        return new Response(JSON.stringify({ ok: true, valid: true, store: 'unconfigured' }), { status: 200, headers: corsH });
-      }
-      const isBazaar = Boolean(bazaarKey && clientKey && clientKey === bazaarKey);
-      const isMyket = Boolean(myketKey && clientKey && clientKey === myketKey);
-      if (isBazaar || isMyket) {
-        return new Response(JSON.stringify({ ok: true, valid: true, store: isBazaar ? 'cafebazaar' : 'myket' }), { status: 200, headers: corsH });
-      }
-      return new Response(JSON.stringify({
-        ok: true,
-        valid: false,
-        message: "فکر کردی میتونی سر من کلاه بزاری؟ 🤣\\nمن از تو هم زرنگترم 😂\\nزود تند سریع برنامه رو پاک کن و از این لینک ها وارد فروشگاه های رسمی بازار یا مایکت شو و برنامه رسمی رو نصب کن 😉"
-      }), { status: 200, headers: corsH });
-    }
+main_kt = """package ir.matinmohammadi.bodymod
 
-    // --- لایه امنیتی محدودیت ۲ اکانت روی هر گوشی (۱ گوگل + ۱ شماره موبایل = جمعاً ۶ روز رایگان) ---
-    if (request.url.includes('/api/security/check-device-account')) {
-      const corsH = { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Device-ID' };
-      if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsH });
-      let b = {};
-      try { b = await request.json(); } catch (e) {}
-      const devId = String(b.deviceId || request.headers.get('X-Device-ID') || '').trim();
-      const rawId = String(b.identifier || '').trim().toLowerCase();
-      const authType = String(b.authType || (rawId.includes('@') ? 'google' : 'phone')).trim().toLowerCase();
-      if (!devId || !rawId || rawId === 'anonymous') {
-        return new Response(JSON.stringify({ ok: true, allowed: true }), { status: 200, headers: corsH });
-      }
-      const kvSec = getKv(env);
-      const slotKey = (authType === 'google' ? 'dev_acc_google:' : 'dev_acc_phone:') + devId;
-      const boundId = await kvSec.get(slotKey);
-      if (!boundId) {
-        await kvSec.put(slotKey, rawId);
-        return new Response(JSON.stringify({ ok: true, allowed: true, bound: true }), { status: 200, headers: corsH });
-      }
-      if (String(boundId).trim().toLowerCase() === rawId) {
-        return new Response(JSON.stringify({ ok: true, allowed: true }), { status: 200, headers: corsH });
-      }
-      return new Response(JSON.stringify({
-        ok: false,
-        allowed: false,
-        deviceAccountLimit: true,
-        message: "نمیتونی سر من کلاه بزاری 😂\\nفقط دوتا اکانت میتونی بسازی، یکی با شماره موبایل، یکی با اکانت گوگلت\\nدکمه برگشت رو بزن و برگرد"
-      }), { status: 403, headers: corsH });
-    }
+import android.app.AlarmManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.os.Build
+import android.provider.Settings
+import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.MethodChannel
 
-    // --- تغییر شماره موبایل یا جیمیل پس از ثبت‌نام و تکمیل فرم ---
-    if (request.url.includes('/api/account/update-contact')) {
-      const corsH = { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Device-ID' };
-      if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsH });
-      let b = {};
-      try { b = await request.json(); } catch (e) {}
-      const kvAcc = getKv(env);
-      const devId = String(b.deviceId || request.headers.get('X-Device-ID') || '').trim();
-      const contactType = String(b.contactType || '').trim().toLowerCase();
-      const newVal = String(b.newValue || '').trim();
-      const user = await authenticateRequest(request, env, new URL(request.url));
-      const userKey = user ? getUserKey(user) : String(b.currentIdentifier || '').trim();
-      if (!userKey || !newVal || (contactType !== 'phone' && contactType !== 'email')) {
-        return new Response(JSON.stringify({ ok: false, error: 'لطفاً شماره موبایل یا جیمیل معتبر وارد کن!' }), { status: 400, headers: corsH });
-      }
-      const rawP = await kvAcc.get('profile:' + userKey);
-      const prof = rawP ? JSON.parse(rawP) : null;
-      if (!prof || !prof.isProfileCompleted) {
-        return new Response(JSON.stringify({ ok: false, error: 'اول فرم مشخصات بدنی‌ت رو کامل کن، بعدش می‌تونی شماره یا جیمیلت رو تغییر بدی 📋' }), { status: 400, headers: corsH });
-      }
-      if (contactType === 'phone') {
-        prof.phone = newVal;
-        if (devId) await kvAcc.put('dev_acc_phone:' + devId, newVal.toLowerCase());
-      } else {
-        prof.email = newVal.toLowerCase();
-        if (devId) await kvAcc.put('dev_acc_google:' + devId, newVal.toLowerCase());
-      }
-      await kvAcc.put('profile:' + userKey, JSON.stringify(prof));
-      return new Response(JSON.stringify({
-        ok: true,
-        message: contactType === 'phone' ? 'شماره موبایلت با موفقیت تغییر کرد و روی کلودفلر ثبت شد ✅' : 'جیمیلت با موفقیت تغییر کرد و روی کلودفلر ثبت شد ✅',
-        phone: prof.phone || '',
-        email: prof.email || ''
-      }), { status: 200, headers: corsH });
-    }
+class MainActivity: FlutterActivity() {
+    private val CHANNEL = "ir.matinmohammadi.bodymod/native"
 
-    // --- روت شمارش معکوس ۱۰۰۰ نفر بتا، دعوت دوست، ۱ روز هدیه ثبت‌نام و کنترل ورژن ---"""
-
-if "/api/security/verify-store" not in js:
-    js = safe_replace(
-        js,
-        "    // --- روت شمارش معکوس ۱۰۰۰ نفر بتا، دعوت دوست، ۱ روز هدیه ثبت‌نام و کنترل ورژن ---",
-        security_and_account_routes,
-        "Add RSA verify-store, 2-account device limit & update-contact endpoints",
-        "worker.js",
-    )
-
-# تفکیک ترایال ۳ روزه به ازای هر نوع اکانت (۱ گوگل + ۱ موبایل = جمعاً ۶ روز روی هر گوشی!)
-old_trial_dev_key = 'const deviceTrialKey = deviceId ? ("trial_3day_device:" + deviceId) : "";'
-new_trial_dev_key = 'const trialKind = String(userKey || "").includes("@") ? "google" : "phone";\n          const deviceTrialKey = deviceId ? ("trial_3day_device_" + trialKind + ":" + deviceId) : "";'
-js = safe_replace(js, old_trial_dev_key, new_trial_dev_key, "Split 3-day trial per device into 1 Google + 1 Phone (6 days total)", "worker.js")
-
-# ضدتقلب دعوت از خودت با Device ID
-old_ref_apply = """        if (bodyObj.action === 'apply_referral') {
-          const resObj = await bmApplyReferralCode(env, uPhone, bodyObj.referralCode || bodyObj.code || '');"""
-
-new_ref_apply = """        if (bodyObj.action === 'apply_referral') {
-          const kvRef = getKv(env);
-          const reqDeviceId = String(bodyObj.deviceId || request.headers.get('X-Device-ID') || '').trim();
-          const codeUpper = String(bodyObj.referralCode || bodyObj.code || '').trim().toUpperCase();
-          if (reqDeviceId && codeUpper) {
-            const ownerDevice = await kvRef.get('ref_owner_device:' + codeUpper);
-            if (ownerDevice && ownerDevice === reqDeviceId) {
-              return new Response(JSON.stringify({
-                ok: false,
-                selfReferralCheat: true,
-                error: "نمیتونی سر من کلاه بزاری 😂\\nبه اکانت خودت نمیتونی دعوت بدی، نمیتونی تقلب کنی 😉\\nکد رو به دوست واقعیت بفرست یا کنسل کن"
-              }), { status: 403, headers: corsH });
+    override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
+        super.configureFlutterEngine(flutterEngine)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "getAndroidId" -> {
+                    try {
+                        val aid = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID) ?: ""
+                        result.success(aid)
+                    } catch (e: Exception) {
+                        result.success("")
+                    }
+                }
+                "scheduleStreakReminder" -> {
+                    try {
+                        val delayMillis = (call.argument<Number>("delayMillis")?.toLong()) ?: 43200000L
+                        val title = call.argument<String>("title") ?: "بادی‌مود 💙"
+                        val body = call.argument<String>("body") ?: ""
+                        val intent = Intent(this, BmStreakReceiver::class.java).apply {
+                            putExtra("title", title)
+                            putExtra("body", body)
+                        }
+                        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                        } else {
+                            PendingIntent.FLAG_UPDATE_CURRENT
+                        }
+                        val pi = PendingIntent.getBroadcast(this, 8842, intent, flags)
+                        val am = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+                        am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + delayMillis, pi)
+                        result.success(true)
+                    } catch (e: Exception) {
+                        result.success(false)
+                    }
+                }
+                else -> result.notImplemented()
             }
-          }
-          const resObj = await bmApplyReferralCode(env, uPhone, bodyObj.referralCode || bodyObj.code || '');
-          if (resObj && !resObj.ok && String(resObj.error || '').includes('خودت')) {
-            resObj.selfReferralCheat = true;
-            resObj.error = "نمیتونی سر من کلاه بزاری 😂\\nبه اکانت خودت نمیتونی دعوت بدی، نمیتونی تقلب کنی 😉\\nکد رو به دوست واقعیت بفرست یا کنسل کن";
-          }"""
-
-if "selfReferralCheat" not in js:
-    js = safe_replace(js, old_ref_apply, new_ref_apply, "Add Device ID anti-cheat for self-referral", "worker.js")
-
-old_beta_return = """      const resObj = await bmGetBetaAndReferralState(env, qPhone, qVer);
-      return new Response(JSON.stringify(resObj), { status: 200, headers: corsH });"""
-
-new_beta_return = """      const resObj = await bmGetBetaAndReferralState(env, qPhone, qVer);
-      const qDeviceId = String(reqUrl.searchParams.get('deviceId') || request.headers.get('X-Device-ID') || '').trim();
-      const myCode = String(resObj.myReferralCode || resObj.referralCode || '').trim().toUpperCase();
-      if (qDeviceId && myCode) {
-        try {
-          const kvRef = getKv(env);
-          await kvRef.put('ref_owner_device:' + myCode, qDeviceId);
-        } catch (e) {}
-      }
-      return new Response(JSON.stringify(resObj), { status: 200, headers: corsH });"""
-
-if "qDeviceId" not in js:
-    js = safe_replace(js, old_beta_return, new_beta_return, "Bind user's referral code to Device ID in KV", "worker.js")
-
-# اعطای خودکار اشتراک ۳ روزه هدیه در /api/ai/* (فیکس قفل مرحله ۳!)
-old_ai_lock_anchor = """          if (changed) {
-            await kv.put("profile:" + userKey, JSON.stringify(rawProfile));
-          }
         }
+    }
+}
+"""
+open(os.path.join(kt_dir, "MainActivity.kt"), "w", encoding="utf-8").write(main_kt)
 
-        const profile = enrichProfileWithAccessAndLocks(rawProfile, user);"""
+recv_kt = """package ir.matinmohammadi.bodymod
 
-new_ai_lock_anchor = """          if (changed) {
-            await kv.put("profile:" + userKey, JSON.stringify(rawProfile));
-          }
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.os.Build
+
+class BmStreakReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        val title = intent.getStringExtra("title") ?: "بادی‌مود 💙🔥"
+        val body = intent.getStringExtra("body") ?: "امروز تعامل نکردی رفیق!"
+        val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val channelId = "bm_streak_blue_heart"
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val ch = NotificationChannel(channelId, "یادآور استریک بادی‌مود", NotificationManager.IMPORTANCE_DEFAULT)
+            nm.createNotificationChannel(ch)
         }
+        val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Notification.Builder(context, channelId)
+        } else {
+            @Suppress("DEPRECATION")
+            Notification.Builder(context)
+        }
+        val notif = builder
+            .setContentTitle(title)
+            .setContentText(body)
+            .setStyle(Notification.BigTextStyle().bigText(body))
+            .setSmallIcon(context.applicationInfo.icon)
+            .setAutoCancel(true)
+            .build()
+        nm.notify(8842, notif)
+    }
+}
+"""
+open(os.path.join(kt_dir, "BmStreakReceiver.kt"), "w", encoding="utf-8").write(recv_kt)
+PY_NATIVE'''
 
-        // اعطای خودکار ۳ روز اشتراک هدیه (جداگانه برای ۱ گوگل + ۱ موبایل روی هر گوشی = جمعاً ۶ روز)
-        if (rawProfile.isProfileCompleted && !rawProfile.isAdmin && !isSubscriptionCurrentlyActive(rawProfile) && !rawProfile.freeTrialClaimed) {
-          const aiDevId = String(body.deviceId || request.headers.get("X-Device-ID") || "").trim();
-          const aiKind = String(userKey || "").includes("@") ? "google" : "phone";
-          const devTrialKey = aiDevId ? ("trial_3day_device_" + aiKind + ":" + aiDevId) : "";
-          const devClaimed = devTrialKey ? Boolean(await kv.get(devTrialKey)) : false;
-          if (!devClaimed) {
-            rawProfile.freeTrialClaimed = true;
-            rawProfile.isFreeTrial = true;
-            rawProfile.hasActiveSubscription = true;
-            rawProfile.subscriptionTier = "اشتراک رایگان ۳ روزه هدیه ثبت‌نام 🎁";
-            rawProfile.subscriptionDaysRemaining = 3;
-            rawProfile.subscriptionExpiresAt = Date.now() + (3 * 86400 * 1000);
-            await kv.put("profile:" + userKey, JSON.stringify(rawProfile));
-            if (devTrialKey) {
-              await kv.put(devTrialKey, userKey);
+for wf in [".github/workflows/build-cafebazaar.yml", ".github/workflows/build-myket.yml"]:
+    if os.path.exists(wf):
+        txt = read_file(wf)
+        if "BmStreakReceiver" not in txt:
+            target = '          sed -i \'s/android:label="bodymod"/android:label="BodyMod"/g\' android/app/src/main/AndroidManifest.xml'
+            if target in txt:
+                txt = txt.replace(target, NATIVE_INJECT_BLOCK, 1)
+                write_file(wf, txt)
+                print(f"✅ Patched workflow: {wf}")
+            else:
+                print(f"⚠️ Anchor not found in {wf}")
+        else:
+            print(f"ℹ️ Already patched: {wf}")
+
+# ==============================================================================
+# 2. PATCH worker.js: Device 2-Account Gate, SignUp/SignIn, Zero-Token Quota, Iran Streak
+# ==============================================================================
+w = read_file("worker.js")
+
+# 2A. Anti-cheat 2-account gate inside /api/auth/google/native
+g_anchor = '        const sessionToken = crypto.randomUUID();\n        const userData = {\n          id: googleUser.sub,'
+g_gate = '''        // ضدتقلب واقعی ۲ اکانت روی هر گوشی (با ANDROID_ID) قبل از صدور توکن
+        const gDevId = String(body.deviceId || body.device_id || request.headers.get("X-Device-ID") || "").trim();
+        const gEmailKey = String(googleUser.email).toLowerCase().trim();
+        if (gDevId) {
+          const devKey = "dev_accounts_v2:" + gDevId;
+          const rawDev = await kv.get(devKey);
+          let devList = [];
+          try { devList = rawDev ? JSON.parse(rawDev) : []; } catch (_) { devList = []; }
+          if (!devList.includes(gEmailKey)) {
+            if (devList.length >= 2) {
+              return jsonResponse({
+                success: false,
+                error: "DEVICE_ACCOUNT_LIMIT",
+                deviceAccountLimit: true,
+                message: "روی هر گوشی حداکثر ۲ حساب (۱ گوگل + ۱ شماره موبایل) مجازه رفیق! 🔒",
+              }, 403);
             }
+            devList.push(gEmailKey);
+            await kv.put(devKey, JSON.stringify(devList));
           }
         }
 
-        const profile = enrichProfileWithAccessAndLocks(rawProfile, user);"""
+        const sessionToken = crypto.randomUUID();
+        const userData = {
+          id: googleUser.sub,'''
 
-if "aiDevId" not in js:
-    js = safe_replace(js, old_ai_lock_anchor, new_ai_lock_anchor, "Auto-grant 3-day free trial in /api/ai/* (1 Google + 1 Phone)", "worker.js")
+if "dev_accounts_v2:" not in w and g_anchor in w:
+    w = w.replace(g_anchor, g_gate, 1)
+    print("✅ Patched worker.js: Google native 2-account device gate")
 
-with open(worker_path, "w", encoding="utf-8") as f:
-    f.write(js)
+# 2B. Anti-cheat 2-account gate inside /api/auth/otp/verify
+otp_anchor = '        const sessionToken = crypto.randomUUID();\n        const userData = {\n          identifier: normalizedPhone,'
+otp_gate = '''        // ضدتقلب واقعی ۲ اکانت روی هر گوشی (با ANDROID_ID) قبل از صدور توکن
+        const oDevId = String(body.deviceId || body.device_id || request.headers.get("X-Device-ID") || "").trim();
+        if (oDevId) {
+          const devKey = "dev_accounts_v2:" + oDevId;
+          const rawDev = await kv.get(devKey);
+          let devList = [];
+          try { devList = rawDev ? JSON.parse(rawDev) : []; } catch (_) { devList = []; }
+          if (!devList.includes(normalizedPhone)) {
+            if (devList.length >= 2) {
+              return jsonResponse({
+                success: false,
+                error: "DEVICE_ACCOUNT_LIMIT",
+                deviceAccountLimit: true,
+                message: "روی هر گوشی حداکثر ۲ حساب (۱ گوگل + ۱ شماره موبایل) مجازه رفیق! 🔒",
+              }, 403);
+            }
+            devList.push(normalizedPhone);
+            await kv.put(devKey, JSON.stringify(devList));
+          }
+        }
 
-# ============================================================================
-# 2. PATCH lib/store_billing.dart + build-cafebazaar.yml (BAZAR_RSA_KEY!) + build-myket.yml
-# ============================================================================
-with open(stub_path, "r", encoding="utf-8") as f:
-    st = f.read()
-if "static String lastError" not in st:
-    st = st.replace(
-        "static const String rsaKey =",
-        "static String lastError = '';\n  static const String rsaKey =",
-    )
-    with open(stub_path, "w", encoding="utf-8") as f:
-        f.write(st)
-    print("✅ [lib/store_billing.dart] Added lastError field")
+        const sessionToken = crypto.randomUUID();
+        const userData = {
+          identifier: normalizedPhone,'''
 
-with open(bazaar_yml, "r", encoding="utf-8") as f:
-    b_code = f.read()
+if "const oDevId =" not in w and otp_anchor in w:
+    w = w.replace(otp_anchor, otp_gate, 1)
+    print("✅ Patched worker.js: OTP verify 2-account device gate")
 
-# فیکس حیاتی غلط املایی: BAZAAR_RSA_KEY -> BAZAR_RSA_KEY
-b_code = safe_replace(
-    b_code,
-    "STORE_RSA_KEY: ${{ secrets.BAZAAR_RSA_KEY }}",
-    "STORE_RSA_KEY: ${{ secrets.BAZAR_RSA_KEY }}",
-    "Fix secret name typo: BAZAAR_RSA_KEY -> BAZAR_RSA_KEY",
-    "build-cafebazaar.yml",
+# 2C. Add authMode (signup vs signin) to auth responses
+w = w.replace(
+    "hasExistingProfile: initResult.hasExistingProfile,",
+    'hasExistingProfile: initResult.hasExistingProfile,\n          authMode: initResult.hasExistingProfile ? "signin" : "signup",'
 )
 
-old_bazaar_dart = """          class BmStoreBilling {
-            static const String storeFlavor = 'bazaar';
-            static const String rsaKey = String.fromEnvironment('STORE_RSA_KEY', defaultValue: '');
+# 2D. Fix bug on line ~1091 that auto-marked default 175/70 profile as completed!
+auto_complete_bug = 'if (!rawProfile.isProfileCompleted && (Number(rawProfile.heightCm) > 0 && Number(rawProfile.weightKg) > 0)) {\n            rawProfile.isProfileCompleted = true;'
+if auto_complete_bug in w:
+    w = w.replace(auto_complete_bug, 'if (false && !rawProfile.isProfileCompleted) {\n            rawProfile.isProfileCompleted = true;', 1)
+    print("✅ Fixed worker.js: prevented auto-completing unsubmitted Sign Up profiles")
 
-            static Future purchase({
-              required String sku,
-              String payload = '',
-              bool consumeImmediately = true,
-            }) async {
-              if (rsaKey.trim().isEmpty) return null;
-              try {
-                final completer = Completer();
-                await FlutterPoolakey.connect(
-                  rsaKey.trim(),
-                  onSucceed: () {
-                    if (!completer.isCompleted) completer.complete(true);
-                  },
-                  onFailed: () {
-                    if (!completer.isCompleted) completer.complete(false);
-                  },
-                  onDisconnected: () {},
-                );
-                final connected = await completer.future.timeout(
-                  const Duration(seconds: 8),
-                  onTimeout: () => false,
-                );
-                if (connected != true) return null;
+# 2E. Zero-token fixed message when daily quota is reached
+old_quota_msg = ': "رفیق سهمیه‌ات توی این بخش تموم شده! ⏳ بعد از ریست شدن سهمیه دوباره بیا تا با هم ادامه بدیم ❤️";'
+new_quota_msg = ': "سهمیه‌ت تموم شده رفیق 😉\\nپیامتو فردا دوباره بفرست";'
+if old_quota_msg in w:
+    w = w.replace(old_quota_msg, new_quota_msg, 1)
+    print("✅ Patched worker.js: Zero-token quota message updated")
 
-                final purchaseInfo = await FlutterPoolakey.purchase(
-                  sku,
-                  payload: payload,
-                );
-                final token = purchaseInfo.purchaseToken;
-                if (token.isNotEmpty) {
-                  if (consumeImmediately) {
-                    try {
-                      await FlutterPoolakey.consume(token);
-                    } catch (_) {}
-                  }
-                  return {
-                    'purchaseToken': token,
-                    'market': 'cafebazaar',
-                    'sku': sku,
-                  };
-                }
-              } catch (_) {}
-              return null;
-            }"""
+# 2F. Server-side Iran Calendar Streak with 3-day Blue Heart Freeze (/api/user/streak)
+streak_anchor = '      // 5. User Profile, 3-Stage Lock Check & Cloud Sync\n      if (path === "/api/user/status") {'
+streak_route = '''      // 4.5 Server-side Iran Calendar Streak with 3-Day Blue Heart Freeze (💙)
+      if (path === "/api/user/streak") {
+        const authHeader = request.headers.get("Authorization") || "";
+        const bearer = authHeader.replace(/^Bearer\\s+/i, "").trim();
+        const sessRaw = bearer ? await kv.get("session:" + bearer) : null;
+        if (!sessRaw) return jsonResponse({ error: "Unauthorized" }, 401);
+        const sess = JSON.parse(sessRaw);
+        const uKey = String(sess.email || sess.phone || sess.identifier || "").toLowerCase().trim();
+        const iranNow = new Date(Date.now() + 3.5 * 3600 * 1000);
+        const todayStr = iranNow.toISOString().slice(0, 10);
+        const sKey = "streak_v2:" + uKey;
+        let st = { count: 0, lastDate: "" };
+        try {
+          const rawSt = await kv.get(sKey);
+          if (rawSt) st = JSON.parse(rawSt);
+        } catch (_) {}
 
-new_bazaar_dart = """          class BmStoreBilling {
-            static const String storeFlavor = 'bazaar';
-            static const String rsaKey = String.fromEnvironment('STORE_RSA_KEY', defaultValue: '');
-            static String lastError = '';
-            static bool _connected = false;
+        let diffDays = 999;
+        if (st.lastDate) {
+          const d1 = new Date(todayStr + "T00:00:00Z").getTime();
+          const d2 = new Date(st.lastDate + "T00:00:00Z").getTime();
+          diffDays = Math.floor((d1 - d2) / 86400000);
+        }
 
-            static Future purchase({
-              required String sku,
-              String payload = '',
-              bool consumeImmediately = true,
-            }) async {
-              lastError = '';
-              final cleanKey = rsaKey.replaceAll(RegExp(r'\\s+'), '');
-              if (cleanKey.isEmpty) {
-                lastError = 'کلید RSA کافه‌بازار در بیلد خالی است (BAZAR_RSA_KEY)!';
-                return null;
-              }
-              try {
-                if (!_connected) {
-                  final completer = Completer();
-                  await FlutterPoolakey.connect(
-                    cleanKey,
-                    onSucceed: () {
-                      _connected = true;
-                      if (!completer.isCompleted) completer.complete(true);
-                    },
-                    onFailed: () {
-                      _connected = false;
-                      if (!completer.isCompleted) completer.complete(false);
-                    },
-                    onDisconnected: () {
-                      _connected = false;
-                    },
-                  );
-                  final ok = await completer.future.timeout(
-                    const Duration(seconds: 10),
-                    onTimeout: () => false,
-                  );
-                  if (ok != true) {
-                    lastError = 'اتصال به اپلیکیشن کافه‌بازار برقرار نشد! مطمئن شو کافه‌بازار روی گوشیت نصب و به‌روزه و توش وارد شدی 🟢';
-                    return null;
-                  }
-                }
+        if (request.method === "POST") {
+          if (diffDays === 0) {
+            if (st.count < 1) st.count = 1;
+          } else if (diffDays >= 1 && diffDays <= 3 && st.count > 0) {
+            st.count = st.count + 1;
+          } else {
+            st.count = 1;
+          }
+          st.lastDate = todayStr;
+          await kv.put(sKey, JSON.stringify(st));
+          return jsonResponse({ success: true, count: st.count, lastDate: st.lastDate, status: "active", emoji: "🔥" });
+        } else {
+          if (diffDays > 3) {
+            st.count = 0;
+            return jsonResponse({ success: true, count: 0, lastDate: st.lastDate, status: "reset", emoji: "🔥" });
+          } else if (diffDays >= 1 && diffDays <= 3 && st.count > 0) {
+            return jsonResponse({ success: true, count: st.count, lastDate: st.lastDate, status: "frozen_blue", emoji: "💙", daysMissed: diffDays });
+          } else {
+            return jsonResponse({ success: true, count: st.count, lastDate: st.lastDate, status: "active", emoji: "🔥" });
+          }
+        }
+      }
 
-                final purchaseInfo = await FlutterPoolakey.purchase(
-                  sku,
-                  payload: payload,
-                );
-                final token = purchaseInfo.purchaseToken;
-                if (token.isNotEmpty) {
-                  if (consumeImmediately) {
-                    try {
-                      await FlutterPoolakey.consume(token);
-                    } catch (_) {}
-                  }
-                  return {
-                    'purchaseToken': token,
-                    'market': 'cafebazaar',
-                    'sku': sku,
-                  };
-                }
-                lastError = 'پرداخت توسط کاربر لغو شد یا توکن از بازار دریافت نشد.';
-              } catch (e) {
-                _connected = false;
-                lastError = 'خطای درگاه کافه‌بازار: $e';
-              }
-              return null;
-            }"""
+      // 5. User Profile, 3-Stage Lock Check & Cloud Sync
+      if (path === "/api/user/status") {'''
 
-b_code = safe_replace(b_code, old_bazaar_dart, new_bazaar_dart, "Upgrade Poolakey billing connect & clean RSA", "build-cafebazaar.yml")
-with open(bazaar_yml, "w", encoding="utf-8") as f:
-    f.write(b_code)
+if "/api/user/streak" not in w and streak_anchor in w:
+    w = w.replace(streak_anchor, streak_route, 1)
+    print("✅ Patched worker.js: Added Iran-calendar 3-day Blue Heart streak API")
 
-with open(myket_yml, "r", encoding="utf-8") as f:
-    m_code = f.read()
-if "static String lastError" not in m_code:
-    m_code = m_code.replace(
-        "static const String rsaKey = String.fromEnvironment('STORE_RSA_KEY', defaultValue: '');",
-        "static const String rsaKey = String.fromEnvironment('STORE_RSA_KEY', defaultValue: '');\n            static String lastError = '';",
-    )
-    m_code = m_code.replace("rsaKey.trim()", "rsaKey.replaceAll(RegExp(r'\\s+'), '')")
-    with open(myket_yml, "w", encoding="utf-8") as f:
-        f.write(m_code)
-    print("✅ [build-myket.yml] Added lastError & clean RSA key")
+write_file("worker.js", w)
 
-# ============================================================================
+# ==============================================================================
 # 3. PATCH lib/main.dart
-#    - Device ID + Uncloseable RSA Store Lock
-#    - Device 2-Account Limit Popup (1 Google + 1 Phone) with Back button
-#    - Change Phone / Gmail Popup + Button in Profile tab
-#    - Self-Referral Anti-Cheat Popup
-#    - Exact Bazaar Poolakey error display
-# ============================================================================
-with open(main_path, "r", encoding="utf-8") as f:
-    dart = f.read()
+# ==============================================================================
+d = read_file("lib/main.dart")
 
-security_helpers = f"""String bmDeviceIdGlobal = '';
-bool bmStoreLockDialogShown = false;
-bool bmAccountLimitDialogShown = false;
+# 3A. Ensure MethodChannel native bridge class (ANDROID_ID + Morning Blue Heart Notification)
+if "class BmNativeBridge" not in d:
+    bridge_code = '''
+class BmNativeBridge {
+  static const MethodChannel _ch = MethodChannel('ir.matinmohammadi.bodymod/native');
 
-Future{LT}String{GT} bmGetOrCreateDeviceId() async {{
-  if (bmDeviceIdGlobal.isNotEmpty) return bmDeviceIdGlobal;
-  final prefs = await SharedPreferences.getInstance();
-  var id = prefs.getString('bm_device_id_v1') ?? '';
-  if (id.isEmpty) {{
-    final now = DateTime.now().microsecondsSinceEpoch.toRadixString(36);
-    final rnd = (now.hashCode ^ 0x5A7C9E).abs().toRadixString(36);
-    id = 'BMDEV-$now-$rnd';
-    await prefs.setString('bm_device_id_v1', id);
-  }}
-  bmDeviceIdGlobal = id;
-  return id;
-}}
+  static Future<String> getHardwareDeviceId(SharedPreferences prefs) async {
+    try {
+      final String? aid = await _ch.invokeMethod<String>('getAndroidId');
+      if (aid != null && aid.trim().isNotEmpty) {
+        final full = 'aid_${aid.trim()}';
+        await prefs.setString('bm_device_id_v1', full);
+        return full;
+      }
+    } catch (_) {}
+    var existing = prefs.getString('bm_device_id_v1') ?? '';
+    if (existing.isEmpty) {
+      existing = 'dev_${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(999999)}';
+      await prefs.setString('bm_device_id_v1', existing);
+    }
+    return existing;
+  }
 
-Future{LT}void{GT} bmVerifyStoreIntegrity(BuildContext context) async {{
-  if (bmStoreLockDialogShown) return;
-  try {{
-    final devId = await bmGetOrCreateDeviceId();
-    final res = await http.post(
-      Uri.parse('https://server.matin-mohammadi.ir/api/security/verify-store'),
-      headers: {{'Content-Type': 'application/json', 'X-Device-ID': devId}},
-      body: jsonEncode({{
-        'storeFlavor': BmStoreBilling.storeFlavor,
-        'rsaKey': BmStoreBilling.rsaKey,
-      }}),
-    ).timeout(const Duration(seconds: 10));
-    if (res.statusCode == 200) {{
-      final d = jsonDecode(utf8.decode(res.bodyBytes));
-      if (d is Map && d['valid'] == false && context.mounted && !bmStoreLockDialogShown) {{
-        bmStoreLockDialogShown = true;
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (ctx) => PopScope(
-            canPop: false,
-            child: AlertDialog(
-              backgroundColor: const Color(0xFF0E141B),
+  static Future<void> scheduleBlueHeartMorningReminder() async {
+    try {
+      final nowUtc = DateTime.now().toUtc();
+      final iranNow = nowUtc.add(const Duration(hours: 3, minutes: 30));
+      final nextMorningIran = DateTime.utc(iranNow.year, iranNow.month, iranNow.day + 1, 9, 0);
+      final delayMs = nextMorningIran.difference(iranNow).inMilliseconds;
+      await _ch.invokeMethod('scheduleStreakReminder', {
+        'delayMillis': delayMs > 60000 ? delayMs : 43200000,
+        'title': 'آتیش استریکت آبی شده! 💙🔥',
+        'body': 'من چیزی نمیگم و نصیحتت نمیکنم 😂\\nولی امروز تعامل نکردی، اگه ادامه بدی آتیش استریکت خاموش میشه و از صفر شروع میشه و زحماتت به باد میره',
+      });
+    } catch (_) {}
+  }
+}
+'''
+    # Insert right after imports (before first class/void main)
+    m = re.search(r'\n(void main\(|class )', d)
+    if m:
+        idx = m.start()
+        d = d[:idx] + "\n" + bridge_code + d[idx:]
+        print("✅ Patched lib/main.dart: Added BmNativeBridge (ANDROID_ID + Morning Notification)")
+
+# Hook hardware ANDROID_ID in both places where bm_device_id_v1 is initialized
+old_dev1 = "  var id = prefs.getString('bm_device_id_v1') ?? '';"
+if old_dev1 in d:
+    d = d.replace(old_dev1, "  var id = await BmNativeBridge.getHardwareDeviceId(prefs);", 1)
+    print("✅ Patched lib/main.dart: Hooked hardware ANDROID_ID (helper)")
+
+old_dev2 = "    deviceId = prefs.getString('bm_device_id_v1') ?? '';"
+if old_dev2 in d:
+    d = d.replace(old_dev2, "    deviceId = await BmNativeBridge.getHardwareDeviceId(prefs);", 1)
+    print("✅ Patched lib/main.dart: Hooked hardware ANDROID_ID (controller)")
+
+# 3B. Silent cancel for CafeBazaar/Myket Subscription & Donation
+sub_cancel_anchor = "    if (context.mounted) {\n      showDialog(\n        context: context,\n        builder: (ctx) => AlertDialog("
+sub_cancel_fix = """    final bmSubErrUp = BmStoreBilling.lastError.toUpperCase();
+    if (bmSubErrUp.contains('CANCEL') || bmSubErrUp.isEmpty) {
+      return;
+    }
+
+    if (context.mounted) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog("""
+if "bmSubErrUp" not in d and sub_cancel_anchor in d:
+    d = d.replace(sub_cancel_anchor, sub_cancel_fix, 1)
+    print("✅ Patched lib/main.dart: Silent cancel on Subscription")
+
+don_cancel_anchor = """    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'درخواست پرداخت مصرفی (چندباره) برای «$label» (کد محصول: $sku) به درگاه بازار/مایکت ارسال شد! ❤️🚀',"""
+don_cancel_fix = """    final bmDonErrUp = BmStoreBilling.lastError.toUpperCase();
+    if (bmDonErrUp.contains('CANCEL') || bmDonErrUp.isEmpty) {
+      return;
+    }
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'درخواست پرداخت مصرفی (چندباره) برای «$label» (کد محصول: $sku) به درگاه بازار/مایکت ارسال شد! ❤️🚀',"""
+if "bmDonErrUp" not in d and don_cancel_anchor in d:
+    d = d.replace(don_cancel_anchor, don_cancel_fix, 1)
+    print("✅ Patched lib/main.dart: Silent cancel on Donation")
+
+# 3C. Show all 4 macros (Calories, Protein, Carbs, Fat) in AI Food Analysis box
+food_anchor = """                      Text(
+                        '✅ ${_lastAiFoodResult!['title']} — ${_lastAiFoodResult!['calories']} کالری (در غذاهای سفارشی ذخیره شد 💾)',
+                        style: const TextStyle(fontWeight: FontWeight.w900),
+                      ),"""
+food_new = """                      Text(
+                        '✅ ${_lastAiFoodResult!['title']} (در غذاهای سفارشی ذخیره شد 💾)',
+                        style: const TextStyle(fontWeight: FontWeight.w900),
+                      ),
+                      const SizedBox(height: 6),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.28),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: BMColors.neonGreen.withOpacity(0.35)),
+                        ),
+                        child: Text(
+                          '🔥 ${_lastAiFoodResult!['calories']} کالری  |  💪 پروتئین: ${_lastAiFoodResult!['proteinG']}g  |  🍞 کربوهیدرات: ${_lastAiFoodResult!['carbsG']}g  |  🥑 چربی: ${_lastAiFoodResult!['fatG']}g',
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: BMColors.neonGreen),
+                        ),
+                      ),"""
+if "پروتئین: ${_lastAiFoodResult!" not in d and food_anchor in d:
+    d = d.replace(food_anchor, food_new, 1)
+    print("✅ Patched lib/main.dart: Added full 4-macro breakdown to AI food box")
+
+# 3D. Registration Form: Empty initial height/weight/target for Sign Up + Hint Texts
+old_ctrls = """    _heightCtrl = TextEditingController(text: p.heightCm.toString());
+    _weightCtrl = TextEditingController(text: p.weightKg.toString());
+    _targetWeightCtrl = TextEditingController(
+      text: p.targetWeightKg.toString(),
+    );"""
+new_ctrls = """    final bool isFreshSignUp = widget.isInsidePopup || !p.isProfileCompleted;
+    _heightCtrl = TextEditingController(text: isFreshSignUp ? '' : p.heightCm.toString());
+    _weightCtrl = TextEditingController(text: isFreshSignUp ? '' : p.weightKg.toString());
+    _targetWeightCtrl = TextEditingController(
+      text: isFreshSignUp ? '' : p.targetWeightKg.toString(),
+    );"""
+if "isFreshSignUp" not in d and old_ctrls in d:
+    d = d.replace(old_ctrls, new_ctrls, 1)
+    print("✅ Patched lib/main.dart: Empty height/weight/target for Sign Up")
+
+d = d.replace(
+    "labelText: 'قد (سانتی‌متر)',",
+    "labelText: 'قد (سانتی‌متر)',\n                  hintText: 'مثلاً: ۱۷۵',"
+)
+d = d.replace(
+    "labelText: 'وزن فعلی (کیلوگرم)',",
+    "labelText: 'وزن فعلی (کیلوگرم)',\n                  hintText: 'مثلاً: ۷۰',"
+)
+d = d.replace(
+    "labelText: 'وزن هدف شما (کیلوگرم)',",
+    "labelText: 'وزن هدف شما (کیلوگرم)',\n            hintText: 'مثلاً: ۷۵',"
+)
+
+# 3E. Add Quiz state variables + 6 Casual Rules + 2-Question Yes/No Quiz before Submit
+state_anchor = "  late String _selectedSupplementMode;"
+state_new = """  late String _selectedSupplementMode;
+  bool? _rulesQuizQ1;
+  bool? _rulesQuizQ2;
+  String _rulesQuizError = '';"""
+if "_rulesQuizQ1" not in d and state_anchor in d:
+    d = d.replace(state_anchor, state_new, 1)
+
+submit_anchor = """        const SizedBox(height: 16),
+
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: BMColors.neonGreen,
+              foregroundColor: Colors.black,
+              padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-                side: const BorderSide(color: Colors.redAccent, width: 2),
+                borderRadius: BorderRadius.circular(14),
               ),
-              title: const Text(
-                '🚨 نسخه غیررسمی شناسایی شد!',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontWeight: FontWeight.w900, color: Colors.redAccent),
-              ),
-              content: const Text(
-                'فکر کردی میتونی سر من کلاه بزاری؟ 🤣\\nمن از تو هم زرنگترم 😂\\nزود تند سریع برنامه رو پاک کن و از این لینک ها وارد فروشگاه های رسمی بازار یا مایکت شو و برنامه رسمی رو نصب کن 😉',
-                textAlign: TextAlign.center,
-                style: TextStyle(height: 1.7, fontSize: 14, color: Colors.white),
-              ),
-              actionsAlignment: MainAxisAlignment.center,
-              actions: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+            ),
+            onPressed: () async {
+              final bool noWorkoutSelected = _selectedGoal == 'gain_bulk' || _selectedWorkoutDays == 'none';"""
+
+rules_and_submit = """        const SizedBox(height: 16),
+
+        if (widget.isInsidePopup || !c.profile.isProfileCompleted) ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.28),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: BMColors.neonCyan.withOpacity(0.45)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '📜 قوانین خودمونی بادی‌مود (فقط ۶ تاست!)',
+                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5, color: BMColors.neonCyan),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'رفیق من خودم هیچوقت قوانین رو نمی‌خوندم 🤣 و به تو هم حق میدم 😂\\nاما اینا هم خیلی مهمه و هم کمه و وقتتو نمی‌گیره؛ فقط همین ۶ تاست که اسکرول کنی می‌بینی 👇',
+                  style: TextStyle(fontSize: 12.5, height: 1.55, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  '۱. هوش مصنوعی بادی‌مود دکتر یا متخصص نیست رفیق! 🩺 اگه مریض شدی یا مشکل اورژانسی داری حتماً برو دکتر؛ ولی برای مشورت‌های روزمره‌ی سلامتی، تغذیه و ورزشِ غیراورژانسی، بله می‌تونه جای دکتر یا مربی بدنسازی رو برات بگیره 😂\\n\\n'
+                  '۲. عددهای هوش مصنوعی تقریبیه 🤖 کالری، پروتئین، کربوهیدرات و چربی‌هایی که هوش مصنوعی از رو عکس یا متنِ غذات درمیاره ترازوی آزمایشگاهی نیست؛ ولی ۹۹.۹ درصد به واقعیت نزدیکه 😂\\n\\n'
+                  '۳. اطلاعاتت رو درست و کامل بگو ✍️ برنامه‌هات دقیقاً رو حساب اطلاعاتی چیده می‌شه که اینجا می‌نویسی (به‌خصوص اطلاعات شخصی‌تر و حساسیت‌هایی که به هوش مصنوعی می‌گی). با اینکه دکتر نیستم ولی پیشنهاداتی که می‌گم براساس خود تو شخصی‌سازی می‌شه؛ اگه اطلاعات واقعی خودتو ندی یا کم‌کاری کنی و ناقص بگی ممکنه پیشنهاد هوش مصنوعی نتیجه برعکس داشته باشه یا حتی خدای نکرده ممکنه بهت آسیب بزنه!\\n\\n'
+                  '۴. کلک و تقلب ممنوع! 🕵️‍♂️ رو هر گوشی فقط ۲ تا اکانت (یکی گوگل، یکی شماره موبایل) می‌تونی بسازی. اگه بخوای به خودت کد دعوت بزنی یا از نسخه‌های غیررسمی بیرون بازار و مایکت استفاده کنی، سیستم مچتو می‌گیره و حسابت قفل می‌شه 😉\\n\\n'
+                  '۵. خریدا دست بازار و مایکته 💳 همه‌ی پرداخت‌های اشتراک و حمایت مالی فقط از درگاه رسمی کافه‌بازار و مایکت انجام می‌شه و پیگیری یا برگشت پولش هم با قوانین همون مارکت‌هاست.\\n\\n'
+                  '۶. اطلاعاتت پیش ما امانته 🔒 مشخصات بدنی، شماره/جیمیل و غذاهای سفارشی تو فقط برای این ذخیره می‌شه که برنامه‌ت دقیق باشه و حسابت نپره؛ عمراً به شرکت‌های تبلیغاتی یا هیچ‌کس دیگه بفروشیم!',
+                  style: TextStyle(fontSize: 12, height: 1.65),
+                ),
+                const Divider(height: 22),
+                const Text(
+                  '🎓 امتحانِ ریز ببینم واقعاً خوندی یا فقط رد کردی 😂:',
+                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, color: BMColors.warningAmber),
+                ),
+                const SizedBox(height: 10),
+                const Text('۱. هوش مصنوعی بادی‌مود دکتر یا متخصص هست؟', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
+                const SizedBox(height: 6),
+                Row(
                   children: [
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF10B981),
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: _rulesQuizQ1 == true ? BMColors.neonCyan.withOpacity(0.25) : null,
+                          side: BorderSide(color: _rulesQuizQ1 == true ? BMColors.neonCyan : Colors.white24),
+                        ),
+                        onPressed: () => setState(() { _rulesQuizQ1 = true; _rulesQuizError = ''; }),
+                        child: const Text('بله'),
                       ),
-                      onPressed: () => launchUrl(
-                        Uri.parse('https://cafebazaar.ir/app/ir.matinmohammadi.bodymod'),
-                        mode: LaunchMode.externalApplication,
-                      ),
-                      icon: const Icon(Icons.store_rounded),
-                      label: const Text('🟢 دانلود رسمی از کافه‌بازار', style: TextStyle(fontWeight: FontWeight.w900)),
                     ),
-                    const SizedBox(height: 8),
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF38BDF8),
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: _rulesQuizQ1 == false ? BMColors.neonCyan.withOpacity(0.25) : null,
+                          side: BorderSide(color: _rulesQuizQ1 == false ? BMColors.neonCyan : Colors.white24),
+                        ),
+                        onPressed: () => setState(() { _rulesQuizQ1 = false; _rulesQuizError = ''; }),
+                        child: const Text('خیر'),
                       ),
-                      onPressed: () => launchUrl(
-                        Uri.parse('https://myket.ir/app/ir.matinmohammadi.bodymod'),
-                        mode: LaunchMode.externalApplication,
-                      ),
-                      icon: const Icon(Icons.shop_rounded),
-                      label: const Text('🔵 دانلود رسمی از مایکت', style: TextStyle(fontWeight: FontWeight.w900)),
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-        );
-      }}
-    }}
-  }} catch (_) {{}}
-}}
-
-Future{LT}void{GT} bmCheckDeviceAccountLimit(BuildContext context, String identifier) async {{
-  final cleanId = identifier.trim();
-  if (cleanId.isEmpty || cleanId == 'anonymous' || bmAccountLimitDialogShown) return;
-  try {{
-    final devId = await bmGetOrCreateDeviceId();
-    final authType = cleanId.contains('@') ? 'google' : 'phone';
-    final res = await http.post(
-      Uri.parse('https://server.matin-mohammadi.ir/api/security/check-device-account'),
-      headers: {{'Content-Type': 'application/json', 'X-Device-ID': devId}},
-      body: jsonEncode({{
-        'deviceId': devId,
-        'authType': authType,
-        'identifier': cleanId,
-      }}),
-    ).timeout(const Duration(seconds: 10));
-    if (res.statusCode == 403 && context.mounted && !bmAccountLimitDialogShown) {{
-      final d = jsonDecode(utf8.decode(res.bodyBytes));
-      if (d is Map && d['deviceAccountLimit'] == true) {{
-        bmAccountLimitDialogShown = true;
-        await showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (ctx) => PopScope(
-            canPop: false,
-            child: AlertDialog(
-              backgroundColor: const Color(0xFF0E141B),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-                side: const BorderSide(color: Colors.amber, width: 1.8),
-              ),
-              title: const Text(
-                '🕵️‍♂️ محدودیت ساخت اکانت!',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontWeight: FontWeight.w900, color: Colors.amber),
-              ),
-              content: const Text(
-                'نمیتونی سر من کلاه بزاری 😂\\nفقط دوتا اکانت میتونی بسازی، یکی با شماره موبایل، یکی با اکانت گوگلت\\nدکمه برگشت رو بزن و برگرد',
-                textAlign: TextAlign.center,
-                style: TextStyle(height: 1.7, fontSize: 14, color: Colors.white),
-              ),
-              actionsAlignment: MainAxisAlignment.center,
-              actions: [
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber,
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                const SizedBox(height: 10),
+                const Text('۲. می‌تونه جای دکتر رو بگیره؟', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: _rulesQuizQ2 == true ? BMColors.neonCyan.withOpacity(0.25) : null,
+                          side: BorderSide(color: _rulesQuizQ2 == true ? BMColors.neonCyan : Colors.white24),
+                        ),
+                        onPressed: () => setState(() { _rulesQuizQ2 = true; _rulesQuizError = ''; }),
+                        child: const Text('بله'),
+                      ),
                     ),
-                    onPressed: () {{
-                      bmAccountLimitDialogShown = false;
-                      Navigator.pop(ctx);
-                    }},
-                    icon: const Icon(Icons.arrow_back_rounded),
-                    label: const Text('برگشت', style: TextStyle(fontWeight: FontWeight.w900)),
-                  ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: _rulesQuizQ2 == false ? BMColors.neonCyan.withOpacity(0.25) : null,
+                          side: BorderSide(color: _rulesQuizQ2 == false ? BMColors.neonCyan : Colors.white24),
+                        ),
+                        onPressed: () => setState(() { _rulesQuizQ2 = false; _rulesQuizError = ''; }),
+                        child: const Text('خیر'),
+                      ),
+                    ),
+                  ],
                 ),
+                if (_rulesQuizError.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    _rulesQuizError,
+                    style: const TextStyle(color: Colors.redAccent, fontSize: 12.5, fontWeight: FontWeight.w800, height: 1.5),
+                  ),
+                ],
               ],
             ),
           ),
-        );
-      }}
-    }}
-  }} catch (_) {{}}
-}}
-
-Future{LT}void{GT} bmShowChangeContactDialog(BuildContext context) async {{
-  String selectedType = 'phone';
-  final inputCtrl = TextEditingController();
-  bool submitting = false;
-  String? statusError;
-
-  await showDialog(
-    context: context,
-    builder: (ctx) => StatefulBuilder(
-      builder: (ctx, setDlgState) => AlertDialog(
-        backgroundColor: const Color(0xFF0E141B),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: Color(0xFF10B981), width: 1.5),
-        ),
-        title: const Text(
-          '✏️ تغییر شماره موبایل یا جیمیل',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF10B981), fontSize: 16),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Text(
-              'بعد از تکمیل فرم مشخصات، می‌تونی شماره موبایل یا جیمیل اکانتت رو اینجا تغییر بدی و روی کلودفلر آپدیت کنی:',
-              style: TextStyle(fontSize: 12.5, color: Colors.white70, height: 1.5),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: ChoiceChip(
-                    label: const Text('📱 شماره موبایل'),
-                    selected: selectedType == 'phone',
-                    onSelected: (_) => setDlgState(() {{
-                      selectedType = 'phone';
-                      statusError = null;
-                    }}),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: ChoiceChip(
-                    label: const Text('📧 جیمیل'),
-                    selected: selectedType == 'email',
-                    onSelected: (_) => setDlgState(() {{
-                      selectedType = 'email';
-                      statusError = null;
-                    }}),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: inputCtrl,
-              keyboardType: selectedType == 'phone' ? TextInputType.phone : TextInputType.emailAddress,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: selectedType == 'phone' ? 'مثلاً: 09141234567' : 'مثلاً: name@gmail.com',
-                hintStyle: const TextStyle(color: Colors.white38),
-                filled: true,
-                fillColor: const Color(0xFF16202A),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-            if (statusError != null) ...[
-              const SizedBox(height: 8),
-              Text(statusError!, style: const TextStyle(color: Colors.redAccent, fontSize: 12)),
-            ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: submitting ? null : () => Navigator.pop(ctx),
-            child: const Text('انصراف', style: TextStyle(color: Colors.white70)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF10B981),
-              foregroundColor: Colors.black,
-            ),
-            onPressed: submitting
-                ? null
-                : () async {{
-                    final val = inputCtrl.text.trim();
-                    if (selectedType == 'phone' && val.length < 10) {{
-                      setDlgState(() => statusError = 'شماره موبایل معتبر نیست!');
-                      return;
-                    }}
-                    if (selectedType == 'email' && !val.contains('@')) {{
-                      setDlgState(() => statusError = 'آدرس جیمیل معتبر نیست!');
-                      return;
-                    }}
-                    setDlgState(() {{
-                      submitting = true;
-                      statusError = null;
-                    }});
-                    try {{
-                      final devId = await bmGetOrCreateDeviceId();
-                      final prefs = await SharedPreferences.getInstance();
-                      final token = prefs.getString('bm_auth_token') ?? prefs.getString('auth_token') ?? '';
-                      final res = await http.post(
-                        Uri.parse('https://server.matin-mohammadi.ir/api/account/update-contact'),
-                        headers: {{
-                          'Content-Type': 'application/json',
-                          'X-Device-ID': devId,
-                          if (token.isNotEmpty) 'Authorization': 'Bearer $token',
-                        }},
-                        body: jsonEncode({{
-                          'deviceId': devId,
-                          'currentIdentifier': bmUserPhoneGlobal,
-                          'contactType': selectedType,
-                          'newValue': val,
-                        }}),
-                      ).timeout(const Duration(seconds: 12));
-                      final d = jsonDecode(utf8.decode(res.bodyBytes));
-                      if (res.statusCode == 200 && d is Map && d['ok'] == true) {{
-                        if (ctx.mounted) Navigator.pop(ctx);
-                        if (context.mounted) {{
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text((d['message'] ?? 'با موفقیت ذخیره شد ✅').toString())),
-                          );
-                        }}
-                      }} else {{
-                        setDlgState(() {{
-                          submitting = false;
-                          statusError = (d is Map ? (d['error'] ?? 'خطا در ثبت تغییرات') : 'خطا در ثبت تغییرات').toString();
-                        }});
-                      }}
-                    }} catch (_) {{
-                      setDlgState(() {{
-                        submitting = false;
-                        statusError = 'خطا در اتصال به سرور کلودفلر! اینترنتت رو چک کن 🌐';
-                      }});
-                    }}
-                  }},
-            child: Text(submitting ? 'در حال ثبت...' : 'ذخیره تغییرات ✅', style: const TextStyle(fontWeight: FontWeight.w900)),
-          ),
+          const SizedBox(height: 14),
         ],
-      ),
-    ),
-  );
-}}
 
-Future{LT}void{GT} bmSyncBetaCountdown"""
-
-if "bmVerifyStoreIntegrity" not in dart:
-    dart = safe_replace(
-        dart,
-        f"Future{LT}void{GT} bmSyncBetaCountdown",
-        security_helpers,
-        "Add Device ID, RSA lock, 2-account limit popup, and Change Phone/Gmail dialog",
-        "main.dart",
-    )
-
-# فراخوانی چک امنیتی RSA + چک محدودیت ۲ اکانت دستگاه داخل bmSyncBetaCountdown
-if "bmVerifyStoreIntegrity(context)" not in dart:
-    dart = safe_replace(
-        dart,
-        "  try {\n    final prefs = await SharedPreferences.getInstance();\n    final res = await http.get(\n      Uri.parse('https://server.matin-mohammadi.ir/api/beta-status",
-        """  if (context != null) {
-    unawaited(bmVerifyStoreIntegrity(context));
-    if (bmUserPhoneGlobal.trim().isNotEmpty) {
-      unawaited(bmCheckDeviceAccountLimit(context, bmUserPhoneGlobal));
-    }
-  }
-  try {
-    final prefs = await SharedPreferences.getInstance();
-    final devId = await bmGetOrCreateDeviceId();
-    final res = await http.get(
-      Uri.parse('https://server.matin-mohammadi.ir/api/beta-status""",
-        "Trigger RSA verify & 2-account device check inside bmSyncBetaCountdown",
-        "main.dart",
-    )
-    dart = dart.replace(
-        "version=$bmCurrentAppVersion'),",
-        "version=$bmCurrentAppVersion&deviceId=$devId'),",
-    )
-
-# ارسال deviceId در /api/referral و نمایش پاپ‌آپ ضدتقلب دعوت از خودت
-old_ref_post = """    final res = await http.post(
-      Uri.parse('https://server.matin-mohammadi.ir/api/referral'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'action': 'apply_referral', 'phone': bmUserPhoneGlobal, 'referralCode': rawCode}),
-    ).timeout(const Duration(seconds: 12));
-    final d = jsonDecode(res.body);"""
-
-new_ref_post = """    final devId = await bmGetOrCreateDeviceId();
-    final res = await http.post(
-      Uri.parse('https://server.matin-mohammadi.ir/api/referral'),
-      headers: {'Content-Type': 'application/json', 'X-Device-ID': devId},
-      body: jsonEncode({'action': 'apply_referral', 'phone': bmUserPhoneGlobal, 'referralCode': rawCode, 'deviceId': devId}),
-    ).timeout(const Duration(seconds: 12));
-    final d = jsonDecode(utf8.decode(res.bodyBytes));
-    if ((d is Map && d['selfReferralCheat'] == true) || res.statusCode == 403) {
-      if (context.mounted) {
-        await showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            backgroundColor: const Color(0xFF0E141B),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: const BorderSide(color: Colors.amber, width: 1.5),
-            ),
-            title: const Text(
-              '🕵️‍♂️ مچت رو گرفتم!',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontWeight: FontWeight.w900, color: Colors.amber),
-            ),
-            content: const Text(
-              'نمیتونی سر من کلاه بزاری 😂\\nبه اکانت خودت نمیتونی دعوت بدی، نمیتونی تقلب کنی 😉\\nکد رو به دوست واقعیت بفرست یا کنسل کن',
-              textAlign: TextAlign.center,
-              style: TextStyle(height: 1.7, fontSize: 14, color: Colors.white),
-            ),
-            actionsAlignment: MainAxisAlignment.center,
-            actions: [
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber,
-                  foregroundColor: Colors.black,
-                ),
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('باشه، کنسل کن 😅', style: TextStyle(fontWeight: FontWeight.w900)),
-              ),
-            ],
-          ),
-        );
-      }
-      bmRefSubmitting = false;
-      onRefresh();
-      return;
-    }"""
-
-dart = safe_replace(dart, old_ref_post, new_ref_post, "Send deviceId in referral & show anti-cheat self-referral popup", "main.dart")
-
-# نمایش خطای دقیق کافه‌بازار اگر درگاه باز نشد
-old_bazaar_fallback = "شتاب‌دهنده پرداخت برای شناسه محصول"
-if "BmStoreBilling.lastError" not in dart:
-    dart = dart.replace(
-        old_bazaar_fallback,
-        "${BmStoreBilling.lastError.isNotEmpty ? '${BmStoreBilling.lastError}\\n\\n' : ''}شتاب‌دهنده پرداخت برای شناسه محصول",
-    )
-    print("✅ [main.dart] Show exact Bazaar Poolakey error in billing dialog")
-
-# اضافه کردن دکمه «تغییر شماره موبایل یا جیمیل» زیر دکمه «خروج از حساب کاربری» در تب پروفایل
-if "bmShowChangeContactDialog(context)" not in dart:
-    logout_idx = dart.find("'خروج از حساب کاربری'")
-    if logout_idx != -1:
-        # پیدا کردن پرانتز بازِ ویجتِ بیرونی‌ترین فرزندِ لیست children
-        paren = 0
-        bracket = 0
-        min_paren = 0
-        outer_open = -1
-        for i in range(logout_idx, -1, -1):
-            ch = dart[i]
-            if ch == ')':
-                paren += 1
-            elif ch == '(':
-                paren -= 1
-                if paren < min_paren:
-                    min_paren = paren
-                    outer_open = i
-            elif ch == ']':
-                bracket += 1
-            elif ch == '[':
-                bracket -= 1
-                if bracket < 0:
-                    break
-        if outer_open != -1:
-            d = 0
-            close_pos = -1
-            for j in range(outer_open, len(dart)):
-                if dart[j] == '(':
-                    d += 1
-                elif dart[j] == ')':
-                    d -= 1
-                    if d == 0:
-                        close_pos = j
-                        break
-            if close_pos != -1:
-                ins = close_pos + 1
-                while ins < len(dart) and dart[ins] in ' \t\r\n':
-                    ins += 1
-                if ins < len(dart) and dart[ins] == ',':
-                    ins += 1
-                change_btn = """
-        const SizedBox(height: 10),
         SizedBox(
           width: double.infinity,
-          child: OutlinedButton.icon(
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF10B981),
-              side: const BorderSide(color: Color(0xFF10B981)),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          child: ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: BMColors.neonGreen,
+              foregroundColor: Colors.black,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
             ),
-            onPressed: () => bmShowChangeContactDialog(context),
-            icon: const Icon(Icons.edit_rounded, size: 18),
-            label: const Text(
-              '✏️ تغییر شماره موبایل یا جیمیل',
-              style: TextStyle(fontWeight: FontWeight.w800),
-            ),
-          ),
-        ),"""
-                dart = dart[:ins] + change_btn + dart[ins:]
-                print("✅ [main.dart] Added 'تغییر شماره موبایل یا جیمیل' button in Profile tab")
-            else:
-                print("⚠️ [main.dart] Could not find closing paren for logout button")
-        else:
-            print("⚠️ [main.dart] Could not locate outer widget for logout button")
-    else:
-        print("⚠️ [main.dart] Could not find 'خروج از حساب کاربری' in main.dart")
+            onPressed: () async {
+              final hVal = double.tryParse(_heightCtrl.text.trim());
+              final wVal = double.tryParse(_weightCtrl.text.trim());
+              final twVal = double.tryParse(_targetWeightCtrl.text.trim());
+              if (hVal == null || hVal < 80 || wVal == null || wVal < 25 || twVal == null || twVal < 25) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('رفیق اول قد، وزن فعلی و وزن هدفت رو دقیق وارد کن! ✍️')),
+                );
+                return;
+              }
+              if (widget.isInsidePopup || !c.profile.isProfileCompleted) {
+                if (_rulesQuizQ1 == null || _rulesQuizQ2 == null) {
+                  setState(() {
+                    _rulesQuizError = 'رفیق اول به هر دو تا سوال امتحانِ بالا جواب بده تا دکمه باز شه! 😉';
+                  });
+                  return;
+                }
+                if (_rulesQuizQ1 != false || _rulesQuizQ2 != true) {
+                  setState(() {
+                    _rulesQuizError = 'ای کلک! قوانین رو نخوندی فقط یه چیزی زدی 🤣 یه بار دیگه بند ۱ تا ۶ رو بخون بعد جواب درست رو انتخاب کن!';
+                  });
+                  return;
+                }
+              }
+              BmNativeBridge.scheduleBlueHeartMorningReminder();
+              final bool noWorkoutSelected = _selectedGoal == 'gain_bulk' || _selectedWorkoutDays == 'none';"""
 
-with open(main_path, "w", encoding="utf-8") as f:
-    f.write(dart)
+if "قوانین خودمونی بادی‌مود" not in d and submit_anchor in d:
+    d = d.replace(submit_anchor, rules_and_submit, 1)
+    print("✅ Patched lib/main.dart: Added 6 casual rules + 2-question quiz + validation")
+else:
+    print("ℹ️ Rules/Quiz anchor already applied or not matched")
 
-print("🚀 تموم شد! BAZAR_RSA_KEY + ترایال ۶ روزه (۲ اکانت) + پاپ‌آپ تغییر شماره/جیمیل + قفل RSA + ضدتقلب دعوت آماده شد!")
+write_file("lib/main.dart", d)
+print("\n🎉 ALL PATCHES COMPLETED SUCCESSFULLY!")

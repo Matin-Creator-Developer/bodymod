@@ -83,6 +83,42 @@ Future<T?> bmShowResponsiveSheet<T>({
   );
 }
 String _bmSavedBirthStr = '';
+
+class BmNativeBridge {
+  static const MethodChannel _ch = MethodChannel('ir.matinmohammadi.bodymod/native');
+
+  static Future<String> getHardwareDeviceId(SharedPreferences prefs) async {
+    try {
+      final String? aid = await _ch.invokeMethod<String>('getAndroidId');
+      if (aid != null && aid.trim().isNotEmpty) {
+        final full = 'aid_${aid.trim()}';
+        await prefs.setString('bm_device_id_v1', full);
+        return full;
+      }
+    } catch (_) {}
+    var existing = prefs.getString('bm_device_id_v1') ?? '';
+    if (existing.isEmpty) {
+      existing = 'dev_${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(999999)}';
+      await prefs.setString('bm_device_id_v1', existing);
+    }
+    return existing;
+  }
+
+  static Future<void> scheduleBlueHeartMorningReminder() async {
+    try {
+      final nowUtc = DateTime.now().toUtc();
+      final iranNow = nowUtc.add(const Duration(hours: 3, minutes: 30));
+      final nextMorningIran = DateTime.utc(iranNow.year, iranNow.month, iranNow.day + 1, 9, 0);
+      final delayMs = nextMorningIran.difference(iranNow).inMilliseconds;
+      await _ch.invokeMethod('scheduleStreakReminder', {
+        'delayMillis': delayMs > 60000 ? delayMs : 43200000,
+        'title': 'آتیش استریکت آبی شده! 💙🔥',
+        'body': 'من چیزی نمیگم و نصیحتت نمیکنم 😂\nولی امروز تعامل نکردی، اگه ادامه بدی آتیش استریکت خاموش میشه و از صفر شروع میشه و زحماتت به باد میره',
+      });
+    } catch (_) {}
+  }
+}
+
 class BmBirthDateThreeBoxes extends StatefulWidget {
   final TextEditingController controller;
   const BmBirthDateThreeBoxes({super.key, required this.controller});
@@ -403,7 +439,7 @@ bool bmAccountLimitDialogShown = false;
 Future<String> bmGetOrCreateDeviceId() async {
   if (bmDeviceIdGlobal.isNotEmpty) return bmDeviceIdGlobal;
   final prefs = await SharedPreferences.getInstance();
-  var id = prefs.getString('bm_device_id_v1') ?? '';
+  var id = await BmNativeBridge.getHardwareDeviceId(prefs);
   if (id.isEmpty) {
     final now = DateTime.now().microsecondsSinceEpoch.toRadixString(36);
     final rnd = (now.hashCode ^ 0x5A7C9E).abs().toRadixString(36);
@@ -3380,7 +3416,7 @@ class BodyModController extends ChangeNotifier {
     AppConfig.useBodyCoinSystem =
         prefs.getBool('bm_use_bodycoin_system') ?? false;
 
-    deviceId = prefs.getString('bm_device_id_v1') ?? '';
+    deviceId = await BmNativeBridge.getHardwareDeviceId(prefs);
     if (deviceId.isEmpty) {
       final rnd = math.Random();
       deviceId = 'dev_${DateTime.now().millisecondsSinceEpoch}_${rnd.nextInt(999999)}';
@@ -4604,6 +4640,11 @@ class BodyModController extends ChangeNotifier {
       // در صورتی که برنامه هنوز به درگاه مارکت متصل نشده یا مارکت روی گوشی باز نشود، اشتراک به هیچ وجه رایگان فعال نمی‌شود!
     }
 
+    final bmSubErrUp = BmStoreBilling.lastError.toUpperCase();
+    if (bmSubErrUp.contains('CANCEL') || bmSubErrUp.isEmpty) {
+      return;
+    }
+
     if (context.mounted) {
       showDialog(
         context: context,
@@ -4703,6 +4744,11 @@ class BodyModController extends ChangeNotifier {
         }
       }
     } catch (_) {}
+
+    final bmDonErrUp = BmStoreBilling.lastError.toUpperCase();
+    if (bmDonErrUp.contains('CANCEL') || bmDonErrUp.isEmpty) {
+      return;
+    }
 
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -5653,6 +5699,9 @@ class _EditableBodyProfileFormWidgetState
   late String _selectedWorkoutPlace;
   late String _selectedBudgetTier;
   late String _selectedSupplementMode;
+  bool? _rulesQuizQ1;
+  bool? _rulesQuizQ2;
+  String _rulesQuizError = '';
 
   @override
   void initState() {
@@ -5660,10 +5709,11 @@ class _EditableBodyProfileFormWidgetState
     final p = widget.controller.profile;
     _nameCtrl = TextEditingController(text: ((p.displayName).toString().trim() == 'رفیق ورزشکار' || (p.displayName).toString().trim() == 'ورزشکار') ? '' : (p.displayName).toString());
     _ageCtrl = TextEditingController(text: p.birthDate.isNotEmpty ? p.birthDate : _bmSavedBirthStr);
-    _heightCtrl = TextEditingController(text: p.heightCm.toString());
-    _weightCtrl = TextEditingController(text: p.weightKg.toString());
+    final bool isFreshSignUp = widget.isInsidePopup || !p.isProfileCompleted;
+    _heightCtrl = TextEditingController(text: isFreshSignUp ? '' : p.heightCm.toString());
+    _weightCtrl = TextEditingController(text: isFreshSignUp ? '' : p.weightKg.toString());
     _targetWeightCtrl = TextEditingController(
-      text: p.targetWeightKg.toString(),
+      text: isFreshSignUp ? '' : p.targetWeightKg.toString(),
     );
     _memoryCtrl = TextEditingController(text: p.aiCoachMemory);
 
@@ -5745,6 +5795,7 @@ class _EditableBodyProfileFormWidgetState
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
                   labelText: 'قد (سانتی‌متر)',
+                  hintText: 'مثلاً: ۱۷۵',
                 ),
               ),
             ),
@@ -5755,6 +5806,7 @@ class _EditableBodyProfileFormWidgetState
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
                   labelText: 'وزن فعلی (کیلوگرم)',
+                  hintText: 'مثلاً: ۷۰',
                 ),
               ),
             ),
@@ -5767,6 +5819,7 @@ class _EditableBodyProfileFormWidgetState
           keyboardType: TextInputType.number,
           decoration: const InputDecoration(
             labelText: 'وزن هدف شما (کیلوگرم)',
+            hintText: 'مثلاً: ۷۵',
             prefixIcon: Icon(Icons.flag_outlined),
           ),
         ),
@@ -5944,6 +5997,111 @@ class _EditableBodyProfileFormWidgetState
         ),
         const SizedBox(height: 16),
 
+        if (widget.isInsidePopup || !c.profile.isProfileCompleted) ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.28),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: BMColors.neonCyan.withOpacity(0.45)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '📜 قوانین خودمونی بادی‌مود (فقط ۶ تاست!)',
+                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5, color: BMColors.neonCyan),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'رفیق من خودم هیچوقت قوانین رو نمی‌خوندم 🤣 و به تو هم حق میدم 😂\nاما اینا هم خیلی مهمه و هم کمه و وقتتو نمی‌گیره؛ فقط همین ۶ تاست که اسکرول کنی می‌بینی 👇',
+                  style: TextStyle(fontSize: 12.5, height: 1.55, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  '۱. هوش مصنوعی بادی‌مود دکتر یا متخصص نیست رفیق! 🩺 اگه مریض شدی یا مشکل اورژانسی داری حتماً برو دکتر؛ ولی برای مشورت‌های روزمره‌ی سلامتی، تغذیه و ورزشِ غیراورژانسی، بله می‌تونه جای دکتر یا مربی بدنسازی رو برات بگیره 😂\n\n'
+                  '۲. عددهای هوش مصنوعی تقریبیه 🤖 کالری، پروتئین، کربوهیدرات و چربی‌هایی که هوش مصنوعی از رو عکس یا متنِ غذات درمیاره ترازوی آزمایشگاهی نیست؛ ولی ۹۹.۹ درصد به واقعیت نزدیکه 😂\n\n'
+                  '۳. اطلاعاتت رو درست و کامل بگو ✍️ برنامه‌هات دقیقاً رو حساب اطلاعاتی چیده می‌شه که اینجا می‌نویسی (به‌خصوص اطلاعات شخصی‌تر و حساسیت‌هایی که به هوش مصنوعی می‌گی). با اینکه دکتر نیستم ولی پیشنهاداتی که می‌گم براساس خود تو شخصی‌سازی می‌شه؛ اگه اطلاعات واقعی خودتو ندی یا کم‌کاری کنی و ناقص بگی ممکنه پیشنهاد هوش مصنوعی نتیجه برعکس داشته باشه یا حتی خدای نکرده ممکنه بهت آسیب بزنه!\n\n'
+                  '۴. کلک و تقلب ممنوع! 🕵️‍♂️ رو هر گوشی فقط ۲ تا اکانت (یکی گوگل، یکی شماره موبایل) می‌تونی بسازی. اگه بخوای به خودت کد دعوت بزنی یا از نسخه‌های غیررسمی بیرون بازار و مایکت استفاده کنی، سیستم مچتو می‌گیره و حسابت قفل می‌شه 😉\n\n'
+                  '۵. خریدا دست بازار و مایکته 💳 همه‌ی پرداخت‌های اشتراک و حمایت مالی فقط از درگاه رسمی کافه‌بازار و مایکت انجام می‌شه و پیگیری یا برگشت پولش هم با قوانین همون مارکت‌هاست.\n\n'
+                  '۶. اطلاعاتت پیش ما امانته 🔒 مشخصات بدنی، شماره/جیمیل و غذاهای سفارشی تو فقط برای این ذخیره می‌شه که برنامه‌ت دقیق باشه و حسابت نپره؛ عمراً به شرکت‌های تبلیغاتی یا هیچ‌کس دیگه بفروشیم!',
+                  style: TextStyle(fontSize: 12, height: 1.65),
+                ),
+                const Divider(height: 22),
+                const Text(
+                  '🎓 امتحانِ ریز ببینم واقعاً خوندی یا فقط رد کردی 😂:',
+                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, color: BMColors.warningAmber),
+                ),
+                const SizedBox(height: 10),
+                const Text('۱. هوش مصنوعی بادی‌مود دکتر یا متخصص هست؟', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: _rulesQuizQ1 == true ? BMColors.neonCyan.withOpacity(0.25) : null,
+                          side: BorderSide(color: _rulesQuizQ1 == true ? BMColors.neonCyan : Colors.white24),
+                        ),
+                        onPressed: () => setState(() { _rulesQuizQ1 = true; _rulesQuizError = ''; }),
+                        child: const Text('بله'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: _rulesQuizQ1 == false ? BMColors.neonCyan.withOpacity(0.25) : null,
+                          side: BorderSide(color: _rulesQuizQ1 == false ? BMColors.neonCyan : Colors.white24),
+                        ),
+                        onPressed: () => setState(() { _rulesQuizQ1 = false; _rulesQuizError = ''; }),
+                        child: const Text('خیر'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                const Text('۲. می‌تونه جای دکتر رو بگیره؟', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: _rulesQuizQ2 == true ? BMColors.neonCyan.withOpacity(0.25) : null,
+                          side: BorderSide(color: _rulesQuizQ2 == true ? BMColors.neonCyan : Colors.white24),
+                        ),
+                        onPressed: () => setState(() { _rulesQuizQ2 = true; _rulesQuizError = ''; }),
+                        child: const Text('بله'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: _rulesQuizQ2 == false ? BMColors.neonCyan.withOpacity(0.25) : null,
+                          side: BorderSide(color: _rulesQuizQ2 == false ? BMColors.neonCyan : Colors.white24),
+                        ),
+                        onPressed: () => setState(() { _rulesQuizQ2 = false; _rulesQuizError = ''; }),
+                        child: const Text('خیر'),
+                      ),
+                    ),
+                  ],
+                ),
+                if (_rulesQuizError.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    _rulesQuizError,
+                    style: const TextStyle(color: Colors.redAccent, fontSize: 12.5, fontWeight: FontWeight.w800, height: 1.5),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+        ],
+
         SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
@@ -5956,6 +6114,30 @@ class _EditableBodyProfileFormWidgetState
               ),
             ),
             onPressed: () async {
+              final hVal = double.tryParse(_heightCtrl.text.trim());
+              final wVal = double.tryParse(_weightCtrl.text.trim());
+              final twVal = double.tryParse(_targetWeightCtrl.text.trim());
+              if (hVal == null || hVal < 80 || wVal == null || wVal < 25 || twVal == null || twVal < 25) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('رفیق اول قد، وزن فعلی و وزن هدفت رو دقیق وارد کن! ✍️')),
+                );
+                return;
+              }
+              if (widget.isInsidePopup || !c.profile.isProfileCompleted) {
+                if (_rulesQuizQ1 == null || _rulesQuizQ2 == null) {
+                  setState(() {
+                    _rulesQuizError = 'رفیق اول به هر دو تا سوال امتحانِ بالا جواب بده تا دکمه باز شه! 😉';
+                  });
+                  return;
+                }
+                if (_rulesQuizQ1 != false || _rulesQuizQ2 != true) {
+                  setState(() {
+                    _rulesQuizError = 'ای کلک! قوانین رو نخوندی فقط یه چیزی زدی 🤣 یه بار دیگه بند ۱ تا ۶ رو بخون بعد جواب درست رو انتخاب کن!';
+                  });
+                  return;
+                }
+              }
+              BmNativeBridge.scheduleBlueHeartMorningReminder();
               final bool noWorkoutSelected = _selectedGoal == 'gain_bulk' || _selectedWorkoutDays == 'none';
               await c.saveAndSyncBodyProfileForm(
                 context,
@@ -7404,8 +7586,22 @@ class _HomeDashboardTabState extends State<HomeDashboardTab> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '✅ ${_lastAiFoodResult!['title']} — ${_lastAiFoodResult!['calories']} کالری (در غذاهای سفارشی ذخیره شد 💾)',
+                        '✅ ${_lastAiFoodResult!['title']} (در غذاهای سفارشی ذخیره شد 💾)',
                         style: const TextStyle(fontWeight: FontWeight.w900),
+                      ),
+                      const SizedBox(height: 6),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.28),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: BMColors.neonGreen.withOpacity(0.35)),
+                        ),
+                        child: Text(
+                          '🔥 ${_lastAiFoodResult!['calories']} کالری  |  💪 پروتئین: ${_lastAiFoodResult!['proteinG']}g  |  🍞 کربوهیدرات: ${_lastAiFoodResult!['carbsG']}g  |  🥑 چربی: ${_lastAiFoodResult!['fatG']}g',
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: BMColors.neonGreen),
+                        ),
                       ),
                       if ((_lastAiFoodResult!['coachTip'] ?? '').toString().trim().isNotEmpty) ...[
                         const SizedBox(height: 4),
