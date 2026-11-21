@@ -595,7 +595,7 @@ String bmExStr(int idx, String role, String orig) {
   return out;
 }
 
-Future<bool> bmGenerateAiWorkoutPlan(BuildContext context, {VoidCallback? onDone}) async {
+Future<bool> bmGenerateAiWorkoutPlan(BuildContext context, {VoidCallback? onDone, Map<String, String>? authHeaders}) async {
   if (bmIsGeneratingWorkout) return false;
   if (!bmTryAcquireAiCooldown(context)) return false;
   bmIsGeneratingWorkout = true;
@@ -616,11 +616,28 @@ Future<bool> bmGenerateAiWorkoutPlan(BuildContext context, {VoidCallback? onDone
         + 'قانون تجهیزات: ' + eqRule + ' '
         + 'فقط و فقط یک آبجکت JSON خالص با این ۳ کلید برگردان: '
         + '{"workout_calories": ' + estWorkoutKcal.toString() + ', "surplus_snack": "پیشنهاد دقیق خوراکی و میان‌وعده پرکالری (بیشتر از کالری سوخته شده) برای ایجاد کالری مازاد و تعادل با تمرین و فعالیت روزانه", "exercises": [۷ آبجکت حرکت ورزشی به ترتیب گرم کردن، ست اصلی، سرد کردن با کلیدهای title و muscle و breath و tip]}';
+    final reqHeaders = <String, String>{'Content-Type': 'application/json'};
+    if (authHeaders != null) reqHeaders.addAll(authHeaders);
     final res = await http.post(
-      Uri.parse('https://server.matin-mohammadi.ir/api/chat'),
-      headers: {'Content-Type': 'application/json'},
+      Uri.parse('${AppConfig.serverBaseUrl}/api/ai/workout-plan'),
+      headers: reqHeaders,
       body: jsonEncode({'message': prompt, 'prompt': prompt, 'mode': 'workout_plan', 'model': 'gemini-3.1-flash-lite'}),
-    ).timeout(const Duration(seconds: 25));
+    ).timeout(const Duration(seconds: 30));
+    if (res.statusCode != 200) {
+      String errMsg = 'خطا در ساخت برنامه ورزشی! مطمئن شو وارد شدی و اشتراکت فعاله 🔒';
+      try {
+        final errData = jsonDecode(utf8.decode(res.bodyBytes));
+        if (errData is Map && errData['error'] != null) {
+          errMsg = errData['error'].toString();
+        }
+      } catch (_) {}
+      bmIsGeneratingWorkout = false;
+      if (onDone != null) onDone();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errMsg)));
+      }
+      return false;
+    }
     String rawReply = res.body;
     try {
       final d = jsonDecode(res.body);
@@ -646,13 +663,13 @@ Future<bool> bmGenerateAiWorkoutPlan(BuildContext context, {VoidCallback? onDone
           bmWorkoutQuotaWeekUsedGlobal = bmCurrentIranWeekKey();
           bmRemainingWorkoutQuotaGlobal = 0;
           await prefs.setString('bm_workout_quota_week_v1', bmWorkoutQuotaWeekUsedGlobal);
+          bmIsGeneratingWorkout = false;
+          if (onDone != null) onDone();
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ برنامه تمرینی، کالری‌سوزی و میان‌وعده کالری مازاد توسط هوش مصنوعی تنظیم شد! 💪🔥'), backgroundColor: Color(0xFF00C896)));
+          }
+          return true;
         }
-        bmIsGeneratingWorkout = false;
-        if (onDone != null) onDone();
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ برنامه تمرینی، کالری‌سوزی و میان‌وعده کالری مازاد توسط هوش مصنوعی تنظیم شد! 💪🔥'), backgroundColor: Color(0xFF00C896)));
-        }
-        return true;
       }
     }
   } catch (_) {}
@@ -4859,9 +4876,28 @@ class BodyModController extends ChangeNotifier {
       await _googleSignIn.signOut();
     } catch (_) {}
     profile = UserProfileModel();
+    weeklyMealPlan = {};
+    chatMessages = [];
+    customAiFoods = [];
+    todayFoodLogs = [];
+    bodyLogsHistory = [];
+    bmAiCustomWorkouts = [];
+    bmAccountIdGlobal = '';
+    bmIsAdminGlobal = false;
+    bmWorkoutQuotaWeekUsedGlobal = '';
+    bmRemainingWorkoutQuotaGlobal = 1;
+    bmWorkoutBurnKcal = 0;
+    bmAiSurplusSnack = '';
     appliedDiscountCode = '';
     appliedDiscountPercent = 0;
     discountedSubscriptionPriceToman = AppConfig.monthlySubscriptionPriceToman;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('bm_ai_custom_workouts_v1');
+      await prefs.remove('bm_workout_quota_week_v1');
+      await prefs.remove('bm_ai_workout_burn_kcal');
+      await prefs.remove('bm_ai_surplus_snack');
+    } catch (_) {}
     await saveAllToDisk();
     notifyListeners();
   }
@@ -8449,6 +8485,111 @@ class WeeklyMealPlanTab extends StatelessWidget {
     final currentDayName = BodyModController.weekDays[c.selectedDayIndex];
     final daySlots = c.weeklyMealPlan[currentDayName] ?? [];
     final bool hasPlan = c.weeklyMealPlan.isNotEmpty;
+    final bool canAccessMeal = c.profile.isAdmin ||
+        (c.profile.isLoggedIn && c.profile.hasActiveSubscription);
+    final bool mealQuotaExhausted =
+        !c.profile.isAdmin && c.remainingMealPlanQuota <= 0;
+
+    if (!canAccessMeal || !hasPlan) {
+      return ListView(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 95),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: bmCardColor,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: BMColors.neonCyan.withOpacity(0.45)),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  !canAccessMeal ? '🔒🥗' : '🥗🤖',
+                  style: const TextStyle(fontSize: 42),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  !canAccessMeal
+                      ? 'برنامه غذایی قفله رفیق!'
+                      : 'هنوز برنامه غذایی اختصاصیت رو دریافت نکردی!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 15.5,
+                    color: bmTextColor,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  !canAccessMeal
+                      ? 'برای دریافت برنامه غذایی ۷ روزه متنوع با هوش مصنوعی، اول از تب پروفایل وارد حسابت شو و اشتراکت رو فعال کن! 💪🔥'
+                      : 'روی دکمه زیر بزن تا مربی هوشمند بر اساس هدف، بودجه و حافظه مربی تو، برنامه غذایی ۷ روزه اختصاصی این هفته‌ت رو بسازه (سهمیه: هفته‌ای ۱ بار).',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: bmTextSubColor,
+                    height: 1.6,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: BMColors.neonCyan,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onPressed: (!canAccessMeal ||
+                            mealQuotaExhausted ||
+                            c.isLoadingAi)
+                        ? null
+                        : () async {
+                            final ok = await c.requestAiWeeklyMealPlan(context);
+                            if (ok && context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'برنامه غذایی ۷ روزه اختصاصیت ساخته شد! 🔥🥗',
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                    icon: c.isLoadingAi
+                        ? const SizedBox(
+                            width: 17,
+                            height: 17,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.black,
+                            ),
+                          )
+                        : const Icon(Icons.restaurant_menu_rounded, size: 19),
+                    label: Text(
+                      !canAccessMeal
+                          ? 'ابتدا وارد شو و اشتراک رو فعال کن 🔒'
+                          : (mealQuotaExhausted
+                              ? 'سهمیه‌ت تموم شده رفیق 😉'
+                              : (c.isLoadingAi
+                                  ? 'در حال ساخت برنامه غذایی... ⏳'
+                                  : 'دریافت/تمدید برنامه غذایی')),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 6, 16, 95),
@@ -8904,6 +9045,7 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
                         ? null
                         : () => bmGenerateAiWorkoutPlan(
                               context,
+                              authHeaders: c._authHeaders,
                               onDone: () {
                                 if (mounted) setState(() {});
                               },
@@ -8945,7 +9087,7 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 6, 16, 95),
       children: [
-        Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: bmCardColor, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFF00E5A3).withOpacity(0.4))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Row(children: [const Icon(Icons.local_fire_department_rounded, color: Colors.orangeAccent, size: 20), const SizedBox(width: 6), Text('کالری مصرفی این تمرین: ${bmGetVisibleWorkoutCalories()} کالری 🔥', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: bmTextColor))]),InkWell(onTap: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? null : () => bmGenerateAiWorkoutPlan(context, onDone: () => setState(() {})), borderRadius: BorderRadius.circular(8), child: Opacity(opacity: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? 0.45 : 1.0, child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5), decoration: BoxDecoration(color: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? Colors.grey : const Color(0xFF00E5A3), borderRadius: BorderRadius.circular(8), border: Border.all(color: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? Colors.grey : const Color(0xFF00E5A3))), child: ValueListenableBuilder<int>(valueListenable: bmAiCooldownSec, builder: (_, sec, __) => Text(bmGlobalDaysPerWeek <= 0 ? 'ورزش نداری رفیق 😅' : (bmIsWorkoutQuotaExhausted() ? 'سهمیه‌ت تموم شده رفیق 😉' : (bmIsGeneratingWorkout ? 'در حال محاسبه AI... ⏳' : (sec > 0 ? '⏳ صبر کن ($sec)' : 'دریافت/تمدید برنامه ورزشی'))), style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.black)))))),]),const SizedBox(height: 8),Text(bmGetSurplusRecommendation(), style: TextStyle(fontSize: 11.5, color: bmTextSubColor, height: 1.45)),])), Column(
+        Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: bmCardColor, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFF00E5A3).withOpacity(0.4))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Row(children: [const Icon(Icons.local_fire_department_rounded, color: Colors.orangeAccent, size: 20), const SizedBox(width: 6), Text('کالری مصرفی این تمرین: ${bmGetVisibleWorkoutCalories()} کالری 🔥', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: bmTextColor))]),InkWell(onTap: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? null : () => bmGenerateAiWorkoutPlan(context, authHeaders: c._authHeaders, onDone: () => setState(() {})), borderRadius: BorderRadius.circular(8), child: Opacity(opacity: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? 0.45 : 1.0, child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5), decoration: BoxDecoration(color: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? Colors.grey : const Color(0xFF00E5A3), borderRadius: BorderRadius.circular(8), border: Border.all(color: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? Colors.grey : const Color(0xFF00E5A3))), child: ValueListenableBuilder<int>(valueListenable: bmAiCooldownSec, builder: (_, sec, __) => Text(bmGlobalDaysPerWeek <= 0 ? 'ورزش نداری رفیق 😅' : (bmIsWorkoutQuotaExhausted() ? 'سهمیه‌ت تموم شده رفیق 😉' : (bmIsGeneratingWorkout ? 'در حال محاسبه AI... ⏳' : (sec > 0 ? '⏳ صبر کن ($sec)' : 'دریافت/تمدید برنامه ورزشی'))), style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.black)))))),]),const SizedBox(height: 8),Text(bmGetSurplusRecommendation(), style: TextStyle(fontSize: 11.5, color: bmTextSubColor, height: 1.45)),])), Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
