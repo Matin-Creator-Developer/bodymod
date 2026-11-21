@@ -1933,6 +1933,7 @@ class UserProfileModel {
   String supplementPreference; // 'commercial', 'homemade'
   String preferredModel; // 'gemini-3.1-flash-lite' | 'gemini-3.1-flash-lite'
   String aiCoachMemory;
+  String city;
   bool isLoggedIn;
   bool isProfileCompleted;
   bool hasActiveSubscription;
@@ -1954,6 +1955,7 @@ class UserProfileModel {
     this.displayName = '',
     this.photoUrl = '',
     this.birthDate = '',
+    this.city = '',
     this.age = 21,
     this.gender = 'male',
     this.heightCm = 175,
@@ -2065,6 +2067,7 @@ class UserProfileModel {
     'name': displayName,
     'photoUrl': photoUrl,
     'birthDate': birthDate,
+    'city': city,
     'age': age,
     'gender': gender,
     'heightCm': heightCm,
@@ -2104,6 +2107,7 @@ class UserProfileModel {
       displayName: (json['displayName'] ?? json['name'] ?? '').toString(),
       photoUrl: (json['photoUrl'] ?? json['picture'] ?? '').toString(),
       birthDate: (json['birthDate'] ?? '').toString(),
+      city: (json['city'] ?? '').toString(),
       age: (json['age'] as num?)?.toInt() ?? 21,
       gender: (json['gender'] ?? 'male').toString(),
       heightCm:
@@ -4918,6 +4922,7 @@ class BodyModController extends ChangeNotifier {
     required String budgetTier,
     required String supplementPreference,
     required String aiCoachMemory,
+    String city = '',
   }) async {
     final bool noWorkout = goal == 'gain_bulk' || workoutDaysPerWeek == 'none';
     profile.displayName = displayName.trim().isEmpty
@@ -4938,6 +4943,7 @@ class BodyModController extends ChangeNotifier {
     profile.budgetTier = budgetTier;
     profile.supplementPreference = supplementPreference;
     profile.aiCoachMemory = aiCoachMemory.trim();
+    profile.city = city.trim();
     profile.isProfileCompleted = true;
 
     // اعطای ۳ روز اشتراک رایگان برای اولین تکمیل فرم (در صورتی که قبلاً نگرفته باشد)
@@ -5703,49 +5709,84 @@ class BodyModController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // دریافت آمار زنده پنل محرمانه مدیرعامل از کلودفلر (فقط برای متین!)
-  Future<void> fetchCeoAdminLiveStats() async {
-    if (!profile.isAdmin) return;
+  String _ceoPanelPassword = '';
+  Map<String, dynamic> adminFullStats = {};
+
+  // دریافت آمار زنده پنل محرمانه مدیرعامل از کلودفلر (قفل دو‌لایه: ایمیل مدیرعامل + رمز سمت سرور)
+  Future> fetchCeoAdminLiveStats({String? password}) async {
+    if (!profile.isAdmin) {
+      return {'ok': false, 'error': 'دسترسی غیرمجاز 🔒'};
+    }
+    final String passToUse = (password ?? _ceoPanelPassword).trim();
+    if (passToUse.isEmpty) {
+      return {'ok': false, 'needPassword': true, 'error': 'رمز پنل وارد نشده است'};
+    }
     try {
       final uri = Uri.parse('${AppConfig.serverBaseUrl}/api/admin/stats');
       final res = await http
-          .get(uri, headers: _authHeaders)
+          .get(
+            uri,
+            headers: {
+              ..._authHeaders,
+              'X-Admin-Password': passToUse,
+            },
+          )
+          .timeout(const Duration(seconds: 12));
+      final data = jsonDecode(utf8.decode(res.bodyBytes));
+      if (res.statusCode == 200 && data is Map<String, dynamic>) {
+        _ceoPanelPassword = passToUse;
+        adminFullStats = data;
+        adminTotalUsers = (data['total_registered_users'] as num?)?.toInt() ?? 0;
+        adminActiveSubscribers = (data['active_beta_subscribers'] as num?)?.toInt() ?? 0;
+        adminTodayAiRequests = (data['today_ai_requests'] as num?)?.toInt() ?? 0;
+        adminTotalDonationsToman = (data['total_donations_toman'] as num?)?.toInt() ?? 0;
+        adminDonationsCount = (data['donations_count'] as num?)?.toInt() ?? 0;
+
+        final seg = data['economic_segments'];
+        if (seg is Map<String, dynamic>) {
+          adminTierBaseCount = (seg['base_under_20m'] as num?)?.toInt() ?? 0;
+          adminTierMidCount = (seg['mid_20m_to_50m'] as num?)?.toInt() ?? 0;
+          adminTierFlagshipCount = (seg['flagship_50m_to_100m'] as num?)?.toInt() ?? 0;
+          adminTierVipWhalesCount = (seg['vip_whales_over_100m'] as num?)?.toInt() ?? 0;
+        }
+
+        final dir = data['users_directory'];
+        if (dir is List) {
+          adminUsersDirectory = dir
+              .map((e) => Map<String, dynamic>.from(e as Map))
+              .toList();
+        }
+        notifyListeners();
+        return {'ok': true};
+      }
+      final errMsg = (data is Map && data['error'] != null)
+          ? data['error'].toString()
+          : 'رمز اشتباه است یا دسترسی تایید نشد 🔒';
+      return {'ok': false, 'needPassword': res.statusCode == 401, 'error': errMsg};
+    } catch (e) {
+      return {'ok': false, 'error': 'خطای ارتباط با کلودفلر: $e'};
+    }
+  }
+
+  Future<bool> clearCeoErrorRadar() async {
+    if (!profile.isAdmin || _ceoPanelPassword.isEmpty) return false;
+    try {
+      final uri = Uri.parse('${AppConfig.serverBaseUrl}/api/admin/errors/clear');
+      final res = await http
+          .post(
+            uri,
+            headers: {
+              ..._authHeaders,
+              'X-Admin-Password': _ceoPanelPassword,
+            },
+          )
           .timeout(const Duration(seconds: 10));
       if (res.statusCode == 200) {
-        final data = jsonDecode(utf8.decode(res.bodyBytes));
-        if (data is Map<String, dynamic>) {
-          adminTotalUsers =
-              (data['total_registered_users'] as num?)?.toInt() ?? 0;
-          adminActiveSubscribers =
-              (data['active_beta_subscribers'] as num?)?.toInt() ?? 0;
-          adminTodayAiRequests =
-              (data['today_ai_requests'] as num?)?.toInt() ?? 0;
-          adminTotalDonationsToman =
-              (data['total_donations_toman'] as num?)?.toInt() ?? 0;
-          adminDonationsCount = (data['donations_count'] as num?)?.toInt() ?? 0;
-
-          final seg = data['economic_segments'];
-          if (seg is Map<String, dynamic>) {
-            adminTierBaseCount =
-                (seg['base_under_20m'] as num?)?.toInt() ?? 0;
-            adminTierMidCount =
-                (seg['mid_20m_to_50m'] as num?)?.toInt() ?? 0;
-            adminTierFlagshipCount =
-                (seg['flagship_50m_to_100m'] as num?)?.toInt() ?? 0;
-            adminTierVipWhalesCount =
-                (seg['vip_whales_over_100m'] as num?)?.toInt() ?? 0;
-          }
-
-          final dir = data['users_directory'];
-          if (dir is List) {
-            adminUsersDirectory = dir
-                .map((e) => Map<String, dynamic>.from(e as Map))
-                .toList();
-          }
-          notifyListeners();
-        }
+        await fetchCeoAdminLiveStats();
+        return true;
       }
     } catch (_) {}
+    return false;
   }
 
   // ساخت کد تخفیف جدید برای کانال @bodymod_channel توسط مدیرعامل (متین)
@@ -6159,6 +6200,7 @@ class _EditableBodyProfileFormWidgetState
   late TextEditingController _weightCtrl;
   late TextEditingController _targetWeightCtrl;
   late TextEditingController _memoryCtrl;
+  late TextEditingController _cityCtrl;
 
   late String _selectedGender;
   late String _selectedGoal;
@@ -6183,6 +6225,7 @@ class _EditableBodyProfileFormWidgetState
       text: isFreshSignUp ? '' : p.targetWeightKg.toString(),
     );
     _memoryCtrl = TextEditingController(text: p.aiCoachMemory);
+    _cityCtrl = TextEditingController(text: p.city);
 
     _selectedGender = p.gender;
     _selectedGoal = AppConfig.goalOptions.containsKey(p.goal)
@@ -6212,6 +6255,7 @@ class _EditableBodyProfileFormWidgetState
     _weightCtrl.dispose();
     _targetWeightCtrl.dispose();
     _memoryCtrl.dispose();
+    _cityCtrl.dispose();
     super.dispose();
   }
 
@@ -6226,6 +6270,18 @@ class _EditableBodyProfileFormWidgetState
           decoration: const InputDecoration(
             labelText: 'نام یا لقب قهرمانی شما', hintText: 'رفیق ورزشکار', floatingLabelBehavior: FloatingLabelBehavior.always,
             prefixIcon: Icon(Icons.badge_outlined),
+          ),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _cityCtrl,
+          decoration: const InputDecoration(
+            labelText: 'شهر محل سکونت 🏙️',
+            hintText: 'مثلاً تهران، ارومیه، اصفهان، مشهد...',
+            helperText: 'برای اینکه هوش مصنوعی غذاها، فرهنگ و رسوم شهرت رو بدونه 🍲',
+            helperMaxLines: 2,
+            floatingLabelBehavior: FloatingLabelBehavior.always,
+            prefixIcon: Icon(Icons.location_city_rounded),
           ),
         ),
         const SizedBox(height: 12),
@@ -6621,6 +6677,7 @@ class _EditableBodyProfileFormWidgetState
                 budgetTier: _selectedBudgetTier,
                 supplementPreference: _selectedSupplementMode,
                 aiCoachMemory: _memoryCtrl.text,
+                  city: _cityCtrl.text.trim(),
               ); bmGlobalEquipment = _selectedWorkoutPlace.toString(); bmAiCustomWorkouts.clear(); bmWorkoutBurnKcal = 0; bmAiSurplusSnack = '';
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -7001,10 +7058,10 @@ class _MainShellScreenState extends State<MainShellScreen> {
                   color: BMColors.whaleGold,
                 ),
                 title: const Text('پنل فرماندهی محرمانه مدیرعامل 👑'),
-                subtitle: const Text('آمار کلودفلر، نهنگ‌ها و ساخت کد تخفیف'),
+                subtitle: const Text('آمار گرافیکی، شهرها، فیلتر زنده و رادار ارورها 🔐'),
                 onTap: () {
                   Navigator.pop(context);
-                  _jumpToTab(4);
+                  _openCeoPasswordGate(context, c);
                 },
               ),
             ],
@@ -10355,6 +10412,26 @@ class _ProfileAndBillingTabState extends State<ProfileAndBillingTab> {
                   '🔒 این بخش ۱۰۰٪ مخفی است و فقط برای جیمیل و شماره موبایل مدیرعامل در سرور کلودفلر فعال می‌شود.',
                   style: TextStyle(fontSize: 11.5, color: BMColors.neonCyan),
                 ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: BMColors.whaleGold,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onPressed: () => _openCeoPasswordGate(context, c),
+                    icon: const Icon(Icons.lock_open_rounded),
+                    label: const Text(
+                      '🚀 ورود به اتاق فرماندهی پیشرفته (۴ تبه + رادار ارورها)',
+                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12.5),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.all(13),
@@ -10544,6 +10621,802 @@ class _ProfileAndBillingTabState extends State<ProfileAndBillingTab> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+
+// ============================================================================
+// 👑 اتاق فرماندهی محرمانه مدیرعامل بادیمود (قفل دو‌لایه سرور + ۴ تب گرافیکی)
+// ============================================================================
+Future<void> _openCeoPasswordGate(
+  BuildContext context,
+  BodyModController c,
+) async {
+  if (!c.profile.isAdmin) return;
+  final passCtrl = TextEditingController();
+  String errText = '';
+  bool loading = false;
+
+  await showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setSt) => AlertDialog(
+        backgroundColor: bmCardColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: BMColors.whaleGold, width: 1.5),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.shield_rounded, color: BMColors.whaleGold),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'قفل امنیتی پنل مدیرعامل 🔐',
+                style: TextStyle(
+                  color: bmTextColor,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 15,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'رمز محرمانه سمت سرور کلودفلر را وارد کن تا آمار زنده و رادار ارورها باز شود:',
+              style: TextStyle(color: bmTextSubColor, fontSize: 12.5),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: passCtrl,
+              obscureText: true,
+              autofocus: true,
+              style: TextStyle(color: bmTextColor),
+              decoration: InputDecoration(
+                labelText: 'رمز عبور محرمانه',
+                prefixIcon: Icon(Icons.key_rounded, color: BMColors.whaleGold),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+            ),
+            if (errText.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Text(
+                errText,
+                style: const TextStyle(
+                  color: Colors.redAccent,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('انصراف'),
+          ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: BMColors.whaleGold,
+              foregroundColor: Colors.black,
+            ),
+            onPressed: loading
+                ? null
+                : () async {
+                    final p = passCtrl.text.trim();
+                    if (p.isEmpty) {
+                      setSt(() => errText = 'رمز رو وارد کن قهرمان! 🔑');
+                      return;
+                    }
+                    setSt(() {
+                      loading = true;
+                      errText = '';
+                    });
+                    final res = await c.fetchCeoAdminLiveStats(password: p);
+                    if (!ctx.mounted) return;
+                    if (res['ok'] == true) {
+                      Navigator.pop(ctx);
+                      if (context.mounted) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => CeoCommandCenterPage(controller: c),
+                          ),
+                        );
+                      }
+                    } else {
+                      setSt(() {
+                        loading = false;
+                        errText = (res['error'] ?? 'رمز اشتباهه! ❌').toString();
+                      });
+                    }
+                  },
+            icon: loading
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                  )
+                : const Icon(Icons.lock_open_rounded),
+            label: Text(loading ? 'در حال بررسی...' : 'باز کردن پنل'),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class CeoCommandCenterPage extends StatefulWidget {
+  final BodyModController controller;
+  const CeoCommandCenterPage({super.key, required this.controller});
+
+  @override
+  State<CeoCommandCenterPage> createState() => _CeoCommandCenterPageState();
+}
+
+class _CeoCommandCenterPageState extends State<CeoCommandCenterPage> {
+  bool _refreshing = false;
+  String _filterGender = 'all'; // all | male | female
+  String _filterCity = 'همه شهرها';
+  String _filterSub = 'all'; // all | paid | trial
+
+  Future<void> _reload() async {
+    setState(() => _refreshing = true);
+    await widget.controller.fetchCeoAdminLiveStats();
+    if (mounted) setState(() => _refreshing = false);
+  }
+
+  Widget _statBox(String title, String mainVal, String subVal, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: bmCardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.45)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: TextStyle(color: bmTextMutedColor, fontSize: 11.5)),
+          const SizedBox(height: 6),
+          Text(
+            mainVal,
+            style: TextStyle(
+              color: color,
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          if (subVal.isNotEmpty) ...[
+            const SizedBox(height: 3),
+            Text(subVal, style: TextStyle(color: bmTextSubColor, fontSize: 11)),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _barRow(String label, int count, double percent, Color color) {
+    final double ratio = (percent / 100.0).clamp(0.0, 1.0);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    color: bmTextColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+              Text(
+                '${percent.toStringAsFixed(1)}٪  ($count نفر)',
+                style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 12.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 5),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: ratio,
+              minHeight: 9,
+              backgroundColor: bmSurfaceColor,
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final stats = widget.controller.adminFullStats;
+    final int totalUsers = (stats['total_registered_users'] as num?)?.toInt() ?? 0;
+    final int paidCount = (stats['paid_subscribers_count'] as num?)?.toInt() ?? 0;
+    final double paidPct = (stats['paid_subscribers_percent'] as num?)?.toDouble() ?? 0.0;
+    final int trialCount = (stats['active_trial_users_count'] as num?)?.toInt() ?? 0;
+    final double trialPct = (stats['active_trial_users_percent'] as num?)?.toDouble() ?? 0.0;
+    final int todayAi = (stats['today_ai_requests'] as num?)?.toInt() ?? 0;
+    final bool ceoKeyOk = stats['ceo_dedicated_key_active'] == true;
+
+    final topH = (stats['top_highlights'] as Map?) ?? {};
+    final topG = (topH['top_gender'] as Map?) ?? {};
+    final topC = (topH['top_city'] as Map?) ?? {};
+    final topA = (topH['top_age'] as Map?) ?? {};
+
+    final gStats = (stats['gender_stats'] as Map?) ?? {};
+    final maleMap = (gStats['male'] as Map?) ?? {};
+    final femaleMap = (gStats['female'] as Map?) ?? {};
+
+    final List ageGroups = (stats['age_groups'] as List?) ?? [];
+    final List cityRankings = (stats['city_rankings'] as List?) ?? [];
+    final List ageRankings = (stats['age_rankings'] as List?) ?? [];
+    final List errorRadar = (stats['error_radar'] as List?) ?? [];
+    final List allUsers = (stats['users_directory'] as List?) ?? [];
+
+    // لیست شهرهای موجود برای فیلتر ترکیبی
+    final List<String> cityDropdownItems = ['همه شهرها'];
+    for (final cItem in cityRankings) {
+      if (cItem is Map && cItem['city'] != null) {
+        final cname = cItem['city'].toString();
+        if (!cityDropdownItems.contains(cname)) cityDropdownItems.add(cname);
+      }
+    }
+    if (!cityDropdownItems.contains(_filterCity)) {
+      _filterCity = 'همه شهرها';
+    }
+
+    // اعمال فیلتر ترکیبی
+    final filteredUsers = allUsers.where((u) {
+      if (u is! Map) return false;
+      if (_filterGender != 'all' && u['gender'] != _filterGender) return false;
+      if (_filterCity != 'همه شهرها' && (u['city'] ?? '') != _filterCity) return false;
+      if (_filterSub == 'paid' && u['hasPaidSub'] != true) return false;
+      if (_filterSub == 'trial' && u['hasFreeTrial'] != true) return false;
+      return true;
+    }).toList();
+    final double filteredPct = totalUsers > 0
+        ? (filteredUsers.length / totalUsers) * 100.0
+        : 0.0;
+
+    return DefaultTabController(
+      length: 4,
+      child: Scaffold(
+        backgroundColor: bmBgColor,
+        appBar: AppBar(
+          backgroundColor: bmCardColor,
+          title: Row(
+            children: [
+              Icon(Icons.workspace_premium_rounded, color: BMColors.whaleGold),
+              const SizedBox(width: 8),
+              const Text(
+                'اتاق فرماندهی مدیرعامل 👑',
+                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15.5),
+              ),
+            ],
+          ),
+          actions: [
+            IconButton(
+              tooltip: 'بروزرسانی زنده از کلودفلر',
+              onPressed: _refreshing ? null : _reload,
+              icon: _refreshing
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(Icons.refresh_rounded, color: BMColors.neonCyan),
+            ),
+          ],
+          bottom: TabBar(
+            isScrollable: true,
+            indicatorColor: BMColors.whaleGold,
+            labelColor: BMColors.whaleGold,
+            unselectedLabelColor: bmTextMutedColor,
+            tabs: [
+              const Tab(text: '📊 کلیات'),
+              const Tab(text: '🏙️ شهر و سن'),
+              const Tab(text: '🔍 فیلتر زنده'),
+              Tab(text: '🚨 رادار ارور (${errorRadar.length})'),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            // ================= تب ۱: کلیات =================
+            ListView(
+              padding: const EdgeInsets.all(14),
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: ceoKeyOk
+                        ? BMColors.neonGreen.withValues(alpha: 0.14)
+                        : BMColors.flameOrange.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: ceoKeyOk ? BMColors.neonGreen : BMColors.flameOrange,
+                    ),
+                  ),
+                  child: Text(
+                    ceoKeyOk
+                        ? '🟢 کلید API اختصاصی مدیرعامل (CEO_GEMINI_API_KEY) فعال و جدا از مشتری‌هاست!'
+                        : '🟠 کلید اختصاصی مدیرعامل هنوز روی کلودفلر ست نشده (از کلیدهای عمومی استفاده می‌شود).',
+                    style: TextStyle(
+                      color: bmTextColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _statBox(
+                        'کل کاربران ثبت‌نامی 👥',
+                        '$totalUsers نفر',
+                        'بدون فیلتر (دیتابیس کلودفلر)',
+                        BMColors.neonCyan,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _statBox(
+                        'درخواست هوش مصنوعی امروز 🤖',
+                        '$todayAi بار',
+                        'ترافیک زنده امروز',
+                        BMColors.purpleAccent,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _statBox(
+                        'خریدار اشتراک پولی 💎',
+                        '$paidCount نفر',
+                        '${paidPct.toStringAsFixed(1)}٪ از کل کاربران',
+                        BMColors.neonGreen,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _statBox(
+                        'اشتراک رایگان ۳ روزه (الآن) 🎁',
+                        '$trialCount نفر',
+                        '${trialPct.toStringAsFixed(1)}٪ (کاربران جدید فعال)',
+                        BMColors.whaleGold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: bmCardColor,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: BMColors.whaleGold.withValues(alpha: 0.5)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '🏆 بیشترین آمار کاربران (Top Highlights)',
+                        style: TextStyle(
+                          color: BMColors.whaleGold,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        '• بیشترین جنسیت: ${topG['label'] ?? '-'} — ${topG['percent'] ?? 0}٪ (${topG['count'] ?? 0} نفر)',
+                        style: TextStyle(color: bmTextColor, fontSize: 13),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        '• بیشترین شهر: ${topC['city'] ?? '-'} — ${topC['percent'] ?? 0}٪ (${topC['count'] ?? 0} نفر)',
+                        style: TextStyle(color: bmTextColor, fontSize: 13),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        '• بیشترین سن: ${topA['label'] ?? '-'} — ${topA['percent'] ?? 0}٪ (${topA['count'] ?? 0} نفر)',
+                        style: TextStyle(color: bmTextColor, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: bmCardColor,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: bmBorderColor),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '⚧ تفکیک جنسیتی (درصد و تعداد دقیق)',
+                        style: TextStyle(
+                          color: bmTextColor,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _barRow(
+                        'آقایان 👨',
+                        (maleMap['count'] as num?)?.toInt() ?? 0,
+                        (maleMap['percent'] as num?)?.toDouble() ?? 0.0,
+                        BMColors.electricBlue,
+                      ),
+                      _barRow(
+                        'خانم‌ها 👩',
+                        (femaleMap['count'] as num?)?.toInt() ?? 0,
+                        (femaleMap['percent'] as num?)?.toDouble() ?? 0.0,
+                        Colors.pinkAccent,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: bmCardColor,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: bmBorderColor),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '🎂 دسته‌بندی سنی کاربران',
+                        style: TextStyle(
+                          color: bmTextColor,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      ...ageGroups.map((ag) {
+                        final m = ag as Map;
+                        return _barRow(
+                          (m['label'] ?? '').toString(),
+                          (m['count'] as num?)?.toInt() ?? 0,
+                          (m['percent'] as num?)?.toDouble() ?? 0.0,
+                          BMColors.neonCyan,
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            // ================= تب ۲: رتبه‌بندی شهرها و سن دقیق =================
+            ListView(
+              padding: const EdgeInsets.all(14),
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: bmCardColor,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: BMColors.neonCyan.withValues(alpha: 0.4)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '🏙️ رتبه‌بندی شهرها (از بیشترین به کمترین — ${cityRankings.length} شهر)',
+                        style: TextStyle(
+                          color: BMColors.neonCyan,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      if (cityRankings.isEmpty)
+                        Text('هنوز شهری ثبت نشده است.', style: TextStyle(color: bmTextMutedColor))
+                      else
+                        ...cityRankings.map((item) {
+                          final m = item as Map;
+                          return _barRow(
+                            (m['city'] ?? 'نامشخص').toString(),
+                            (m['count'] as num?)?.toInt() ?? 0,
+                            (m['percent'] as num?)?.toDouble() ?? 0.0,
+                            BMColors.neonGreen,
+                          );
+                        }),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: bmCardColor,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: BMColors.whaleGold.withValues(alpha: 0.4)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '📅 رتبه‌بندی دقیق سن به تفکیک سال (از بیشترین به کمترین)',
+                        style: TextStyle(
+                          color: BMColors.whaleGold,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      if (ageRankings.isEmpty)
+                        Text('هنوز سنی ثبت نشده است.', style: TextStyle(color: bmTextMutedColor))
+                      else
+                        ...ageRankings.map((item) {
+                          final m = item as Map;
+                          return _barRow(
+                            (m['label'] ?? '').toString(),
+                            (m['count'] as num?)?.toInt() ?? 0,
+                            (m['percent'] as num?)?.toDouble() ?? 0.0,
+                            BMColors.purpleAccent,
+                          );
+                        }),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            // ================= تب ۳: فیلتر ترکیبی زنده =================
+            ListView(
+              padding: const EdgeInsets.all(14),
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: bmCardColor,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: bmBorderColor),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '🔍 فیلتر ترکیبی هوشمند',
+                        style: TextStyle(
+                          color: bmTextColor,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 8,
+                        children: [
+                          ChoiceChip(
+                            label: const Text('همه جنسیت‌ها'),
+                            selected: _filterGender == 'all',
+                            onSelected: (_) => setState(() => _filterGender = 'all'),
+                          ),
+                          ChoiceChip(
+                            label: const Text('آقایان 👨'),
+                            selected: _filterGender == 'male',
+                            onSelected: (_) => setState(() => _filterGender = 'male'),
+                          ),
+                          ChoiceChip(
+                            label: const Text('خانم‌ها 👩'),
+                            selected: _filterGender == 'female',
+                            onSelected: (_) => setState(() => _filterGender = 'female'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        children: [
+                          ChoiceChip(
+                            label: const Text('همه اشتراک‌ها'),
+                            selected: _filterSub == 'all',
+                            onSelected: (_) => setState(() => _filterSub = 'all'),
+                          ),
+                          ChoiceChip(
+                            label: const Text('پولی 💎'),
+                            selected: _filterSub == 'paid',
+                            onSelected: (_) => setState(() => _filterSub = 'paid'),
+                          ),
+                          ChoiceChip(
+                            label: const Text('رایگان ۳ روزه 🎁'),
+                            selected: _filterSub == 'trial',
+                            onSelected: (_) => setState(() => _filterSub = 'trial'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      DropdownButtonFormField<String>(
+                        initialValue: _filterCity,
+                        dropdownColor: bmCardColor,
+                        decoration: InputDecoration(
+                          labelText: 'فیلتر بر اساس شهر 🏙️',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        items: cityDropdownItems
+                            .map((cName) => DropdownMenuItem(
+                                  value: cName,
+                                  child: Text(cName, style: TextStyle(color: bmTextColor)),
+                                ))
+                            .toList(),
+                        onChanged: (v) {
+                          if (v != null) setState(() => _filterCity = v);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _statBox(
+                  'نتیجه فیلتر فعلی 🎯',
+                  '${filteredUsers.length} نفر (${filteredPct.toStringAsFixed(1)}٪ از کل)',
+                  'از مجموع $totalUsers کاربر ثبت‌نامی',
+                  BMColors.neonGreen,
+                ),
+                const SizedBox(height: 12),
+                ...filteredUsers.take(60).map((u) {
+                  final m = u as Map;
+                  return Card(
+                    color: bmCardColor,
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: ListTile(
+                      title: Text(
+                        '${m['name'] ?? 'کاربر'} (${m['city'] ?? 'ثبت نشده'})',
+                        style: TextStyle(color: bmTextColor, fontWeight: FontWeight.bold, fontSize: 13.5),
+                      ),
+                      subtitle: Text(
+                        'سن: ${m['age'] ?? '-'} | ${m['gender'] == 'female' ? 'خانم' : 'آقا'} | ${m['userKey'] ?? ''}',
+                        style: TextStyle(color: bmTextMutedColor, fontSize: 11.5),
+                      ),
+                      trailing: Text(
+                        m['hasPaidSub'] == true
+                            ? '💎 پولی'
+                            : (m['hasFreeTrial'] == true ? '🎁 ۳روزه' : 'عادی'),
+                        style: TextStyle(
+                          color: m['hasPaidSub'] == true ? BMColors.neonGreen : BMColors.whaleGold,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            ),
+
+            // ================= تب ۴: رادار خودکار ارورها =================
+            ListView(
+              padding: const EdgeInsets.all(14),
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '🚨 ارورهای ثبت‌شده قبل از گزارش کاربران (${errorRadar.length})',
+                        style: TextStyle(
+                          color: bmTextColor,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 13.5,
+                        ),
+                      ),
+                    ),
+                    if (errorRadar.isNotEmpty)
+                      TextButton.icon(
+                        onPressed: () async {
+                          final ok = await widget.controller.clearCeoErrorRadar();
+                          if (ok && mounted) setState(() {});
+                        },
+                        icon: const Icon(Icons.delete_sweep_rounded, color: Colors.redAccent),
+                        label: const Text('پاکسازی', style: TextStyle(color: Colors.redAccent)),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                if (errorRadar.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: bmCardColor,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: BMColors.neonGreen.withValues(alpha: 0.5)),
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(Icons.verified_rounded, color: BMColors.neonGreen, size: 42),
+                        const SizedBox(height: 8),
+                        Text(
+                          'ایول! هیچ اروری برای هیچ کاربری ثبت نشده! 😎✅',
+                          style: TextStyle(color: bmTextColor, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  ...errorRadar.map((err) {
+                    final m = err as Map;
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: bmCardColor,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: Colors.redAccent.withValues(alpha: 0.5)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '⚠️ ${m['message'] ?? 'خطا'} (کد ${m['status'] ?? 500})',
+                            style: const TextStyle(
+                              color: Colors.redAccent,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'مسیر: ${m['path'] ?? '-'} | کاربر: ${m['userKey'] ?? '-'}',
+                            style: TextStyle(color: bmTextSubColor, fontSize: 11.5),
+                          ),
+                          Text(
+                            'زمان: ${m['tehranDate'] ?? ''} (${m['time'] ?? ''})',
+                            style: TextStyle(color: bmTextMutedColor, fontSize: 11),
+                          ),
+                          if ((m['details'] ?? '').toString().isNotEmpty) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              m['details'].toString(),
+                              style: TextStyle(color: bmTextMutedColor, fontSize: 11),
+                            ),
+                          ],
+                        ],
+                      ),
+                    );
+                  }),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
