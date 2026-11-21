@@ -9631,8 +9631,7 @@ class _BodyAndAiCoachTabState extends State<BodyAndAiCoachTab> {
                     border: Border.all(color: BMColors.neonCyan.withOpacity(0.5)),
                   ),
                   child: Text(
-                    '🤖 تحلیل هفتگی مربی:
-$_lastBodyAiAnalysis',
+                    '🤖 تحلیل هفتگی مربی:\n$_lastBodyAiAnalysis',
                     style: TextStyle(fontSize: 12.5, height: 1.55, color: bmTextColor),
                   ),
                 ),
