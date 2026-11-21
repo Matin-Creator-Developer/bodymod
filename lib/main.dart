@@ -8529,8 +8529,8 @@ class WeeklyMealPlanTab extends StatelessWidget {
                     (!c.profile.isAdmin && c.remainingMealPlanQuota <= 0)
                         ? 'سهمیه‌ت تموم شده رفیق 😉'
                         : (hasPlan
-                            ? 'درخواست چینش مجدد برنامه ۷ روزه متنوع از AI 🔄'
-                            : 'دریافت برنامه غذایی ۷ روزه متنوع از هوش مصنوعی 🚀'),
+                            ? 'دریافت/تمدید برنامه غذایی'
+                            : 'دریافت/تمدید برنامه غذایی'),
                     style: const TextStyle(
                       fontWeight: FontWeight.w900,
                       fontSize: 13,
@@ -8837,10 +8837,115 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
       phaseColor = BMColors.electricBlue;
     }
 
+    final bool canAccessGym = c.profile.isAdmin ||
+        (c.profile.isLoggedIn && c.profile.hasActiveSubscription);
+    final bool noWorkoutInForm =
+        bmGlobalDaysPerWeek <= 0 || c.profile.workoutDaysPerWeek == 'none';
+    final bool gymQuotaExhausted =
+        !c.profile.isAdmin && bmIsWorkoutQuotaExhausted();
+
+    if (!canAccessGym || bmAiCustomWorkouts.isEmpty) {
+      return ListView(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 95),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: bmCardColor,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: BMColors.neonCyan.withOpacity(0.45)),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  !canAccessGym ? '🔒🏋️‍♂️' : '🏋️‍♂️🤖',
+                  style: const TextStyle(fontSize: 42),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  !canAccessGym
+                      ? 'باشگاه زنده قفله رفیق!'
+                      : 'هنوز برنامه ورزشی اختصاصیت رو دریافت نکردی!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 15.5,
+                    color: bmTextColor,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  !canAccessGym
+                      ? 'برای دریافت برنامه ورزشی اختصاصی و باز شدن باشگاه زنده، اول از تب پروفایل وارد حسابت شو و اشتراکت رو فعال کن! 💪🔥'
+                      : 'روی دکمه زیر بزن تا مربی هوشمند بر اساس تجهیزات و هدف تو، برنامه ورزشی اختصاصی این هفته‌ت رو بسازه (سهمیه: هفته‌ای ۱ بار).',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: bmTextSubColor,
+                    height: 1.6,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: BMColors.neonCyan,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onPressed: (!canAccessGym ||
+                            noWorkoutInForm ||
+                            gymQuotaExhausted ||
+                            bmIsGeneratingWorkout)
+                        ? null
+                        : () => bmGenerateAiWorkoutPlan(
+                              context,
+                              onDone: () {
+                                if (mounted) setState(() {});
+                              },
+                            ),
+                    icon: bmIsGeneratingWorkout
+                        ? const SizedBox(
+                            width: 17,
+                            height: 17,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.black,
+                            ),
+                          )
+                        : const Icon(Icons.fitness_center_rounded, size: 19),
+                    label: Text(
+                      !canAccessGym
+                          ? 'ابتدا وارد شو و اشتراک رو فعال کن 🔒'
+                          : (noWorkoutInForm
+                              ? 'ورزش نداری رفیق 😅'
+                              : (gymQuotaExhausted
+                                  ? 'سهمیه‌ت تموم شده رفیق 😉'
+                                  : (bmIsGeneratingWorkout
+                                      ? 'در حال ساخت برنامه ورزشی... ⏳'
+                                      : 'دریافت/تمدید برنامه ورزشی'))),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 6, 16, 95),
       children: [
-        Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: bmCardColor, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFF00E5A3).withOpacity(0.4))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Row(children: [const Icon(Icons.local_fire_department_rounded, color: Colors.orangeAccent, size: 20), const SizedBox(width: 6), Text('کالری مصرفی این تمرین: ${bmGetVisibleWorkoutCalories()} کالری 🔥', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: bmTextColor))]),InkWell(onTap: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? null : () => bmGenerateAiWorkoutPlan(context, onDone: () => setState(() {})), borderRadius: BorderRadius.circular(8), child: Opacity(opacity: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? 0.45 : 1.0, child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5), decoration: BoxDecoration(color: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? Colors.grey : const Color(0xFF00E5A3), borderRadius: BorderRadius.circular(8), border: Border.all(color: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? Colors.grey : const Color(0xFF00E5A3))), child: ValueListenableBuilder<int>(valueListenable: bmAiCooldownSec, builder: (_, sec, __) => Text(bmGlobalDaysPerWeek <= 0 ? 'ورزش نداری رفیق 😅' : (bmIsWorkoutQuotaExhausted() ? 'سهمیه‌ت تموم شده رفیق 😉' : (bmIsGeneratingWorkout ? 'در حال محاسبه AI... ⏳' : (sec > 0 ? '⏳ صبر کن ($sec)' : '🤖 بروزرسانی با AI'))), style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.black)))))),]),const SizedBox(height: 8),Text(bmGetSurplusRecommendation(), style: TextStyle(fontSize: 11.5, color: bmTextSubColor, height: 1.45)),])), Column(
+        Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: bmCardColor, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFF00E5A3).withOpacity(0.4))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Row(children: [const Icon(Icons.local_fire_department_rounded, color: Colors.orangeAccent, size: 20), const SizedBox(width: 6), Text('کالری مصرفی این تمرین: ${bmGetVisibleWorkoutCalories()} کالری 🔥', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: bmTextColor))]),InkWell(onTap: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? null : () => bmGenerateAiWorkoutPlan(context, onDone: () => setState(() {})), borderRadius: BorderRadius.circular(8), child: Opacity(opacity: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? 0.45 : 1.0, child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5), decoration: BoxDecoration(color: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? Colors.grey : const Color(0xFF00E5A3), borderRadius: BorderRadius.circular(8), border: Border.all(color: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? Colors.grey : const Color(0xFF00E5A3))), child: ValueListenableBuilder<int>(valueListenable: bmAiCooldownSec, builder: (_, sec, __) => Text(bmGlobalDaysPerWeek <= 0 ? 'ورزش نداری رفیق 😅' : (bmIsWorkoutQuotaExhausted() ? 'سهمیه‌ت تموم شده رفیق 😉' : (bmIsGeneratingWorkout ? 'در حال محاسبه AI... ⏳' : (sec > 0 ? '⏳ صبر کن ($sec)' : 'دریافت/تمدید برنامه ورزشی'))), style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.black)))))),]),const SizedBox(height: 8),Text(bmGetSurplusRecommendation(), style: TextStyle(fontSize: 11.5, color: bmTextSubColor, height: 1.45)),])), Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
@@ -9084,6 +9189,33 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
               Text(
                 '🎯 عضله هدف: ${bmExStr(safeIdx, 'muscle', activeStep.muscleGroup)} • تکرار: ${activeStep.repsOrDuration}',
                 style: TextStyle(fontSize: 12.5, color: bmTextSubColor),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: bmSurfaceColor,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: BMColors.neonCyan.withOpacity(0.35)),
+                ),
+                child: Row(
+                  children: [
+                    const Text('🔍', style: TextStyle(fontSize: 16)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'میتونی اسم تمرین رو توی گوگل سرچ کنی و ببینی چطوری انجام میشه',
+                        style: TextStyle(
+                          fontSize: 11.8,
+                          fontWeight: FontWeight.w700,
+                          color: bmTextSubColor,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 12),
               Row(
