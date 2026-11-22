@@ -4442,6 +4442,7 @@ class BodyModController extends ChangeNotifier {
     if (!online) return null;
 
     try {
+      try { await _googleSignIn.signOut(); } catch (_) {}
       final GoogleSignInAccount? account = await _googleSignIn.signIn();
       if (account == null) {
         return null;
@@ -4469,6 +4470,7 @@ class BodyModController extends ChangeNotifier {
           .timeout(const Duration(seconds: 12));
 
       if (response.statusCode == 403 && context.mounted) {
+        try { await _googleSignIn.signOut(); } catch (_) {}
         await bmCheckDeviceAccountLimit(context, account.email);
         return null;
       }
