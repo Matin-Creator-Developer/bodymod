@@ -611,7 +611,11 @@ Future<bool> bmGenerateAiWorkoutPlan(BuildContext context, {VoidCallback? onDone
     final eqRule = isBw
         ? 'کاربر هیچ وسیله‌ای ندارد (فقط وزن بدن در خانه). اکیداً هیچ حرکتی با دمبل، هالتر، وزنه یا دستگاه نده! تمام ۷ حرکت باید ۱۰۰٪ با وزن بدن باشند.'
         : 'تجهیزات کاربر: ' + eq + '. تمام حرکات را دقیقاً متناسب با همین تجهیزات طراحی کن.';
-    final prompt = 'تو مربی حرفه‌ای بادیمود هستی. مشخصات کاربر: وزن ' + bmGlobalWeight.round().toString() + ' کیلو، قد ' + bmGlobalHeight.round().toString() + '، سن ' + bmGlobalAge.toString() + '، تمرین در هفته: ' + bmGlobalDaysPerWeek.toString() + ' روز، هدف: ' + gl + '. '
+    final prevTitles = bmAiCustomWorkouts.map((e) => e['title'] ?? '').where((t) => t.isNotEmpty).join('، ');
+    final varietyRule = prevTitles.isNotEmpty
+        ? ' تمرین‌های قبلی کاربر این‌ها بوده (تکرارشون نکن و حرکات کاملاً جدید، متنوع و خلاقانه بده): ' + prevTitles + '. '
+        : ' حرکات باید کاملاً متنوع، علمی، جذاب و غیرتکراری باشن و کل زوایای عضلات هدف رو پوشش بدن. ';
+    final prompt = 'تو مربی حرفه‌ای بادی‌مود هستی. مشخصات کاربر: وزن ' + bmGlobalWeight.round().toString() + ' کیلو، قد ' + bmGlobalHeight.round().toString() + '، سن ' + bmGlobalAge.toString() + '، تمرین در هفته: ' + bmGlobalDaysPerWeek.toString() + ' روز، هدف: ' + gl + '.' + varietyRule
         + 'محاسبه مخفی پس‌زمینه (فقط برای اطلاع خودت جهت ایجاد تعادل کالری؛ این عدد روزمره را به کاربر نگو): کالری کارهای عادی روزانه مثل راه رفتن و صحبت کردن و تحرک هفتگی = ' + hiddenRoutineKcal.toString() + ' کالری. '
         + 'قانون تجهیزات: ' + eqRule + ' '
         + 'فقط و فقط یک آبجکت JSON خالص با این ۳ کلید برگردان: '
@@ -811,6 +815,12 @@ Future<void> bmVerifyStoreIntegrity(BuildContext context) async {
       final d = jsonDecode(utf8.decode(res.bodyBytes));
       if (d is Map && d['valid'] == false && context.mounted && !bmStoreLockDialogShown) {
         bmStoreLockDialogShown = true;
+        final String bazaarLink = (d['bazaarUrl'] ?? '').toString().trim().isNotEmpty
+            ? d['bazaarUrl'].toString().trim()
+            : 'https://cafebazaar.ir/app/ir.matinmohammadi.bodymod';
+        final String myketLink = (d['myketUrl'] ?? '').toString().trim().isNotEmpty
+            ? d['myketUrl'].toString().trim()
+            : 'https://myket.ir/app/ir.matinmohammadi.bodymod';
         showDialog(
           context: context,
           barrierDismissible: false,
@@ -844,11 +854,11 @@ Future<void> bmVerifyStoreIntegrity(BuildContext context) async {
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                       onPressed: () => launchUrl(
-                        Uri.parse('https://cafebazaar.ir/app/ir.matinmohammadi.bodymod'),
+                        Uri.parse(bazaarLink),
                         mode: LaunchMode.externalApplication,
                       ),
                       icon: const Icon(Icons.store_rounded),
-                      label: const Text('🟢 دانلود رسمی از کافه‌بازار', style: TextStyle(fontWeight: FontWeight.w900)),
+                      label: const Text('دانلود رسمی از کافه‌بازار', style: TextStyle(fontWeight: FontWeight.w900)),
                     ),
                     const SizedBox(height: 8),
                     ElevatedButton.icon(
@@ -858,11 +868,11 @@ Future<void> bmVerifyStoreIntegrity(BuildContext context) async {
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                       onPressed: () => launchUrl(
-                        Uri.parse('https://myket.ir/app/ir.matinmohammadi.bodymod'),
+                        Uri.parse(myketLink),
                         mode: LaunchMode.externalApplication,
                       ),
                       icon: const Icon(Icons.shop_rounded),
-                      label: const Text('🔵 دانلود رسمی از مایکت', style: TextStyle(fontWeight: FontWeight.w900)),
+                      label: const Text('دانلود رسمی از مایکت', style: TextStyle(fontWeight: FontWeight.w900)),
                     ),
                   ],
                 ),
@@ -1395,7 +1405,7 @@ bool bmTryAcquireAiCooldown(BuildContext? context) {
 }
 // --- [END 5-SECOND AI COOLDOWN] ---
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); bmSyncBetaCountdown(); bmLoadSavedAiWorkouts();
+  WidgetsFlutterBinding.ensureInitialized(); bmSyncBetaCountdown(); await bmLoadSavedAiWorkouts();
 
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -1719,7 +1729,7 @@ class BodyModTopChannelBanner extends StatelessWidget {
                 Text('📢🎁 ', style: TextStyle(fontSize: 24)),
                 Expanded(
                   child: Text(
-                    'کانال رسمی بادیمود (@bodymod_channel)',
+                    'کانال رسمی بادی‌مود (@bodymod_channel)',
                     style: TextStyle(
                       fontWeight: FontWeight.w900,
                       fontSize: 16.5,
@@ -1847,7 +1857,7 @@ class BodyModTopChannelBanner extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            'لینک کانال بادیمود',
+                            'لینک کانال بادی‌مود',
                             style: TextStyle(
                               fontWeight: FontWeight.w900,
                               fontSize: 14.5,
@@ -4765,6 +4775,24 @@ class BodyModController extends ChangeNotifier {
       bmAccountIdGlobal = srvAccId;
     }
     bmIsAdminGlobal = profile.isAdmin;
+    final srvWp = serverProfile['workoutPlan'];
+    if (srvWp is Map && srvWp['exercises'] is List && (srvWp['exercises'] as List).isNotEmpty) {
+      bmAiCustomWorkouts = (srvWp['exercises'] as List)
+          .whereType()
+          .map((e) => Map<String, String>.from(e.map((k, v) => MapEntry(k.toString(), v.toString()))))
+          .toList();
+      if (srvWp['workout_calories'] != null) {
+        bmWorkoutBurnKcal = int.tryParse(srvWp['workout_calories'].toString()) ?? bmWorkoutBurnKcal;
+      }
+      if (srvWp['surplus_snack'] != null && srvWp['surplus_snack'].toString().trim().isNotEmpty) {
+        bmAiSurplusSnack = srvWp['surplus_snack'].toString().trim();
+      }
+      SharedPreferences.getInstance().then((prefs) {
+        prefs.setString('bm_ai_custom_workouts_v1', jsonEncode(bmAiCustomWorkouts));
+        if (bmWorkoutBurnKcal > 0) prefs.setInt('bm_ai_workout_burn_kcal', bmWorkoutBurnKcal);
+        if (bmAiSurplusSnack.isNotEmpty) prefs.setString('bm_ai_surplus_snack', bmAiSurplusSnack);
+      });
+    }
     _applyQuotasFromResponse(data['quotas']);
   }
 
@@ -6282,7 +6310,7 @@ class _EditableBodyProfileFormWidgetState
     if (_selectedGoal == 'gain_bulk') {
       _selectedWorkoutDays = 'none';
     }
-    bmGlobalEquipment = _selectedWorkoutPlace.toString(); bmAiCustomWorkouts.clear(); bmWorkoutBurnKcal = 0; bmAiSurplusSnack = '';
+    bmGlobalEquipment = _selectedWorkoutPlace.toString();
     _selectedBudgetTier = AppConfig.budgetTierOptions.containsKey(p.budgetTier)
         ? p.budgetTier
         : AppConfig.budgetBase;
@@ -6720,7 +6748,7 @@ class _EditableBodyProfileFormWidgetState
                 supplementPreference: _selectedSupplementMode,
                 aiCoachMemory: _memoryCtrl.text,
                   city: _cityCtrl.text.trim(),
-              ); bmGlobalEquipment = _selectedWorkoutPlace.toString(); bmAiCustomWorkouts.clear(); bmWorkoutBurnKcal = 0; bmAiSurplusSnack = '';
+              ); bmGlobalEquipment = _selectedWorkoutPlace.toString();
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -6930,7 +6958,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
           ),
         ],
       ),
-      // کادر کانال بادیمود (@bodymod_channel) بالای تمام صفحات قرار دارد!
+      // کادر کانال بادی‌مود (@bodymod_channel) بالای تمام صفحات قرار دارد!
       body: Column(
         children: [
           const BodyModTopChannelBanner(),
@@ -7375,6 +7403,8 @@ class _MainShellScreenState extends State<MainShellScreen> {
 // 10. 3-STAGE SMART AI LOCK BANNER (CONNECTED TO 2-STEP AUTH & FORM POPUP)
 // ============================================================================
 
+bool bmHideTrialWelcomeBanner = false;
+
 class SmartAiLockBanner extends StatelessWidget {
   final BodyModController controller;
   final ValueChanged<int> onNavigateTab;
@@ -7391,7 +7421,8 @@ class SmartAiLockBanner extends StatelessWidget {
     if (stage == 0) {
       if (controller.profile.isFreeTrial &&
           controller.profile.hasActiveSubscription &&
-          !controller.profile.isAdmin) {
+          !controller.profile.isAdmin &&
+          !bmHideTrialWelcomeBanner) {
         final daysLeft = controller.profile.subscriptionDaysRemaining;
         return Container(
           margin: const EdgeInsets.only(bottom: 10),
@@ -7418,6 +7449,16 @@ class SmartAiLockBanner extends StatelessWidget {
                         color: BMColors.neonGreen,
                       ),
                     ),
+                  ),
+                  IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    tooltip: 'بستن',
+                    onPressed: () {
+                      bmHideTrialWelcomeBanner = true;
+                      controller.notifyListeners();
+                    },
+                    icon: Icon(Icons.close_rounded, size: 20, color: bmTextSubColor),
                   ),
                 ],
               ),
@@ -10671,7 +10712,7 @@ class _ProfileAndBillingTabState extends State<ProfileAndBillingTab> {
 
 
 // ============================================================================
-// 👑 اتاق فرماندهی محرمانه مدیرعامل بادیمود (قفل دو‌لایه سرور + ۴ تب گرافیکی)
+// 👑 اتاق فرماندهی محرمانه مدیرعامل بادی‌مود (قفل دو‌لایه سرور + ۴ تب گرافیکی)
 // ============================================================================
 Future<void> _openCeoPasswordGate(
   BuildContext context,
