@@ -3690,6 +3690,8 @@ class BodyModController extends ChangeNotifier {
   // بدون هیچ دیتای تستی در شروع! همه از صفر واقعی شروع می‌شوند
   int streakCount = 0;
   String lastCompletedStreakDate = '';
+  int workoutStreakCount = 0;
+  String lastCompletedWorkoutStreakDate = '';
   int todayWaterGlasses = 0;
   int targetWaterGlasses = 8;
   List<FoodLogItem> todayFoodLogs = [];
@@ -3817,6 +3819,8 @@ class BodyModController extends ChangeNotifier {
 
     streakCount = prefs.getInt('bm_streak_count_v82') ?? 0;
     lastCompletedStreakDate = prefs.getString('bm_last_streak_date_v82') ?? '';
+    workoutStreakCount = prefs.getInt('bm_workout_streak_count_v82') ?? 0;
+    lastCompletedWorkoutStreakDate = prefs.getString('bm_last_workout_streak_date_v82') ?? '';
     todayWaterGlasses = prefs.getInt('bm_today_water_v82') ?? 0;
     targetWaterGlasses = prefs.getInt('bm_target_water_v82') ?? 8;
     final savedRef = prefs.getString('bm_applied_ref_code') ?? '';
@@ -3994,15 +3998,46 @@ class BodyModController extends ChangeNotifier {
       todayFoodLogs.fold(0, (sum, item) => sum + item.fatG);
 
   StreakVisualState get currentStreakState {
-    if (streakCount <= 0 &&
-        todayCaloriesConsumed < 200 &&
-        todayWaterGlasses < 2) {
-      return StreakVisualState.deadSkull;
-    }
-    if (todayCaloriesConsumed >= 200 || todayWaterGlasses >= 3) {
+    final todayIso = DateTime.now().toIso8601String().split('T').first;
+    if (lastCompletedStreakDate == todayIso ||
+        todayFoodLogs.isNotEmpty ||
+        todayWaterGlasses >= 1) {
       return StreakVisualState.redFire;
     }
+    if (streakCount <= 0) {
+      return StreakVisualState.deadSkull;
+    }
     return StreakVisualState.blueFrozen;
+  }
+
+  StreakVisualState get currentWorkoutStreakState {
+    final todayIso = DateTime.now().toIso8601String().split('T').first;
+    if (lastCompletedWorkoutStreakDate == todayIso) {
+      return StreakVisualState.redFire;
+    }
+    if (workoutStreakCount <= 0) {
+      return StreakVisualState.deadSkull;
+    }
+    return StreakVisualState.blueFrozen;
+  }
+
+  String get workoutStreakEmoji {
+    switch (currentWorkoutStreakState) {
+      case StreakVisualState.redFire:
+        return '🔥';
+      case StreakVisualState.blueFrozen:
+        return '💙';
+      case StreakVisualState.deadSkull:
+        return '💀';
+    }
+  }
+
+  String get workoutStreakStatusMessage {
+    if (currentWorkoutStreakState == StreakVisualState.redFire) {
+      return 'آتیش استریک ورزشت شعله‌وره قهرمان! 🔥 کل تمرین امروزت رو انجام دادی و $workoutStreakCount روزه داری می‌ترکونی! 💪';
+    }
+    return 'رفیق استریک خوراکی با تمرین فرق میکنه 😉
+هروقت کل تمرین های امروزت رو انجام بدی، آتیش استریکت برای ورزش روشن میشه';
   }
 
   String get streakEmoji {
@@ -4021,7 +4056,7 @@ class BodyModController extends ChangeNotifier {
       case StreakVisualState.redFire:
         return 'آتیشت شعله‌وره قهرمان! 🔥 امروزت رو ثبت کردی و $streakCount روزه پیوسته داری می‌ترکونی!';
       case StreakVisualState.blueFrozen:
-        return 'هشدار یخ‌زدگی! 💙 آتیش $streakCount روزه‌ت به خاطر ثبت نکردن امروز آبی شده؛ یه وعده یا ۳ لیوان آب ثبت کن تا دوباره قرمز و داغ بشه! 🔥';
+        return 'هشدار یخ‌زدگی! 💙 آتیش $streakCount روزه‌ت به خاطر ثبت نکردن امروز آبی شده؛ یه خوراکی یا ۱ لیوان آب ثبت کن تا دوباره قرمز و داغ بشه! 🔥';
       case StreakVisualState.deadSkull:
         return 'آتیش استریکت هنوز خاموشه! 💀 همین الان اولین خوراکی یا لیوان آبت رو ثبت کن تا آتیش استریکت روشن بشه رفیق! 🔥';
     }
@@ -4064,6 +4099,8 @@ class BodyModController extends ChangeNotifier {
     await prefs.setString('bm_user_profile_v82', jsonEncode(profile.toJson()));
     await prefs.setInt('bm_streak_count_v82', streakCount);
     await prefs.setString('bm_last_streak_date_v82', lastCompletedStreakDate);
+    await prefs.setInt('bm_workout_streak_count_v82', workoutStreakCount);
+    await prefs.setString('bm_last_workout_streak_date_v82', lastCompletedWorkoutStreakDate);
     await prefs.setInt('bm_today_water_v82', todayWaterGlasses);
     await prefs.setInt('bm_target_water_v82', targetWaterGlasses);
 
@@ -4164,11 +4201,21 @@ class BodyModController extends ChangeNotifier {
 
   void _checkAndUpgradeStreak() {
     final todayIso = DateTime.now().toIso8601String().split('T').first;
-    if ((todayCaloriesConsumed >= 200 || todayWaterGlasses >= 3) &&
+    if ((todayFoodLogs.isNotEmpty || todayWaterGlasses >= 1) &&
         lastCompletedStreakDate != todayIso) {
       streakCount += 1;
       lastCompletedStreakDate = todayIso;
     }
+  }
+
+  void markTodayWorkoutCompleted() {
+    final todayIso = DateTime.now().toIso8601String().split('T').first;
+    if (lastCompletedWorkoutStreakDate != todayIso) {
+      workoutStreakCount += 1;
+      lastCompletedWorkoutStreakDate = todayIso;
+    }
+    saveAllToDisk();
+    notifyListeners();
   }
 
   void addBodyMetricRecord({
@@ -6877,42 +6924,50 @@ class _MainShellScreenState extends State<MainShellScreen> {
           ],
         ),
         actions: [
-          // نشانگر آتیش استریک (🔥 / 💙 / 💀)
-          InkWell(
-            borderRadius: BorderRadius.circular(20),
-            onTap: () => _showStreakPhilosophySheet(context, c),
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: c.currentStreakState == StreakVisualState.redFire
-                    ? BMColors.flameOrange.withOpacity(0.18)
-                    : c.currentStreakState == StreakVisualState.blueFrozen
-                    ? BMColors.electricBlue.withOpacity(0.22)
-                    : Colors.grey.withOpacity(0.2),
+          // نشانگر آتیش استریک (جداگانه برای آب و غذا / ورزش)
+          Builder(
+            builder: (_) {
+              final bool isGym = _currentTab == 2;
+              final st = isGym ? c.currentWorkoutStreakState : c.currentStreakState;
+              final em = isGym ? c.workoutStreakEmoji : c.streakEmoji;
+              final cnt = isGym ? c.workoutStreakCount : c.streakCount;
+              return InkWell(
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: c.currentStreakState == StreakVisualState.redFire
-                      ? BMColors.flameOrange
-                      : c.currentStreakState == StreakVisualState.blueFrozen
-                      ? BMColors.electricBlue
-                      : bmTextMutedColor,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Text(c.streakEmoji, style: const TextStyle(fontSize: 14.5)),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${c.streakCount} روز',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 12,
+                onTap: () => _showStreakPhilosophySheet(context, c),
+                child: Container(
+                  margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: st == StreakVisualState.redFire
+                        ? BMColors.flameOrange.withOpacity(0.18)
+                        : st == StreakVisualState.blueFrozen
+                        ? BMColors.electricBlue.withOpacity(0.22)
+                        : Colors.grey.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: st == StreakVisualState.redFire
+                          ? BMColors.flameOrange
+                          : st == StreakVisualState.blueFrozen
+                          ? BMColors.electricBlue
+                          : bmTextMutedColor,
                     ),
                   ),
-                ],
-              ),
-            ),
+                  child: Row(
+                    children: [
+                      Text(em, style: const TextStyle(fontSize: 14.5)),
+                      const SizedBox(width: 4),
+                      Text(
+                        '$cnt روز',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
           // نشانگر سهمیه روزانه یا ورود سریع
           InkWell(
@@ -7934,7 +7989,7 @@ class _HomeDashboardTabState extends State<HomeDashboardTab> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'استریک فعلی: ${c.streakCount} روز پیوسته',
+                      'استریک آب و غذا: ${c.streakCount} روز پیوسته',
                       style: TextStyle(
                         fontWeight: FontWeight.w900,
                         fontSize: 15,
@@ -9091,10 +9146,11 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
         } else {
           _activeStepIndex = 0;
           _currentSet = 1;
+          widget.controller.markTodayWorkoutCompleted();
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text(
-                'دمت گرم قهرمان! کل تمرین امروز (گرم کردن + ست‌های اصلی + سرد کردن) رو ترکوندی! 🏆🔥💪',
+                'دمت گرم قهرمان! کل تمرین امروز رو ترکوندی و آتیش استریک ورزشت روشن شد! 🏆🔥💪',
               ),
             ),
           );
@@ -9126,10 +9182,66 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
     final bool gymQuotaExhausted =
         !c.profile.isAdmin && bmIsWorkoutQuotaExhausted();
 
+    Widget buildWorkoutStreakCard() {
+      final st = c.currentWorkoutStreakState;
+      return Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: st == StreakVisualState.redFire
+                ? (bmIsDarkTheme ? [const Color(0xFF431407), bmSurfaceColor] : [const Color(0xFFFFEDD5), bmCardColor])
+                : st == StreakVisualState.blueFrozen
+                ? (bmIsDarkTheme ? [const Color(0xFF0C4A6E), bmSurfaceColor] : [const Color(0xFFE0F2FE), bmCardColor])
+                : [bmSurfaceColor, bmCardColor],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: st == StreakVisualState.redFire
+                ? BMColors.flameOrange
+                : st == StreakVisualState.blueFrozen
+                ? BMColors.electricBlue
+                : bmBorderColor,
+          ),
+        ),
+        child: Row(
+          children: [
+            Text(c.workoutStreakEmoji, style: const TextStyle(fontSize: 34)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'استریک ورزش: ${c.workoutStreakCount} روز پیوسته',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 15,
+                      color: bmTextColor,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    c.workoutStreakStatusMessage,
+                    style: TextStyle(
+                      fontSize: 12.2,
+                      color: bmTextSubColor,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     if (!canAccessGym || bmAiCustomWorkouts.isEmpty) {
       return ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 95),
         children: [
+          buildWorkoutStreakCard(),
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -9228,6 +9340,7 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 6, 16, 95),
       children: [
+        buildWorkoutStreakCard(),
         Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: bmCardColor, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFF00E5A3).withOpacity(0.4))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Row(children: [const Icon(Icons.local_fire_department_rounded, color: Colors.orangeAccent, size: 20), const SizedBox(width: 6), Text('کالری مصرفی این تمرین: ${bmGetVisibleWorkoutCalories()} کالری 🔥', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: bmTextColor))]),InkWell(onTap: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? null : () => bmGenerateAiWorkoutPlan(context, authHeaders: c._authHeaders, onDone: () => setState(() {})), borderRadius: BorderRadius.circular(8), child: Opacity(opacity: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? 0.45 : 1.0, child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5), decoration: BoxDecoration(color: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? Colors.grey : const Color(0xFF00E5A3), borderRadius: BorderRadius.circular(8), border: Border.all(color: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? Colors.grey : const Color(0xFF00E5A3))), child: ValueListenableBuilder<int>(valueListenable: bmAiCooldownSec, builder: (_, sec, __) => Text(bmGlobalDaysPerWeek <= 0 ? 'ورزش نداری رفیق 😅' : (bmIsWorkoutQuotaExhausted() ? 'سهمیه‌ت تموم شده رفیق 😉' : (bmIsGeneratingWorkout ? 'در حال محاسبه AI... ⏳' : (sec > 0 ? '⏳ صبر کن ($sec)' : 'دریافت/تمدید برنامه ورزشی'))), style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.black)))))),]),const SizedBox(height: 8),Text(bmGetSurplusRecommendation(), style: TextStyle(fontSize: 11.5, color: bmTextSubColor, height: 1.45)),])), Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
