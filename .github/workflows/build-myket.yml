@@ -218,9 +218,9 @@ jobs:
             --target-platform android-arm,android-arm64 \
             --dart-define=STORE_FLAVOR=myket \
             --dart-define=STORE_RSA_KEY="$STORE_RSA_KEY" \
-            --build-name=8.1.${{ github.run_number }} \
+            --build-name=8.2.69 \
             --build-number=$BUILD_NUM
-          cp build/app/outputs/flutter-apk/app-release.apk BodyMod-v8.1.${{ github.run_number }}-Myket.apk
+          cp build/app/outputs/flutter-apk/app-release.apk BodyMod-v8.2.69-Myket.apk
 
       - name: Strictly Sign Myket APK ONLY with Secret Keystore
         env:
@@ -237,22 +237,22 @@ jobs:
             exit 1
           fi
           APKSIGNER=$(find $ANDROID_HOME/build-tools -name "apksigner" | sort -V | tail -n 1)
-          "$APKSIGNER" sign --ks bodymod.keystore --ks-key-alias bodymod_master_key --ks-pass pass:Matin1383 --key-pass pass:Matin1383 "BodyMod-v8.1.${{ github.run_number }}-Myket.apk"
-          "$APKSIGNER" verify --print-certs "BodyMod-v8.1.${{ github.run_number }}-Myket.apk" | grep -E "SHA-1|SHA-256"
+          "$APKSIGNER" sign --ks bodymod.keystore --ks-key-alias bodymod_master_key --ks-pass pass:Matin1383 --key-pass pass:Matin1383 "BodyMod-v8.2.69-Myket.apk"
+          "$APKSIGNER" verify --print-certs "BodyMod-v8.2.69-Myket.apk" | grep -E "SHA-1|SHA-256"
           rm -f bodymod.keystore
 
       - name: Upload Myket APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: BodyMod-Myket-APK
-          path: BodyMod-v8.1.${{ github.run_number }}-Myket.apk
+          path: BodyMod-v8.2.69-Myket.apk
 
       - name: Publish Myket Release
         uses: softprops/action-gh-release@v2
         if: success()
         with:
-          tag_name: v8.1.${{ github.run_number }}-myket
-          name: "🔵 BodyMod v8.1.${{ github.run_number }} (نسخه رسمی مایکت)"
-          files: BodyMod-v8.1.${{ github.run_number }}-Myket.apk
+          tag_name: v8.2.69-myket
+          name: "🔵 BodyMod v8.2.69 (نسخه رسمی مایکت)"
+          files: BodyMod-v8.2.69-Myket.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

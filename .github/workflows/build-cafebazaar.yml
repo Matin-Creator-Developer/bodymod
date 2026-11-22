@@ -236,9 +236,9 @@ jobs:
             --target-platform android-arm,android-arm64 \
             --dart-define=STORE_FLAVOR=bazaar \
             --dart-define=STORE_RSA_KEY="$STORE_RSA_KEY" \
-            --build-name=8.1.${{ github.run_number }} \
+            --build-name=8.2.69 \
             --build-number=$BUILD_NUM
-          cp build/app/outputs/flutter-apk/app-release.apk BodyMod-v8.1.${{ github.run_number }}-CafeBazaar.apk
+          cp build/app/outputs/flutter-apk/app-release.apk BodyMod-v8.2.69-CafeBazaar.apk
 
       - name: Strictly Sign CafeBazaar APK ONLY with Secret Keystore
         env:
@@ -255,22 +255,22 @@ jobs:
             exit 1
           fi
           APKSIGNER=$(find $ANDROID_HOME/build-tools -name "apksigner" | sort -V | tail -n 1)
-          "$APKSIGNER" sign --ks bodymod.keystore --ks-key-alias bodymod_master_key --ks-pass pass:Matin1383 --key-pass pass:Matin1383 "BodyMod-v8.1.${{ github.run_number }}-CafeBazaar.apk"
-          "$APKSIGNER" verify --print-certs "BodyMod-v8.1.${{ github.run_number }}-CafeBazaar.apk" | grep -E "SHA-1|SHA-256"
+          "$APKSIGNER" sign --ks bodymod.keystore --ks-key-alias bodymod_master_key --ks-pass pass:Matin1383 --key-pass pass:Matin1383 "BodyMod-v8.2.69-CafeBazaar.apk"
+          "$APKSIGNER" verify --print-certs "BodyMod-v8.2.69-CafeBazaar.apk" | grep -E "SHA-1|SHA-256"
           rm -f bodymod.keystore
 
       - name: Upload CafeBazaar APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: BodyMod-CafeBazaar-APK
-          path: BodyMod-v8.1.${{ github.run_number }}-CafeBazaar.apk
+          path: BodyMod-v8.2.69-CafeBazaar.apk
 
       - name: Publish CafeBazaar Release
         uses: softprops/action-gh-release@v2
         if: success()
         with:
-          tag_name: v8.1.${{ github.run_number }}-bazaar
-          name: "🟢 BodyMod v8.1.${{ github.run_number }} (نسخه رسمی کافه‌بازار)"
-          files: BodyMod-v8.1.${{ github.run_number }}-CafeBazaar.apk
+          tag_name: v8.2.69-bazaar
+          name: "🟢 BodyMod v8.2.69 (نسخه رسمی کافه‌بازار)"
+          files: BodyMod-v8.2.69-CafeBazaar.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
