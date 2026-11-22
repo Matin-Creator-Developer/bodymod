@@ -4036,8 +4036,7 @@ class BodyModController extends ChangeNotifier {
     if (currentWorkoutStreakState == StreakVisualState.redFire) {
       return 'آتیش استریک ورزشت شعله‌وره قهرمان! 🔥 کل تمرین امروزت رو انجام دادی و $workoutStreakCount روزه داری می‌ترکونی! 💪';
     }
-    return 'رفیق استریک خوراکی با تمرین فرق میکنه 😉
-هروقت کل تمرین های امروزت رو انجام بدی، آتیش استریکت برای ورزش روشن میشه';
+    return 'رفیق استریک خوراکی با تمرین فرق میکنه 😉\nهروقت کل تمرین های امروزت رو انجام بدی، آتیش استریکت برای ورزش روشن میشه';
   }
 
   String get streakEmoji {
