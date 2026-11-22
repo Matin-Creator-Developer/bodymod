@@ -4444,9 +4444,6 @@ class BodyModController extends ChangeNotifier {
     try {
       final GoogleSignInAccount? account = await _googleSignIn.signIn();
       if (account == null) {
-        if (context.mounted) {
-          return await _fallbackDirectGoogleEmailDialog(context);
-        }
         return null;
       }
 
@@ -4492,7 +4489,11 @@ class BodyModController extends ChangeNotifier {
       }
     } catch (_) {
       if (context.mounted) {
-        return await _fallbackDirectGoogleEmailDialog(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('ورود با حساب گوگل انجام نشد؛ اینترنتت رو چک کن و دوباره بزن رفیق! 🔐'),
+          ),
+        );
       }
     }
     return null;
@@ -4669,6 +4670,15 @@ class BodyModController extends ChangeNotifier {
           .timeout(const Duration(seconds: 12));
 
       final data = jsonDecode(utf8.decode(res.bodyBytes));
+      if (res.statusCode == 403 && data is Map && data['deviceAccountLimit'] == true) {
+        if (context.mounted) {
+          await bmCheckDeviceAccountLimit(context, cleanPhone);
+        }
+        return {
+          'ok': false,
+          'message': (data['message'] ?? 'نمیتونی سر من کلاه بزاری 😂 فقط دوتا اکانت میتونی بسازی!').toString(),
+        };
+      }
       if (res.statusCode == 200 && data['success'] == true) {
         _applyServerAuthData(data);
         await saveAllToDisk();
@@ -4684,7 +4694,7 @@ class BodyModController extends ChangeNotifier {
       }
       return {
         'ok': false,
-        'message': (data['error'] ?? 'کد واردشده معتبر نیست!').toString(),
+        'message': (data['message'] ?? data['error'] ?? 'کد واردشده معتبر نیست!').toString(),
       };
     } catch (_) {
       return {
@@ -5414,6 +5424,22 @@ class BodyModController extends ChangeNotifier {
             }
           }
         }
+      } else if (res.statusCode == 429 || res.statusCode == 403) {
+        String errMsg = 'سهمیه‌ت تموم شده رفیق 😉';
+        try {
+          final errData = jsonDecode(utf8.decode(res.bodyBytes));
+          if (errData is Map<String, dynamic>) {
+            _applyQuotasFromResponse(errData['quotas']);
+            if (errData['message'] != null) errMsg = errData['message'].toString();
+            else if (errData['error'] != null) errMsg = errData['error'].toString();
+          }
+        } catch (_) {}
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errMsg)));
+        }
+        isLoadingAi = false;
+        notifyListeners();
+        return false;
       }
     } catch (_) {}
 
