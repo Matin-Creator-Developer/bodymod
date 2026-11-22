@@ -1,7 +1,7 @@
 name: bodymod
 description: BodyMod Native AI Fitness & Nutrition Coach
 publish_to: 'none'
-version: 8.2.69+500
+version: 2.43.76+500
 
 environment:
   sdk: '>=3.2.0 <4.0.0'

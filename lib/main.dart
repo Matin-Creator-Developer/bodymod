@@ -1423,7 +1423,7 @@ void main() async {
 
 class AppConfig {
   static const String appName = 'BodyMod AI';
-  static const String appVersion = '8.2.69';
+  static const String appVersion = '2.43.76';
   static const String packageName = 'ir.matinmohammadi.bodymod';
   static const String serverBaseUrl = 'https://server.matin-mohammadi.ir';
 
