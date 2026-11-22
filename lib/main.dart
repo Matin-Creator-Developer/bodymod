@@ -4199,12 +4199,50 @@ class BodyModController extends ChangeNotifier {
     );
   }
 
+  Future<void> syncStreaksToCloud() async {
+    if (!profile.isLoggedIn || profile.userKey.trim().isEmpty) return;
+    try {
+      final res = await http
+          .post(
+            Uri.parse('${AppConfig.serverBaseUrl}/api/user/streak'),
+            headers: _authHeaders,
+            body: jsonEncode({
+              'streakCount': streakCount,
+              'lastCompletedStreakDate': lastCompletedStreakDate,
+              'workoutStreakCount': workoutStreakCount,
+              'lastCompletedWorkoutStreakDate': lastCompletedWorkoutStreakDate,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(res.bodyBytes));
+        if (data is Map) {
+          final sf = (data['streakCount'] as num?)?.toInt() ?? streakCount;
+          final sfd = (data['lastCompletedStreakDate'] ?? '').toString();
+          final sw = (data['workoutStreakCount'] as num?)?.toInt() ?? workoutStreakCount;
+          final swd = (data['lastCompletedWorkoutStreakDate'] ?? '').toString();
+          if (sf > streakCount) {
+            streakCount = sf;
+            if (sfd.isNotEmpty) lastCompletedStreakDate = sfd;
+          }
+          if (sw > workoutStreakCount) {
+            workoutStreakCount = sw;
+            if (swd.isNotEmpty) lastCompletedWorkoutStreakDate = swd;
+          }
+          await saveAllToDisk();
+          notifyListeners();
+        }
+      }
+    } catch (_) {}
+  }
+
   void _checkAndUpgradeStreak() {
     final todayIso = DateTime.now().toIso8601String().split('T').first;
     if ((todayFoodLogs.isNotEmpty || todayWaterGlasses >= 1) &&
         lastCompletedStreakDate != todayIso) {
       streakCount += 1;
       lastCompletedStreakDate = todayIso;
+      unawaited(syncStreaksToCloud());
     }
   }
 
@@ -4213,6 +4251,7 @@ class BodyModController extends ChangeNotifier {
     if (lastCompletedWorkoutStreakDate != todayIso) {
       workoutStreakCount += 1;
       lastCompletedWorkoutStreakDate = todayIso;
+      unawaited(syncStreaksToCloud());
     }
     saveAllToDisk();
     notifyListeners();
@@ -4822,6 +4861,18 @@ class BodyModController extends ChangeNotifier {
       bmAccountIdGlobal = srvAccId;
     }
     bmIsAdminGlobal = profile.isAdmin;
+    final srvFoodCnt = (serverProfile['streakCount'] as num?)?.toInt() ?? 0;
+    final srvFoodDate = (serverProfile['lastCompletedStreakDate'] ?? '').toString();
+    if (srvFoodCnt > streakCount || (lastCompletedStreakDate.isEmpty && srvFoodDate.isNotEmpty)) {
+      streakCount = srvFoodCnt;
+      lastCompletedStreakDate = srvFoodDate;
+    }
+    final srvWorkCnt = (serverProfile['workoutStreakCount'] as num?)?.toInt() ?? 0;
+    final srvWorkDate = (serverProfile['lastCompletedWorkoutStreakDate'] ?? '').toString();
+    if (srvWorkCnt > workoutStreakCount || (lastCompletedWorkoutStreakDate.isEmpty && srvWorkDate.isNotEmpty)) {
+      workoutStreakCount = srvWorkCnt;
+      lastCompletedWorkoutStreakDate = srvWorkDate;
+    }
     final srvWp = serverProfile['workoutPlan'];
     if (srvWp is Map && srvWp['exercises'] is List && (srvWp['exercises'] as List).isNotEmpty) {
       bmAiCustomWorkouts = (srvWp['exercises'] as List)
@@ -4983,6 +5034,10 @@ class BodyModController extends ChangeNotifier {
     chatMessages = [];
     customAiFoods = [];
     todayFoodLogs = [];
+    streakCount = 0;
+    lastCompletedStreakDate = '';
+    workoutStreakCount = 0;
+    lastCompletedWorkoutStreakDate = '';
     bodyLogsHistory = [];
     bmAiCustomWorkouts = [];
     bmAccountIdGlobal = '';
