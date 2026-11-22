@@ -5727,7 +5727,7 @@ class BodyModController extends ChangeNotifier {
   Map<String, dynamic> adminFullStats = {};
 
   // دریافت آمار زنده پنل محرمانه مدیرعامل از کلودفلر (قفل دو‌لایه: ایمیل مدیرعامل + رمز سمت سرور)
-  Future> fetchCeoAdminLiveStats({String? password}) async {
+  Future<Map<String, dynamic>> fetchCeoAdminLiveStats({String? password}) async {
     if (!profile.isAdmin) {
       return {'ok': false, 'error': 'دسترسی غیرمجاز 🔒'};
     }
