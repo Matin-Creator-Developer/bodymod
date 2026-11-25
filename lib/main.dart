@@ -652,14 +652,14 @@ Future<bool> bmGenerateAiWorkoutPlan(BuildContext context, {VoidCallback? onDone
     final res = await http.post(
       Uri.parse('${AppConfig.serverBaseUrl}/api/ai/workout-plan'),
       headers: reqHeaders,
-      body: jsonEncode({'message': prompt, 'prompt': prompt, 'mode': 'workout_plan', 'model': 'gemini-3.1-flash-lite'}),
+      body: jsonEncode({'message': prompt, 'prompt': prompt, 'mode': 'workout_plan', 'model': 'gemini-3.5-flash-lite'}),
     ).timeout(const Duration(seconds: 45));
     if (res.statusCode != 200) {
       String errMsg = 'خطا در ساخت برنامه ورزشی! مطمئن شو وارد شدی و اشتراکت فعاله 🔒';
       try {
         final errData = jsonDecode(utf8.decode(res.bodyBytes));
-        if (errData is Map && errData['error'] != null) {
-          errMsg = errData['error'].toString();
+        if (errData is Map && (errData['message'] != null || errData['error'] != null)) {
+          errMsg = (errData['message'] ?? errData['error']).toString();
         }
       } catch (_) {}
       bmIsGeneratingWorkout = false;
@@ -1995,7 +1995,7 @@ class UserProfileModel {
   List<String> targetMuscles;
   String budgetTier; // 'base', 'mid', 'flagship', 'vip'
   String supplementPreference; // 'commercial', 'homemade'
-  String preferredModel; // 'gemini-3.1-flash-lite' | 'gemini-3.1-flash-lite'
+  String preferredModel; // 'gemini-3.5-flash-lite' | 'gemini-3.5-flash-lite'
   String aiCoachMemory;
   String city;
   bool isLoggedIn;
@@ -2031,7 +2031,7 @@ class UserProfileModel {
     this.targetMuscles = const ['کل بدن'],
     this.budgetTier = AppConfig.budgetBase,
     this.supplementPreference = 'commercial',
-    this.preferredModel = 'gemini-3.1-flash-lite',
+    this.preferredModel = 'gemini-3.5-flash-lite',
     this.aiCoachMemory = '',
     this.isLoggedIn = false,
     this.isProfileCompleted = false,
@@ -2196,7 +2196,7 @@ class UserProfileModel {
               .toString(),
       supplementPreference: (json['supplementPreference'] ?? 'commercial')
           .toString(),
-      preferredModel: (json['preferredModel'] ?? 'gemini-3.1-flash-lite')
+      preferredModel: (json['preferredModel'] ?? 'gemini-3.5-flash-lite')
           .toString(),
       aiCoachMemory: (json['aiCoachMemory'] ?? '').toString(),
       isLoggedIn: json['isLoggedIn'] == true,
@@ -5009,7 +5009,7 @@ class BodyModController extends ChangeNotifier {
             headers: _authHeaders,
             body: jsonEncode({
               'mode': 'coach_analysis',
-              'model': 'gemini-3.1-flash-lite',
+              'model': 'gemini-3.5-flash-lite',
               'prompt': prompt,
               'message': prompt,
             }),
@@ -5052,7 +5052,7 @@ class BodyModController extends ChangeNotifier {
       int readRem(String key, int fallback) {
         final g = quotasRaw[key];
         if (g is Map<String, dynamic>) {
-          final m = g['gemini-3.1-flash-lite'];
+          final m = g['gemini-3.5-flash-lite'] ?? g['gemini-3.1-flash-lite'];
           if (m is Map<String, dynamic> && m['remaining'] != null) {
             return (m['remaining'] as num).toInt();
           }
@@ -5062,7 +5062,7 @@ class BodyModController extends ChangeNotifier {
       int readMax(String key, int fallback) {
         final g = quotasRaw[key];
         if (g is Map<String, dynamic>) {
-          final m = g['gemini-3.1-flash-lite'];
+          final m = g['gemini-3.5-flash-lite'] ?? g['gemini-3.1-flash-lite'];
           if (m is Map<String, dynamic> && m['max'] != null) {
             return (m['max'] as num).toInt();
           }
@@ -5673,212 +5673,23 @@ class BodyModController extends ChangeNotifier {
     } catch (_) {}
 
     if (!parsedFromServerJson) {
-      _buildDiverseTailoredSevenDayPlan();
+      isLoadingAi = false;
+      notifyListeners();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('رفیق الان ترافیک سرورهای هوش مصنوعی خیلی بالاست! 😅 مشکل از برنامه ما نیست و سهمیه‌ات هم اصلاً کم نشده؛ یه دقیقه دیگه دوباره امتحان کن تا جوابت رو بدم! ❤️🙏'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+      return false;
     }
 
     await saveAllToDisk();
     isLoadingAi = false;
     notifyListeners();
     return true;
-  }
-
-  // ساخت برنامه ۷ روزه با تنوع ۱۰۰٪ واقعی در تمام ۷ روز هفته (شنبه تا جمعه بدون حتی ۱ وعده تکراری!)
-  void _buildDiverseTailoredSevenDayPlan() {
-    final tier = profile.budgetTier;
-    final bool isVipOrFlagship =
-        tier == AppConfig.budgetVip || tier == AppConfig.budgetFlagship;
-    final bool isMid = tier == AppConfig.budgetMid;
-
-    // ۷ منوی کاملاً متفاوت برای ۷ روز هفته (شنبه تا جمعه) متناسب با بودجه و هدف کاربر
-    final List<Map<String, dynamic>> sevenDistinctDays = [
-      // ۰: شنبه
-      {
-        'b': isVipOrFlagship
-            ? 'املت ۳ سفیده و ۱ زرده با قارچ و آووکادو + ۲ ورق نان تست پروتئینی'
-            : isMid
-            ? 'املت ۲ عدد تخم‌مرغ با گوجه و فلفل دلمه‌ای + ۲ کف دست نان سنگک'
-            : '۲ عدد تخم‌مرغ آب‌پز + ۲ کف دست نان سنگک و ۱ عدد گوجه',
-        's1': isVipOrFlagship
-            ? '۱ اسکوپ پروتئین وی ایزوله + ۱۰ عدد بادام درختی و بلوبری'
-            : '۱ عدد سیب درختی + ۲ عدد گردو و ۱ فنجان چای سبز',
-        'l': isVipOrFlagship
-            ? '۲۰۰ گرم فیله سالمون گریل + ۸ قاشق برنج قهوه‌ای و کلم بروکلی بخارپز'
-            : isMid
-            ? '۱۸۰ گرم سینه مرغ زعفرانی + ۸ قاشق برنج کته و سالاد شیرازی'
-            : '۱ کاسه پرپروتئین عدسی با ۱ قاشق روغن زیتون + ۲ کف دست سنگک',
-        's2': 'معجون ۲ قاشق شیره انگور و گردو + ۱ فنجان قهوه قبل تمرین',
-        'd': isVipOrFlagship
-            ? '۱۸۰ گرم استیک فیله گوساله + سالاد کینوا و سبزیجات گریل'
-            : isMid
-            ? 'خوراک ۲ عدد فیله مرغ تنوری با سیب‌زمینی آب‌پز و خیارشور'
-            : 'خوراک لوبیا چیتی پخته + ۱ عدد تخم‌مرغ آب‌پز و سالاد فصل',
-      },
-      // ۱: یکشنبه
-      {
-        'b': isVipOrFlagship
-            ? 'پنکیک جو دوسر پرک با کره بادام‌زمینی، موز و شیره افرا'
-            : isMid
-            ? 'کاسه اوتمیل (جو دوسر با شیر، ۱ عدد موز و ۱ قاشق عسل)'
-            : '۲ قاشق غذاخوری ارده و شیره انگور + ۲ کف دست نان بربری',
-        's1': '۱ پیاله ماست یونانی کم‌چرب با نعناع خشک و ۵ عدد بادام',
-        'l': isVipOrFlagship
-            ? '۲ سیخ کباب برگ گوسفندی کم‌چرب + ۸ قاشق چلوی زعفرانی و گوجه کبابی'
-            : isMid
-            ? '۱ سیخ جوجه‌کباب زعفرانی کامل + ۸ قاشق برنج کته و ماست و خیار'
-            : '۸ قاشق عدس‌پلو با گوشت چرخ‌کرده یا سویا + ۱ پیاله ماست',
-        's2': '۱ عدد موز متوسط + ۱ قاشق مرباخوری کره بادام‌زمینی',
-        'd': isVipOrFlagship
-            ? '۲۰۰ گرم فیله بوقلمون مزه‌دارشده + قارچ کبابی و سالاد کاهو'
-            : isMid
-            ? '۱ قوطی تن ماهی آب‌کش‌شده با لیموترش + ۲ کف دست سنگک'
-            : 'کوکو سیب‌زمینی و تخم‌مرغ کم‌روغن (۲ عدد) + گوجه و خیار و سنگک',
-      },
-      // ۲: دوشنبه
-      {
-        'b': isVipOrFlagship
-            ? 'تست بوقلمون دودی و پنیر گودا کم‌چرب + ۲ عدد سفیده تخم‌مرغ'
-            : '۱ قوطی کبریت پنیر سفید + ۳ عدد گردو، خیار و گوجه و ۲ کف دست سنگک',
-        's1': '۳ عدد خرما مضافتی + ۱ لیوان شیر کم‌چرب ولرم',
-        'l': isVipOrFlagship
-            ? 'خورشت فسنجان با سینه مرغ (کم‌روغن) + ۸ قاشق برنج ایرانی'
-            : isMid
-            ? 'خورشت قورمه‌سبزی جاافتاده با گوشت لخم (۶ قاشق) + ۸ قاشق برنج'
-            : '۸ قاشق ماکارونی دم‌کشیده با سویا و سیب‌زمینی ته‌دیگ + سالاد شیرازی',
-        's2': '۱ مشت کوچک نخودچی و کشمش + ۱ فنجان چای تازهدم',
-        'd': isVipOrFlagship
-            ? 'سینه مرغ شکم‌پر با اسفناج و پنیر فتا + سبزیجات بخارپز'
-            : isMid
-            ? '۲ عدد کتلت گوشت خانگی کم‌روغن + سالاد کاهو و ۱ کف دست نان'
-            : '۱ کاسه آش رشته سنتی با کشک فراوان (پروتئین بالا)',
-      },
-      // ۳: سه‌شنبه
-      {
-        'b': 'نیمرو ۲ عدد تخم‌مرغ با کمی زردچوبه و فلفل سیاه + ۲ کف دست سنگک',
-        's1': '۱ عدد پرتقال یا ۲ عدد نارنگی فصل + ۱۰ عدد پسته خام',
-        'l': isVipOrFlagship
-            ? '۲۲۰ گرم ماهی قزل‌آلا شکم‌پر کبابی + ۸ قاشق سبزی‌پلو'
-            : isMid
-            ? 'خورشت قیمه کم‌روغن با گوشت و لپه (۶ قاشق) + ۸ قاشق برنج سفید'
-            : '۱ کاسه آبگوشت سنتی (گوشت و نخود کوبیده) + ۲ کف دست سنگک و سبزی',
-        's2': 'شیک خانگی (۱ لیوان شیر، نصف موز، ۱ قاشق شیره انگور و ۱ گردو)',
-        'd': isVipOrFlagship
-            ? 'سالاد سزار رژیمی با ۲۰۰ گرم فیله مرغ گریل و روغن زیتون'
-            : isMid
-            ? 'میرزاقاسمی (بادمجان کبابی، گوجه و ۲ تخم‌مرغ) + ۲ کف دست سنگک'
-            : '۲ عدد سیب‌زمینی آب‌پز + ۲ عدد تخم‌مرغ آب‌پز رنده‌شده با نعناع و کره کم',
-      },
-      // ۴: چهارشنبه
-      {
-        'b': isVipOrFlagship
-            ? 'فرنچ‌تست پروتئینی با سفیده تخم‌مرغ، دارچین و عسل طبیعی'
-            : '۱ کاسه عدسی داغ صبحانه با آبلیمو + ۱ کف دست نان سنگک',
-        's1': '۱ برش هندوانه یا طالبی شیرین + ۲ عدد گردو',
-        'l': isVipOrFlagship
-            ? '۸ قاشق باقالی‌پلو با ماهیچه گوسفندی + ماست موسیر'
-            : isMid
-            ? '۸ قاشق لوبیاپلو با گوشت تکه‌ای + ۱ پیاله ماست و خیار'
-            : 'خوراک جگر مرغ یا سینه مرغ خردشده با پیاز و فلفل دلمه‌ای + سنگک',
-        's2': '۲ عدد بیسکوئیت سبوس‌دار + ۱ فنجان قهوه اسپرسو یا چای',
-        'd': isVipOrFlagship
-            ? '۲۰۰ گرم میگو یا فیله ماهی گریل + سیب‌زمینی تنوری'
-            : isMid
-            ? 'کشک بادمجان پرپروتئین با گردو (۶ قاشق) + ۲ کف دست سنگک'
-            : 'املت قارچ و پنیر کم‌چرب (با ۲ تخم‌مرغ) + سالاد فصل',
-      },
-      // ۵: پنجشنبه
-      {
-        'b': '۲ کف دست بربری داغ + پنیر سفید، ۱ قاشق عسل و ۲ عدد گردو',
-        's1': '۱ عدد سیب + ۳ عدد خرما و ۱۰ عدد بادام درختی',
-        'l': isVipOrFlagship
-            ? '۱ سیخ کباب سلطانی یا چنجه گوسفندی + ۸ قاشق کته زعفرانی'
-            : isMid
-            ? 'زرشک‌پلو با ران مرغ زعفرانی (۸ قاشق برنج) + سالاد فصل'
-            : '۸ قاشق استانبولی‌پلو با سیب‌زمینی و گوشت چرخ‌کرده / عدس + ماست',
-        's2': '۱ پیاله کوچک شله‌زرد یا شیربرنج خانگی با دارچین',
-        'd': isVipOrFlagship
-            ? 'ساندویچ رست‌بیف یا مرغ گریل در نان چاباتا با کاهو و گوجه'
-            : isMid
-            ? '۱۵۰ گرم سینه مرغ گریل مکعبی + ۱ عدد ذرت مکزیکی کم‌سس'
-            : 'ساندویچ ۵ قرص فلافل خانگی تنوری با گوجه و خیارشور',
-      },
-      // ۶: جمعه
-      {
-        'b': isVipOrFlagship
-            ? 'بشقاب صبحانه انگلیسی رژیمی (۲ تخم‌مرغ، لوبیا، قارچ گریل و بوقلمون)'
-            : 'حلیم گندم و بوقلمون پرپروتئین (۱ پیاله متوسط) با دارچین و کم‌شکر',
-        's1': '۱ پیاله انگور یا میوه فصل + ۱ مشت کوچک تخمه آفتابگردان',
-        'l': isVipOrFlagship
-            ? 'سبزی‌پلو با ماهی شیر یا سالمون تازه + سیرترشی و سالاد'
-            : isMid
-            ? '۲ سیخ کباب کوبیده خانگی کم‌چرب + ۷ قاشق برنج و گوجه کبابی'
-            : 'خوراک مرغ و سیب‌زمینی و هویج آب‌پز زعفرانی + ۲ کف دست سنگک',
-        's2': '۱ لیوان دوغ سنتی خنک با نعناع یا ۱ فنجان چای با ۲ عدد خرما',
-        'd': 'سوپ جو و مرغ مقوی با لیموترش تازه + سالاد کاهو و ۲ عدد سفیده تخم‌مرغ',
-      },
-    ];
-
-    final targetCal = profile.recommendedDailyCalories;
-    weeklyMealPlan.clear();
-
-    for (int i = 0; i < weekDays.length; i++) {
-      final dayName = weekDays[i];
-      final menu = sevenDistinctDays[i];
-      weeklyMealPlan[dayName] = [
-        MealPlanSlot(
-          mealType: 'صبحانه 🍳',
-          title: menu['b'].toString(),
-          ingredientsTip:
-              'نیم ساعت قبل از صبحانه ۱ لیوان آب ولرم بنوش تا متابولیسمت روشن بشه! 💧',
-          calories: (targetCal * 0.23).round(),
-          proteinG: 24,
-          carbsG: 42,
-          fatG: 14,
-          emoji: '🍳',
-        ),
-        MealPlanSlot(
-          mealType: 'میان‌وعده صبح 🍎',
-          title: menu['s1'].toString(),
-          ingredientsTip: 'جلوگیری از ریزه‌خواری و حفظ انرژی تا ظهر ⚡',
-          calories: (targetCal * 0.11).round(),
-          proteinG: 9,
-          carbsG: 22,
-          fatG: 6,
-          emoji: '🍎',
-        ),
-        MealPlanSlot(
-          mealType: 'ناهار 🍲',
-          title: menu['l'].toString(),
-          ingredientsTip:
-              'وعده اصلی روز $dayName؛ آروم بجو و سبزیجات کنارش رو فراموش نکن! 🥗',
-          calories: (targetCal * 0.34).round(),
-          proteinG: 44,
-          carbsG: 58,
-          fatG: 17,
-          emoji: '🍲',
-        ),
-        MealPlanSlot(
-          mealType: 'میان‌وعده عصر (قبل تمرین) ⚡',
-          title: menu['s2'].toString(),
-          ingredientsTip: 'سوخت‌رسانی عالی ۴۵ دقیقه قبل از شروع فعالیت بدنی 🔥',
-          calories: (targetCal * 0.11).round(),
-          proteinG: 8,
-          carbsG: 28,
-          fatG: 7,
-          emoji: '🍯',
-        ),
-        MealPlanSlot(
-          mealType: 'شام (ریکاوری شبانه) 🥗',
-          title: menu['d'].toString(),
-          ingredientsTip:
-              'حداقل ۲ ساعت قبل از خواب میل کن تا ریکاوری عضلاتت عالی انجام بشه 🌙',
-          calories: (targetCal * 0.21).round(),
-          proteinG: 34,
-          carbsG: 30,
-          fatG: 12,
-          emoji: '🥗',
-        ),
-      ];
-    }
   }
 
   // ارسال پیام به چت مربی هوشمند در کلودفلر
