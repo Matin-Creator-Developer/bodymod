@@ -562,8 +562,25 @@ Future<void> bmLoadSavedAiWorkouts() async {
     bmWorkoutBurnKcal = prefs.getInt('bm_ai_workout_burn_kcal') ?? 0;
     bmAiSurplusSnack = prefs.getString('bm_ai_surplus_snack') ?? '';
     bmWorkoutQuotaWeekUsedGlobal = prefs.getString('bm_workout_quota_week_v1') ?? '';
+    final savedMuscles = prefs.getStringList('bm_target_muscles_v1');
+    if (savedMuscles != null && savedMuscles.isNotEmpty) {
+      bmGlobalTargetMuscles = List<String>.from(savedMuscles);
+    }
+    final savedWeeklyJson = prefs.getString('bm_ai_weekly_workouts_v1');
+    if (savedWeeklyJson != null && savedWeeklyJson.isNotEmpty) {
+      final Map<String, dynamic> wDecoded = jsonDecode(savedWeeklyJson);
+      bmAiWeeklyWorkouts = wDecoded.map((k, v) => MapEntry(k.toString(), Map<String, dynamic>.from(v as Map)));
+      for (int i = 0; i < bmWorkoutWeekDays.length; i++) {
+        final dObj = bmAiWeeklyWorkouts[bmWorkoutWeekDays[i]];
+        if (dObj != null && dObj['is_rest'] != true && dObj['exercises'] is List && (dObj['exercises'] as List).isNotEmpty) {
+          bmSelectedWorkoutDayIdx = i;
+          bmAiCustomWorkouts = (dObj['exercises'] as List).map((e) => Map<String, String>.from((e as Map).map((k, v) => MapEntry(k.toString(), v.toString())))).toList();
+          break;
+        }
+      }
+    }
     final savedJson = prefs.getString('bm_ai_custom_workouts_v1');
-    if (savedJson != null && savedJson.isNotEmpty) {
+    if (bmAiCustomWorkouts.isEmpty && savedJson != null && savedJson.isNotEmpty) {
       final List<dynamic> decoded = jsonDecode(savedJson);
       bmAiCustomWorkouts = decoded.map((e) => Map<String, String>.from((e as Map).map((k, v) => MapEntry(k.toString(), v.toString())))).toList();
     }
@@ -615,18 +632,23 @@ Future<bool> bmGenerateAiWorkoutPlan(BuildContext context, {VoidCallback? onDone
     final varietyRule = prevTitles.isNotEmpty
         ? ' تمرین‌های قبلی کاربر این‌ها بوده (تکرارشون نکن و حرکات کاملاً جدید، متنوع و خلاقانه بده): ' + prevTitles + '. '
         : ' حرکات باید کاملاً متنوع، علمی، جذاب و غیرتکراری باشن و کل زوایای عضلات هدف رو پوشش بدن. ';
-    final prompt = 'تو مربی حرفه‌ای بادی‌مود هستی. مشخصات کاربر: وزن ' + bmGlobalWeight.round().toString() + ' کیلو، قد ' + bmGlobalHeight.round().toString() + '، سن ' + bmGlobalAge.toString() + '، تمرین در هفته: ' + bmGlobalDaysPerWeek.toString() + ' روز، هدف: ' + gl + '.' + varietyRule
+    final musclesStr = bmGlobalTargetMuscles.isEmpty ? 'کل بدن' : bmGlobalTargetMuscles.join('، ');
+    final splitRule = bmGlobalDaysPerWeek <= 2
+        ? 'چون کاربر فقط ' + bmGlobalDaysPerWeek.toString() + ' روز در هفته تمرین می‌کنه، در روزهای تمرینی برنامه کل بدن (Full Body) بده و بقیه روزهای هفته رو is_rest: true بذار.'
+        : 'چون کاربر ' + bmGlobalDaysPerWeek.toString() + ' روز در هفته تمرین می‌کنه، برنامه ۷ روزه علمی با تفکیک عضلات مرتبط بچین (مثلاً بالاتنه/پایین‌تنه یا Push/Pull/Legs) طوری که عضله‌ای که دیروز تمرین کرده، فرداش حتماً استراحت کنه و دو روز پشت سر هم یک عضله تمرین داده نشه! دقیقاً ' + bmGlobalDaysPerWeek.toString() + ' روز تمرینی (is_rest: false) و بقیه روزها استراحت (is_rest: true) باشه.';
+    final prompt = 'تو مربی حرفه‌ای بادی‌مود هستی. مشخصات کاربر: وزن ' + bmGlobalWeight.round().toString() + ' کیلو، قد ' + bmGlobalHeight.round().toString() + '، سن ' + bmGlobalAge.toString() + '، تمرین در هفته: ' + bmGlobalDaysPerWeek.toString() + ' روز، هدف: ' + gl + '، عضلات و نواحی هدف کاربر: ' + musclesStr + '.' + varietyRule
+        + 'قانون علمی تقسیم روزهای هفته: ' + splitRule + ' '
         + 'محاسبه مخفی پس‌زمینه (فقط برای اطلاع خودت جهت ایجاد تعادل کالری؛ این عدد روزمره را به کاربر نگو): کالری کارهای عادی روزانه مثل راه رفتن و صحبت کردن و تحرک هفتگی = ' + hiddenRoutineKcal.toString() + ' کالری. '
         + 'قانون تجهیزات: ' + eqRule + ' '
         + 'فقط و فقط یک آبجکت JSON خالص با این ۳ کلید برگردان: '
-        + '{"workout_calories": ' + estWorkoutKcal.toString() + ', "surplus_snack": "پیشنهاد دقیق خوراکی و میان‌وعده پرکالری (بیشتر از کالری سوخته شده) برای ایجاد کالری مازاد و تعادل با تمرین و فعالیت روزانه", "exercises": [۷ آبجکت حرکت ورزشی به ترتیب گرم کردن، ست اصلی، سرد کردن با کلیدهای title و muscle و breath و tip]}';
+        + '{"workout_calories": ' + estWorkoutKcal.toString() + ', "surplus_snack": "پیشنهاد دقیق خوراکی و میان‌وعده برای ایجاد کالری مازاد یا ریکاوری", "weekly_plan": {"شنبه": {"is_rest": false, "focus": "عنوان عضله هدف این روز", "exercises": [۷ آبجکت حرکت به ترتیب گرم کردن، ست اصلی، سرد کردن با کلیدهای title و muscle و breath و tip]}, "یکشنبه": ..., "دوشنبه": ..., "سه‌شنبه": ..., "چهارشنبه": ..., "پنجشنبه": ..., "جمعه": ...}} (برای روزهای استراحت is_rest را true و exercises را [] بگذار).';
     final reqHeaders = <String, String>{'Content-Type': 'application/json'};
     if (authHeaders != null) reqHeaders.addAll(authHeaders);
     final res = await http.post(
       Uri.parse('${AppConfig.serverBaseUrl}/api/ai/workout-plan'),
       headers: reqHeaders,
       body: jsonEncode({'message': prompt, 'prompt': prompt, 'mode': 'workout_plan', 'model': 'gemini-3.1-flash-lite'}),
-    ).timeout(const Duration(seconds: 30));
+    ).timeout(const Duration(seconds: 45));
     if (res.statusCode != 200) {
       String errMsg = 'خطا در ساخت برنامه ورزشی! مطمئن شو وارد شدی و اشتراکت فعاله 🔒';
       try {
@@ -660,17 +682,43 @@ Future<bool> bmGenerateAiWorkoutPlan(BuildContext context, {VoidCallback? onDone
           bmAiSurplusSnack = parsed['surplus_snack'].toString().trim();
           await prefs.setString('bm_ai_surplus_snack', bmAiSurplusSnack);
         }
-        if (parsed['exercises'] is List && (parsed['exercises'] as List).isNotEmpty) {
+        bool savedAnyWorkout = false;
+        if (parsed['weekly_plan'] is Map && (parsed['weekly_plan'] as Map).isNotEmpty) {
+          final Map<String, dynamic> wp = Map<String, dynamic>.from(parsed['weekly_plan'] as Map);
+          bmAiWeeklyWorkouts = {};
+          for (final d in bmWorkoutWeekDays) {
+            if (wp[d] is Map) {
+              bmAiWeeklyWorkouts[d] = Map<String, dynamic>.from(wp[d] as Map);
+            }
+          }
+          if (bmAiWeeklyWorkouts.isNotEmpty) {
+            await prefs.setString('bm_ai_weekly_workouts_v1', jsonEncode(bmAiWeeklyWorkouts));
+            for (int i = 0; i < bmWorkoutWeekDays.length; i++) {
+              final dObj = bmAiWeeklyWorkouts[bmWorkoutWeekDays[i]];
+              if (dObj != null && dObj['is_rest'] != true && dObj['exercises'] is List && (dObj['exercises'] as List).isNotEmpty) {
+                bmSelectedWorkoutDayIdx = i;
+                bmAiCustomWorkouts = (dObj['exercises'] as List).map((e) => Map<String, String>.from((e as Map).map((k, v) => MapEntry(k.toString(), v.toString())))).toList();
+                await prefs.setString('bm_ai_custom_workouts_v1', jsonEncode(bmAiCustomWorkouts));
+                break;
+              }
+            }
+            savedAnyWorkout = true;
+          }
+        }
+        if (!savedAnyWorkout && parsed['exercises'] is List && (parsed['exercises'] as List).isNotEmpty) {
           final List<dynamic> arr = parsed['exercises'];
           bmAiCustomWorkouts = arr.map((e) => Map<String, String>.from((e as Map).map((k, v) => MapEntry(k.toString(), v.toString())))).toList();
           await prefs.setString('bm_ai_custom_workouts_v1', jsonEncode(bmAiCustomWorkouts));
+          savedAnyWorkout = true;
+        }
+        if (savedAnyWorkout) {
           bmWorkoutQuotaWeekUsedGlobal = bmCurrentIranWeekKey();
           bmRemainingWorkoutQuotaGlobal = 0;
           await prefs.setString('bm_workout_quota_week_v1', bmWorkoutQuotaWeekUsedGlobal);
           bmIsGeneratingWorkout = false;
           if (onDone != null) onDone();
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ برنامه تمرینی، کالری‌سوزی و میان‌وعده کالری مازاد توسط هوش مصنوعی تنظیم شد! 💪🔥'), backgroundColor: Color(0xFF00C896)));
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ برنامه تمرینی ۷ روزه علمی، کالری‌سوزی و میان‌وعده توسط هوش مصنوعی تنظیم شد! 💪🔥'), backgroundColor: Color(0xFF00C896)));
           }
           return true;
         }
@@ -1939,6 +1987,7 @@ class UserProfileModel {
   String goal; // یکی از ۶ هدف دقیق
   String workoutDaysPerWeek; // 'none', 'd1' .. 'd7'
   String workoutPlace; // 'home_dumbbell', 'gym', 'bodyweight'
+  List<String> targetMuscles;
   String budgetTier; // 'base', 'mid', 'flagship', 'vip'
   String supplementPreference; // 'commercial', 'homemade'
   String preferredModel; // 'gemini-3.1-flash-lite' | 'gemini-3.1-flash-lite'
@@ -1974,6 +2023,7 @@ class UserProfileModel {
     this.goal = 'gain_muscle',
     this.workoutDaysPerWeek = 'd3',
     this.workoutPlace = 'home_dumbbell',
+    this.targetMuscles = const ['کل بدن'],
     this.budgetTier = AppConfig.budgetBase,
     this.supplementPreference = 'commercial',
     this.preferredModel = 'gemini-3.1-flash-lite',
@@ -2088,6 +2138,7 @@ class UserProfileModel {
     'goal': goal,
     'workoutDaysPerWeek': workoutDaysPerWeek,
     'workoutPlace': workoutPlace,
+    'targetMuscles': targetMuscles,
     'budgetTier': budgetTier,
     'economicStatus': budgetTier,
     'supplementPreference': supplementPreference,
@@ -2132,6 +2183,9 @@ class UserProfileModel {
       goal: (json['goal'] ?? 'gain_muscle').toString(),
       workoutDaysPerWeek: (json['workoutDaysPerWeek'] ?? 'd3').toString(),
       workoutPlace: (json['workoutPlace'] ?? 'home_dumbbell').toString(),
+      targetMuscles: (json['targetMuscles'] is List && (json['targetMuscles'] as List).isNotEmpty)
+          ? (json['targetMuscles'] as List).map((e) => e.toString()).toList()
+          : const ['کل بدن'],
       budgetTier:
           (json['budgetTier'] ?? json['economicStatus'] ?? AppConfig.budgetBase)
               .toString(),
@@ -4872,20 +4926,45 @@ class BodyModController extends ChangeNotifier {
       workoutStreakCount = srvWorkCnt;
       lastCompletedWorkoutStreakDate = srvWorkDate;
     }
+    if (profile.targetMuscles.isNotEmpty) {
+      bmGlobalTargetMuscles = List<String>.from(profile.targetMuscles);
+    }
     final srvWp = serverProfile['workoutPlan'];
-    if (srvWp is Map && srvWp['exercises'] is List && (srvWp['exercises'] as List).isNotEmpty) {
-      bmAiCustomWorkouts = (srvWp['exercises'] as List)
-          .whereType()
-          .map((e) => Map<String, String>.from(e.map((k, v) => MapEntry(k.toString(), v.toString()))))
-          .toList();
+    if (srvWp is Map) {
       if (srvWp['workout_calories'] != null) {
         bmWorkoutBurnKcal = int.tryParse(srvWp['workout_calories'].toString()) ?? bmWorkoutBurnKcal;
       }
       if (srvWp['surplus_snack'] != null && srvWp['surplus_snack'].toString().trim().isNotEmpty) {
         bmAiSurplusSnack = srvWp['surplus_snack'].toString().trim();
       }
+      if (srvWp['weekly_plan'] is Map && (srvWp['weekly_plan'] as Map).isNotEmpty) {
+        final wpMap = Map<String, dynamic>.from(srvWp['weekly_plan'] as Map);
+        bmAiWeeklyWorkouts = {};
+        for (final d in bmWorkoutWeekDays) {
+          if (wpMap[d] is Map) {
+            bmAiWeeklyWorkouts[d] = Map<String, dynamic>.from(wpMap[d] as Map);
+          }
+        }
+        for (int i = 0; i < bmWorkoutWeekDays.length; i++) {
+          final dObj = bmAiWeeklyWorkouts[bmWorkoutWeekDays[i]];
+          if (dObj != null && dObj['is_rest'] != true && dObj['exercises'] is List && (dObj['exercises'] as List).isNotEmpty) {
+            bmSelectedWorkoutDayIdx = i;
+            bmAiCustomWorkouts = (dObj['exercises'] as List)
+                .whereType()
+                .map((e) => Map<String, String>.from(e.map((k, v) => MapEntry(k.toString(), v.toString()))))
+                .toList();
+            break;
+          }
+        }
+      } else if (srvWp['exercises'] is List && (srvWp['exercises'] as List).isNotEmpty) {
+        bmAiCustomWorkouts = (srvWp['exercises'] as List)
+            .whereType()
+            .map((e) => Map<String, String>.from(e.map((k, v) => MapEntry(k.toString(), v.toString()))))
+            .toList();
+      }
       SharedPreferences.getInstance().then((prefs) {
-        prefs.setString('bm_ai_custom_workouts_v1', jsonEncode(bmAiCustomWorkouts));
+        if (bmAiWeeklyWorkouts.isNotEmpty) prefs.setString('bm_ai_weekly_workouts_v1', jsonEncode(bmAiWeeklyWorkouts));
+        if (bmAiCustomWorkouts.isNotEmpty) prefs.setString('bm_ai_custom_workouts_v1', jsonEncode(bmAiCustomWorkouts));
         if (bmWorkoutBurnKcal > 0) prefs.setInt('bm_ai_workout_burn_kcal', bmWorkoutBurnKcal);
         if (bmAiSurplusSnack.isNotEmpty) prefs.setString('bm_ai_surplus_snack', bmAiSurplusSnack);
       });
@@ -5039,6 +5118,9 @@ class BodyModController extends ChangeNotifier {
     lastCompletedWorkoutStreakDate = '';
     bodyLogsHistory = [];
     bmAiCustomWorkouts = [];
+    bmAiWeeklyWorkouts = {};
+    bmSelectedWorkoutDayIdx = 0;
+    bmGlobalTargetMuscles = ['کل بدن'];
     bmAccountIdGlobal = '';
     bmIsAdminGlobal = false;
     _ceoPanelPassword = '';
@@ -5053,6 +5135,8 @@ class BodyModController extends ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('bm_ai_custom_workouts_v1');
+      await prefs.remove('bm_ai_weekly_workouts_v1');
+      await prefs.remove('bm_target_muscles_v1');
       await prefs.remove('bm_workout_quota_week_v1');
       await prefs.remove('bm_ai_workout_burn_kcal');
       await prefs.remove('bm_ai_surplus_snack');
@@ -5074,6 +5158,7 @@ class BodyModController extends ChangeNotifier {
     required String goal,
     required String workoutDaysPerWeek,
     required String workoutPlace,
+    List<String> targetMuscles = const ['کل بدن'],
     required String budgetTier,
     required String supplementPreference,
     required String aiCoachMemory,
@@ -5095,6 +5180,14 @@ class BodyModController extends ChangeNotifier {
     profile.goal = goal;
     profile.workoutDaysPerWeek = goal == 'gain_bulk' ? 'none' : workoutDaysPerWeek;
     profile.workoutPlace = noWorkout ? 'none' : workoutPlace;
+    profile.targetMuscles = noWorkout ? const [] : (targetMuscles.isEmpty ? const ['کل بدن'] : List<String>.from(targetMuscles));
+    bmGlobalTargetMuscles = List<String>.from(profile.targetMuscles);
+    bmGlobalDaysPerWeek = profile.workoutDaysPerWeek == 'none' ? 0 : (int.tryParse(profile.workoutDaysPerWeek.replaceAll(RegExp(r'[^0-9]'), '')) ?? 3);
+    bmGlobalWeight = weightKg;
+    bmGlobalHeight = heightCm;
+    bmGlobalAge = age;
+    bmGlobalGoal = AppConfig.goalLabel(goal);
+    _prefs?.setStringList('bm_target_muscles_v1', bmGlobalTargetMuscles);
     profile.budgetTier = budgetTier;
     profile.supplementPreference = supplementPreference;
     profile.aiCoachMemory = aiCoachMemory.trim();
@@ -6377,6 +6470,7 @@ class _EditableBodyProfileFormWidgetState
   late String _selectedGoal;
   late String _selectedWorkoutDays;
   late String _selectedWorkoutPlace;
+  late List<String> _selectedTargetMuscles;
   late String _selectedBudgetTier;
   late String _selectedSupplementMode;
   bool? _rulesQuizQ1;
@@ -6408,6 +6502,7 @@ class _EditableBodyProfileFormWidgetState
         : 'd3';
     const validPlaces = ['home_dumbbell', 'gym', 'bodyweight'];
     _selectedWorkoutPlace = validPlaces.contains(p.workoutPlace) ? p.workoutPlace : 'bodyweight';
+    _selectedTargetMuscles = p.targetMuscles.isNotEmpty ? List<String>.from(p.targetMuscles) : ['کل بدن'];
     if (_selectedGoal == 'gain_bulk') {
       _selectedWorkoutDays = 'none';
     }
@@ -6618,6 +6713,64 @@ class _EditableBodyProfileFormWidgetState
         ),
         const SizedBox(height: 12),
 
+        // انتخاب چندتایی عضلات و نواحی هدف برای تقویت
+        Opacity(
+          opacity: (_selectedGoal == 'gain_bulk' || _selectedWorkoutDays == 'none') ? 0.42 : 1.0,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '💪 کدوم قسمت‌های بدنت رو می‌خوای تقویت کنی؟ (چندانتخابی؛ هرچند تا دوست داری انتخاب کن!)',
+                style: TextStyle(
+                  fontSize: 12.2,
+                  fontWeight: FontWeight.w800,
+                  color: (_selectedGoal == 'gain_bulk' || _selectedWorkoutDays == 'none') ? bmTextMutedColor : BMColors.neonCyan,
+                  height: 1.45,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: bmTargetMuscleOptions.map((m) {
+                  final isSel = _selectedTargetMuscles.contains(m);
+                  final disabled = _selectedGoal == 'gain_bulk' || _selectedWorkoutDays == 'none';
+                  return FilterChip(
+                    selected: isSel,
+                    selectedColor: BMColors.neonGreen,
+                    checkmarkColor: Colors.black,
+                    label: Text(
+                      m,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12,
+                        color: isSel ? Colors.black : bmTextColor,
+                      ),
+                    ),
+                    onSelected: disabled
+                        ? null
+                        : (val) {
+                            setState(() {
+                              if (val) {
+                                if (!_selectedTargetMuscles.contains(m)) {
+                                  _selectedTargetMuscles.add(m);
+                                }
+                              } else {
+                                _selectedTargetMuscles.remove(m);
+                                if (_selectedTargetMuscles.isEmpty) {
+                                  _selectedTargetMuscles.add('کل بدن');
+                                }
+                              }
+                            });
+                          },
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+
         // ۴ سطح وضعیت اقتصادی و میزان درآمد ماهانه
         Text(
           '💰 وضعیت اقتصادی (برای اینکه مربی هوش مصنوعیت توصیه واقعی‌تری داشته باشه)',
@@ -6719,7 +6872,7 @@ class _EditableBodyProfileFormWidgetState
                   '۳. اطلاعاتت رو درست و کامل بگو ✍️ برنامه‌هات دقیقاً رو حساب اطلاعاتی چیده می‌شه که اینجا می‌نویسی (به‌خصوص اطلاعات شخصی‌تر و حساسیت‌هایی که به هوش مصنوعی می‌گی). با اینکه دکتر نیستم ولی پیشنهاداتی که می‌گم براساس خود تو شخصی‌سازی می‌شه؛ اگه اطلاعات واقعی خودتو ندی یا کم‌کاری کنی و ناقص بگی ممکنه پیشنهاد هوش مصنوعی نتیجه برعکس داشته باشه یا حتی خدای نکرده ممکنه بهت آسیب بزنه!\n\n'
                   '۴. کلک و تقلب ممنوع! 🕵️‍♂️ رو هر گوشی فقط ۲ تا اکانت (یکی گوگل، یکی شماره موبایل) می‌تونی بسازی. اگه بخوای به خودت کد دعوت بزنی یا از نسخه‌های غیررسمی بیرون بازار و مایکت استفاده کنی، سیستم مچتو می‌گیره و حسابت قفل می‌شه 😉\n\n'
                   '۵. خریدا دست بازار و مایکته 💳 همه‌ی پرداخت‌های اشتراک و حمایت مالی فقط از درگاه رسمی کافه‌بازار و مایکت انجام می‌شه و پیگیری یا برگشت پولش هم با قوانین همون مارکت‌هاست.\n\n'
-                  '۶. اطلاعاتت پیش ما امانته 🔒 مشخصات بدنی، شماره/جیمیل و غذاهای سفارشی تو فقط برای این ذخیره می‌شه که برنامه‌ت دقیق باشه و حسابت نپره؛ عمراً به شرکت‌های تبلیغاتی یا هیچ‌کس دیگه بفروشیم!',
+                  '۶. اطلاعاتت کاملاً محرمانه‌ست و فقط برای ساخت برنامه‌ی اختصاصی خودت و ذخیره شدن حسابت استفاده می‌شه 🔒',
                   style: TextStyle(fontSize: 12, height: 1.65),
                 ),
                 const Divider(height: 22),
@@ -6845,6 +6998,7 @@ class _EditableBodyProfileFormWidgetState
                 goal: _selectedGoal,
                 workoutDaysPerWeek: _selectedGoal == 'gain_bulk' ? 'none' : _selectedWorkoutDays,
                 workoutPlace: noWorkoutSelected ? 'none' : _selectedWorkoutPlace,
+                targetMuscles: noWorkoutSelected ? const [] : _selectedTargetMuscles,
                 budgetTier: _selectedBudgetTier,
                 supplementPreference: _selectedSupplementMode,
                 aiCoachMemory: _memoryCtrl.text,
@@ -9291,7 +9445,7 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
       );
     }
 
-    if (!canAccessGym || bmAiCustomWorkouts.isEmpty) {
+    if (!canAccessGym || (bmAiCustomWorkouts.isEmpty && bmAiWeeklyWorkouts.isEmpty)) {
       return ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 95),
         children: [
@@ -9395,7 +9549,90 @@ class _WorkoutAndLivePlayerTabState extends State<WorkoutAndLivePlayerTab> {
       padding: const EdgeInsets.fromLTRB(16, 6, 16, 95),
       children: [
         buildWorkoutStreakCard(),
-        Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: bmCardColor, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFF00E5A3).withOpacity(0.4))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Row(children: [const Icon(Icons.local_fire_department_rounded, color: Colors.orangeAccent, size: 20), const SizedBox(width: 6), Text('کالری مصرفی این تمرین: ${bmGetVisibleWorkoutCalories()} کالری 🔥', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: bmTextColor))]),InkWell(onTap: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? null : () => bmGenerateAiWorkoutPlan(context, authHeaders: c._authHeaders, onDone: () => setState(() {})), borderRadius: BorderRadius.circular(8), child: Opacity(opacity: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? 0.45 : 1.0, child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5), decoration: BoxDecoration(color: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? Colors.grey : const Color(0xFF00E5A3), borderRadius: BorderRadius.circular(8), border: Border.all(color: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? Colors.grey : const Color(0xFF00E5A3))), child: ValueListenableBuilder<int>(valueListenable: bmAiCooldownSec, builder: (_, sec, __) => Text(bmGlobalDaysPerWeek <= 0 ? 'ورزش نداری رفیق 😅' : (bmIsWorkoutQuotaExhausted() ? 'سهمیه‌ت تموم شده رفیق 😉' : (bmIsGeneratingWorkout ? 'در حال محاسبه AI... ⏳' : (sec > 0 ? '⏳ صبر کن ($sec)' : 'دریافت/تمدید برنامه ورزشی'))), style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.black)))))),]),const SizedBox(height: 8),Text(bmGetSurplusRecommendation(), style: TextStyle(fontSize: 11.5, color: bmTextSubColor, height: 1.45)),])), Column(
+        Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        if (bmAiWeeklyWorkouts.isNotEmpty) ...[
+          SizedBox(
+            height: 42,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: bmWorkoutWeekDays.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 6),
+              itemBuilder: (_, idx) {
+                final dName = bmWorkoutWeekDays[idx];
+                final dObj = bmAiWeeklyWorkouts[dName];
+                final isRest = dObj == null || dObj['is_rest'] == true;
+                final isSel = idx == bmSelectedWorkoutDayIdx;
+                return ChoiceChip(
+                  selected: isSel,
+                  selectedColor: isRest ? BMColors.electricBlue : BMColors.neonCyan,
+                  label: Text(
+                    isRest ? '$dName 😴' : '$dName 💪',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 12,
+                      color: isSel ? Colors.black : bmTextColor,
+                    ),
+                  ),
+                  onSelected: (_) {
+                    setState(() {
+                      bmSelectedWorkoutDayIdx = idx;
+                      _activeStepIndex = 0;
+                      _currentSet = 1;
+                      _previewPhase = null;
+                      if (!isRest && dObj['exercises'] is List) {
+                        bmAiCustomWorkouts = (dObj['exercises'] as List)
+                            .whereType()
+                            .map((e) => Map<String, String>.from(e.map((k, v) => MapEntry(k.toString(), v.toString()))))
+                            .toList();
+                      }
+                    });
+                  },
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 10),
+          Builder(builder: (_) {
+            final dName = bmWorkoutWeekDays[bmSelectedWorkoutDayIdx.clamp(0, 6)];
+            final dObj = bmAiWeeklyWorkouts[dName];
+            final isRest = dObj == null || dObj['is_rest'] == true;
+            final focusTxt = (dObj?['focus'] ?? (isRest ? 'استراحت و ریکاوری عضلات 😴🌿' : 'تمرین اختصاصی روز $dName 💪')).toString();
+            return Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isRest ? BMColors.electricBlue.withOpacity(0.14) : BMColors.neonCyan.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: isRest ? BMColors.electricBlue : BMColors.neonCyan),
+              ),
+              child: Row(
+                children: [
+                  Text(isRest ? '😴🌿' : '🎯💪', style: const TextStyle(fontSize: 22)),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isRest ? '$dName: روز استراحت و ریکاوری' : 'تمرکز تمرین $dName:',
+                          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, color: isRest ? BMColors.electricBlue : BMColors.neonCyan),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          isRest
+                              ? '$focusTxt — عضلات دیروزت امروز دارن رشد می‌کنن! آب کافی بخور و کشش سبک انجام بده 💧'
+                              : focusTxt,
+                          style: TextStyle(fontSize: 12, color: bmTextColor, height: 1.4),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+        Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: bmCardColor, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFF00E5A3).withOpacity(0.4))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Row(children: [const Icon(Icons.local_fire_department_rounded, color: Colors.orangeAccent, size: 20), const SizedBox(width: 6), Text('کالری مصرفی این تمرین: ${bmGetVisibleWorkoutCalories()} کالری 🔥', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: bmTextColor))]),InkWell(onTap: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? null : () => bmGenerateAiWorkoutPlan(context, authHeaders: c._authHeaders, onDone: () => setState(() {})), borderRadius: BorderRadius.circular(8), child: Opacity(opacity: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? 0.45 : 1.0, child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5), decoration: BoxDecoration(color: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? Colors.grey : const Color(0xFF00E5A3), borderRadius: BorderRadius.circular(8), border: Border.all(color: (bmGlobalDaysPerWeek <= 0 || bmIsWorkoutQuotaExhausted()) ? Colors.grey : const Color(0xFF00E5A3))), child: ValueListenableBuilder<int>(valueListenable: bmAiCooldownSec, builder: (_, sec, __) => Text(bmGlobalDaysPerWeek <= 0 ? 'ورزش نداری رفیق 😅' : (bmIsWorkoutQuotaExhausted() ? 'سهمیه‌ت تموم شده رفیق 😉' : (bmIsGeneratingWorkout ? 'در حال محاسبه AI... ⏳' : (sec > 0 ? '⏳ صبر کن ($sec)' : 'دریافت/تمدید برنامه ورزشی'))), style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.black)))))),]),const SizedBox(height: 8),Text(bmGetSurplusRecommendation(), style: TextStyle(fontSize: 11.5, color: bmTextSubColor, height: 1.45)),])), Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
