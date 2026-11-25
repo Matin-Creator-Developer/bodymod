@@ -506,6 +506,11 @@ int bmGlobalDaysPerWeek = 3;
 int bmWorkoutBurnKcal = 0;
 String bmAiSurplusSnack = '';
 List<Map<String, String>> bmAiCustomWorkouts = [];
+List<String> bmGlobalTargetMuscles = ['کل بدن'];
+const List<String> bmTargetMuscleOptions = ['کل بدن', 'سینه', 'شکم', 'بازو', 'پشت و سرشانه', 'ران و باسن'];
+const List<String> bmWorkoutWeekDays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
+Map<String, Map<String, dynamic>> bmAiWeeklyWorkouts = {};
+int bmSelectedWorkoutDayIdx = 0;
 bool bmIsGeneratingWorkout = false;
 
 // محاسبه مخفی در پس‌زمینه: متابولیسم پایه + کارهای عادی روزانه (راه رفتن، صحبت کردن و...) + ضریب تمرین هفتگی
