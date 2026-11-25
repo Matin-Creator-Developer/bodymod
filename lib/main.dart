@@ -733,7 +733,7 @@ Future<bool> bmGenerateAiWorkoutPlan(BuildContext context, {VoidCallback? onDone
   bmIsGeneratingWorkout = false;
   if (onDone != null) onDone();
   if (context.mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('⚠️ خطا در ساخت برنامه ورزشی از هوش مصنوعی! چند ثانیه دیگه دوباره امتحان کن رفیق.'), backgroundColor: Colors.redAccent));
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('⚠️ رفیق الان ترافیک سرورهای هوش مصنوعی خیلی بالاست! 😅 مشکل از برنامه ما نیست و سهمیه‌ات هم اصلاً کم نشده؛ چند دقیقه دیگه دوباره امتحان کن تا جوابت رو بدم! ❤️🙏'), backgroundColor: Colors.redAccent));
   }
   return false;
 }
@@ -5628,7 +5628,7 @@ class BodyModController extends ChangeNotifier {
                   'بر اساس پرونده بدنی من (هدف: ${AppConfig.goalLabel(profile.goal)}، بودجه: ${AppConfig.budgetLabel(profile.budgetTier)}، تمرین: ${AppConfig.workoutDaysLabel(profile.workoutDaysPerWeek)}، حافظه مربی: ${profile.aiCoachMemory}) یک برنامه غذایی ۷ روزه کاملاً متنوع برای شنبه تا جمعه بچین که هیچ دو روزی غذای تکراری نداشته باشن.',
             }),
           )
-          .timeout(const Duration(seconds: 20));
+          .timeout(const Duration(seconds: 45));
 
       if (res.statusCode == 200) {
         final data = jsonDecode(utf8.decode(res.bodyBytes));
@@ -5678,7 +5678,7 @@ class BodyModController extends ChangeNotifier {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('رفیق الان ترافیک سرورهای هوش مصنوعی خیلی بالاست! 😅 مشکل از برنامه ما نیست و سهمیه‌ات هم اصلاً کم نشده؛ یه دقیقه دیگه دوباره امتحان کن تا جوابت رو بدم! ❤️🙏'),
+            content: Text('رفیق الان ترافیک سرورهای هوش مصنوعی خیلی بالاست! 😅 مشکل از برنامه ما نیست و سهمیه‌ات هم اصلاً کم نشده؛ چند دقیقه دیگه دوباره امتحان کن تا جوابت رو بدم! ❤️🙏'),
             backgroundColor: Colors.redAccent,
           ),
         );
