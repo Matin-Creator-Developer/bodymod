@@ -1564,7 +1564,7 @@ class AppConfig {
       '۱. بیماری خاص، آسیب‌دیدگی مفصلی یا دیسک کمر داری؟ داروی خاصی مصرف می‌کنی؟\n'
       '۲. به چه خوراکی‌هایی حساسیت داری یا اصلاً دوست نداری؟\n'
       '۳. ساعت خوابت چطوره، شیفت کاری داری یا نکته دیگه‌ای هست که مربی باید همیشه یادش بمونه؟\n'
-      '(خیالت راحت رفیق، این اطلاعات کاملاً امن هستن 🔒)';
+      '🔒 خیالت راحت رفیق! اطلاعاتت و حریم خصوصیت به صورت ۱۰۰٪ امن محافظت میشه.';
 
   // ۴ سطح وضعیت اقتصادی و میزان درآمد ماهانه
   static const String budgetBase = 'base';
@@ -4619,6 +4619,7 @@ class BodyModController extends ChangeNotifier {
               'name': account.displayName ?? '',
               'photo_url': account.photoUrl ?? '',
               'deviceId': deviceId,
+              if (referralCode.trim().isNotEmpty) 'referralCode': referralCode.trim(),
             }),
           )
           .timeout(const Duration(seconds: 12));
@@ -4821,6 +4822,7 @@ class BodyModController extends ChangeNotifier {
               'code': cleanCode,
               'otpToken': _lastOtpStatelessToken,
               'deviceId': deviceId,
+              if (referralCode.trim().isNotEmpty) 'referralCode': referralCode.trim(),
             }),
           )
           .timeout(const Duration(seconds: 12));
@@ -5908,6 +5910,7 @@ class TwoStepAuthBottomSheet extends StatefulWidget {
 class _TwoStepAuthBottomSheetState extends State<TwoStepAuthBottomSheet> {
   final TextEditingController _phoneCtrl = TextEditingController();
   final TextEditingController _otpCtrl = TextEditingController();
+  final TextEditingController _refCodeCtrl = TextEditingController();
   bool _otpSent = false;
   bool _busy = false;
   String? _statusMsg;
@@ -5939,6 +5942,7 @@ class _TwoStepAuthBottomSheetState extends State<TwoStepAuthBottomSheet> {
     _resendTimer?.cancel();
     _phoneCtrl.dispose();
     _otpCtrl.dispose();
+    _refCodeCtrl.dispose();
     super.dispose();
   }
 
@@ -5981,6 +5985,35 @@ class _TwoStepAuthBottomSheetState extends State<TwoStepAuthBottomSheet> {
             ),
             const SizedBox(height: 16),
 
+            // فیلد اختیاری کد دعوت + هشدار مهم قبل از ورود
+            TextField(
+              controller: _refCodeCtrl,
+              textDirection: TextDirection.ltr,
+              decoration: const InputDecoration(
+                labelText: 'کد دعوت دوستت (اختیاری - مثلاً BM-12345678910)',
+                prefixIcon: Icon(Icons.card_giftcard_rounded),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: BMColors.warningAmber.withOpacity(0.14),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: BMColors.warningAmber.withOpacity(0.6)),
+              ),
+              child: Text(
+                '⚠️ اگه کد دعوت داری و میخای از گوگل استفاده کنی، قبل از زدن دکمه گوگل باید کد دعوتت رو بزنی وگرنه دیگه نمیتونی کد بزنی',
+                style: TextStyle(
+                  fontSize: 11.8,
+                  fontWeight: FontWeight.w800,
+                  color: BMColors.warningAmber,
+                  height: 1.45,
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+
             // روش اول: ورود نیتیو با گوگل (Google Sign-In)
             SizedBox(
               width: double.infinity,
@@ -5997,7 +6030,10 @@ class _TwoStepAuthBottomSheetState extends State<TwoStepAuthBottomSheet> {
                     ? null
                     : () async {
                         setState(() => _busy = true);
-                        final res = await c.loginWithNativeGoogle(context);
+                        final res = await c.loginWithNativeGoogle(
+                          context,
+                          referralCode: _refCodeCtrl.text.trim(),
+                        );
                         if (!mounted) return;
                         setState(() => _busy = false);
                         if (res != null && res['loggedIn'] == true) {
@@ -6091,6 +6127,7 @@ class _TwoStepAuthBottomSheetState extends State<TwoStepAuthBottomSheet> {
                             context,
                             rawPhone: phone,
                             otpCode: code,
+                            referralCode: _refCodeCtrl.text.trim(),
                           );
                           if (!mounted) return;
                           setState(() => _busy = false);
@@ -7199,6 +7236,24 @@ class _MainShellScreenState extends State<MainShellScreen> {
                 _showReferralInviteSheet(context, c);
               },
             ),
+            ListTile(
+              leading: Icon(
+                Icons.people_alt_rounded,
+                color: BMColors.neonCyan,
+              ),
+              title: const Text(
+                'لیست دعوت شدگان 👥',
+                style: TextStyle(fontWeight: FontWeight.w800),
+              ),
+              subtitle: const Text(
+                'مشاهده اسم و تعداد دوستانی که با کد تو اومدن',
+                style: TextStyle(fontSize: 11.5),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _showInvitedUsersSheet(context, c);
+              },
+            ),
             // فقط اگر کلودفلر تایید کند که کاربر مدیرعامل است، گزینه پنل مدیرعامل نمایش داده می‌شود!
             if (c.profile.isAdmin) ...[
               const Divider(height: 24),
@@ -7217,6 +7272,151 @@ class _MainShellScreenState extends State<MainShellScreen> {
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  void _showInvitedUsersSheet(BuildContext context, BodyModController c) {
+    if (!c.profile.isLoggedIn) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('رفیق اول وارد حسابت شو تا لیست دعوت‌شدگانت رو ببینی! 🔐')),
+      );
+      return;
+    }
+    bmShowResponsiveSheet(
+      context: context,
+      backgroundColor: BMColors.cardDark,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => FutureBuilder<http.Response>(
+        future: http
+            .get(
+              Uri.parse('${AppConfig.serverBaseUrl}/api/referral/invited-list'),
+              headers: c._authHeaders,
+            )
+            .timeout(const Duration(seconds: 12)),
+        builder: (ctx, snap) {
+          if (snap.connectionState == ConnectionState.waiting) {
+            return const Padding(
+              padding: EdgeInsets.all(32),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+          int totalCount = 0;
+          List<String> names = [];
+          String? errText;
+          if (snap.hasError || !snap.hasData) {
+            errText = 'خطا در ارتباط با سرور کلودفلر! اینترنتت رو چک کن 🌐';
+          } else if (snap.data!.statusCode == 200) {
+            try {
+              final d = jsonDecode(utf8.decode(snap.data!.bodyBytes));
+              if (d is Map && d['ok'] == true) {
+                totalCount = (d['count'] as num?)?.toInt() ?? 0;
+                final rawInv = d['invited'];
+                if (rawInv is List) {
+                  names = rawInv
+                      .map((e) => (e is Map ? (e['name'] ?? 'رفیق ورزشکار') : e).toString())
+                      .toList();
+                }
+              } else {
+                errText = (d is Map ? (d['error'] ?? 'خطا در دریافت لیست') : 'خطا در دریافت لیست').toString();
+              }
+            } catch (_) {
+              errText = 'خطا در خواندن اطلاعات سرور!';
+            }
+          } else {
+            errText = 'خطا در دریافت لیست (کد ${snap.data!.statusCode})';
+          }
+
+          return Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    const Text('👥🎁 ', style: TextStyle(fontSize: 22)),
+                    Expanded(
+                      child: Text(
+                        'لیست دعوت شدگان ($totalCount نفر)',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w900,
+                          color: bmTextColor,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      icon: Icon(Icons.close_rounded, color: bmTextSubColor),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                if (errText != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Text(
+                      errText,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+                    ),
+                  )
+                else if (names.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    child: Text(
+                      'هنوز کسی با کد دعوت تو ثبت‌نام و تکمیل فرم نکرده رفیق! 😅
+کد دعوتت رو بفرست برای دوستات تا هم اونا تخفیف بگیرن هم تو ۳ روز رایگان! 🚀',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: bmTextSubColor, fontSize: 13, height: 1.6),
+                    ),
+                  )
+                else
+                  ...List.generate(names.length, (i) {
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                      decoration: BoxDecoration(
+                        color: bmSurfaceColor,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: BMColors.neonCyan.withOpacity(0.35)),
+                      ),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 14,
+                            backgroundColor: BMColors.neonGreen.withOpacity(0.2),
+                            child: Text(
+                              '${i + 1}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w900,
+                                color: BMColors.neonGreen,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              names[i],
+                              style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 14,
+                                color: bmTextColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -7266,7 +7466,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
                 Text(
                   'کد یا لینک دعوت خودت رو بفرست برای رفیقت:\n'
                   '• دوستت با زدن کد تو ۳۰٪ تخفیف اشتراک می‌گیره (۳۴۹,۳۰۰ تومان به جای ۴۹۹,۰۰۰ تومان) 🎉\n'
-                  '• به محض اینکه دوستت اشتراک بخره، ۳ روز اشتراک رایگان به حساب تو اضافه می‌شه! 🚀💎',
+                  '• به محض اینکه دوستت با کد تو ثبت‌نام کنه و فرم مشخصاتش رو کامل کنه، ۳ روز اشتراک رایگان به حساب تو اضافه می‌شه! 🚀💎',
                   style: TextStyle(
                     fontSize: 12.5,
                     color: bmTextSubColor,
@@ -7339,74 +7539,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
                     ),
                   ),
                 ],
-                const Divider(height: 24),
-                Text(
-                  'کد یا لینک دعوت دوستت رو داری؟ اینجا بزن تا ۳۰٪ تخفیف اشتراک بگیری 👇',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w800,
-                    color: bmTextColor,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: bmRefInputCtrl,
-                        textDirection: TextDirection.ltr,
-                        style: TextStyle(fontSize: 12.5, color: bmTextColor),
-                        decoration: InputDecoration(
-                          hintText: bmAppliedRefCode.isNotEmpty
-                              ? 'کد فعال: $bmAppliedRefCode (۳۰٪ تخفیف)'
-                              : 'کد دعوت (آیدی اکانت) رفیقت رو بزن (مثلاً BM-12345678910)',
-                          isDense: true,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: bmYellowBoxColor,
-                        foregroundColor: bmOnYellowBoxColor,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      onPressed: bmRefSubmitting
-                          ? null
-                          : () async {
-                              if (!c.profile.isLoggedIn) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('رفیق اول با گوگل یا شماره موبایل وارد حسابت شو! 🔐'),
-                                  ),
-                                );
-                                return;
-                              }
-                              bmUserPhoneGlobal = c.profile.userKey;
-                              await bmSubmitFriendReferralCode(ctx, () {
-                                if (ctx.mounted) setSheetState(() {});
-                              });
-                              if (bmAppliedRefCode.isNotEmpty) {
-                                c.appliedDiscountCode = bmAppliedRefCode;
-                                c.appliedDiscountPercent = 30;
-                                c.discountedSubscriptionPriceToman = 349300;
-                                c.notifyListeners();
-                              }
-                            },
-                      child: Text(
-                        bmRefSubmitting ? '...' : 'اعمال ۳۰٪ تخفیف',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w900,
-                          color: bmOnYellowBoxColor,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+
               ],
             ),
           );
